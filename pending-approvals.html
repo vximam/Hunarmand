@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pending Worker Approvals — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ── INHERITED COLOR VARIABLES FROM DESIGN SYSTEM ── */
+:root {
+  --g1: #1b5e37;
+  --g2: #134228;
+  --mint: #e8f5ed;
+  --mint2: #d4ecde;
+  --white: #ffffff;
+  --near: #f5fbf7;
+  --ink: #0b1a10;
+  --muted: #4e6a57;
+  --faint: #8ca898;
+  --bdr: rgba(197, 222, 206, 0.55);
+  --bdr2: rgba(197, 222, 206, 0.25);
+  --sh1: 0 2px 8px rgba(11, 26, 16, 0.04);
+  --sh2: 0 4px 16px rgba(11, 26, 16, 0.06);
+  --fd: 'Sora', sans-serif;
+  --fi: 'Inter', sans-serif;
+  --transition: all 0.2s ease-in-out;
+}
+
+[data-theme="dark"] {
+  --white: #121c15;
+  --near: #0a110c;
+  --ink: #e8f5ed;
+  --muted: #7ba888;
+  --faint: #4e6a57;
+  --bdr: rgba(197, 222, 206, 0.15);
+  --bdr2: rgba(197, 222, 206, 0.08);
+  --mint: #1c3526;
+  --mint2: #234430;
+}
+
+/* ── BASE RESET ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--fi);
+  color: var(--ink);
+  background: var(--near);
+  padding: 2.5rem 2rem;
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ── CONTAINER ── */
+.workspace-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* ── BREADCRUMB COMPONENT (TOP LEFT) ── */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.breadcrumb-link {
+  color: var(--muted);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.breadcrumb-link:hover {
+  color: var(--g1);
+}
+.breadcrumb-slash {
+  color: var(--faint);
+  font-weight: 400;
+}
+.breadcrumb-current {
+  color: var(--g1);
+  font-weight: 600;
+}
+
+/* ── ACTION HEADER BAR ── */
+.header-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+.heading-primary {
+  font-family: var(--fd);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.view-all-action {
+  color: var(--g1);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+.view-all-action:hover {
+  color: var(--g2);
+  transform: translateX(2px);
+}
+
+/* ── PILL FILTER CAROUSEL (Image Matched) ── */
+.filter-pills-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.pill-button {
+  font-family: var(--fi);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.45rem 1.2rem;
+  border-radius: 100px;
+  border: 1px solid var(--bdr);
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.pill-button:hover {
+  border-color: var(--g1);
+  background: var(--near);
+  color: var(--g1);
+}
+.pill-button.active {
+  background: var(--g1);
+  color: var(--white);
+  border-color: var(--g1);
+  font-weight: 600;
+}
+
+/* ── WORKER COMPONENT DATA MATRIX (Image Matched Cards) ── */
+.matrix-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.worker-record-card {
+  background: var(--white);
+  border: 1px solid var(--bdr2);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--sh1);
+  transition: var(--transition);
+}
+.worker-record-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh2);
+  border-color: var(--bdr);
+}
+
+/* Profile Left Block */
+.profile-core-block {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--mint);
+  border: 1px solid var(--bdr2);
+}
+.profile-info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.profile-name {
+  font-family: var(--fd);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.profile-meta-metrics {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.divider-span {
+  color: var(--faint);
+  margin: 0 4px;
+}
+
+/* Action Right Checkbox Box */
+.approve-action-trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mint);
+  border: 1px solid var(--mint2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g1);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.approve-action-trigger:hover {
+  background: var(--g1);
+  color: var(--white);
+  border-color: var(--g1);
+  transform: scale(1.05);
+}
+
+/* Utility Utilities */
+.theme-switch-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--sh2);
+  color: var(--g1);
+  z-index: 1000;
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MAIN INTERFACE WORKSPACE ══ -->
+<div class="workspace-container">
+  
+  <!-- ══ TOP LEFT BREADCRUMB CORNER ══ -->
+  <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+    <a href="demoooo.html" class="breadcrumb-link">Dashboard</a>
+    <span class="breadcrumb-slash">/</span>
+    <span class="breadcrumb-current">Pending Worker Approvals</span>
+  </nav>
+
+  <!-- ══ TITLE BLOCK WITH VIEW ALL LINK ══ -->
+  <div class="header-action-bar">
+    <h1 class="heading-primary">Pending Worker Approvals</h1>
+  </div>
+
+  <!-- ══ PILL FILTERS (MATCHED TO image_39c807.png) ══ -->
+  <div class="filter-pills-row">
+    <button class="pill-button active" onclick="applyMatrixFilter('all', this)">All</button>
+    <button class="pill-button" onclick="applyMatrixFilter('Plumbing', this)">Plumbing</button>
+    <button class="pill-button" onclick="applyMatrixFilter('Houseclean', this)">Houseclean</button>
+    <button class="pill-button" onclick="applyMatrixFilter('Carpentry', this)">Carpentry</button>
+  </div>
+
+  <!-- ══ DATA MATRIX WRAPPER (40 WORKERS GENERATED HERE) ══ -->
+  <div class="matrix-grid-wrapper" id="matrixGridContainer">
+    <!-- Items are generated dynamically by engine script below -->
+  </div>
+</div>
+
+<!-- Floating Dark/Light Toggle for utility convenience -->
+<div class="theme-switch-widget" onclick="toggleInterfaceTheme()" title="Toggle Interface Color Scheme">
+  <i class="fa-solid fa-moon" id="themeWidgetIcon"></i>
+</div>
+
+<!-- ══ DATA ENGINE SCRIPT GENERATING 40 AUTHENTIC DEEP RECORDS ══ -->
+<script>
+// Mock profile assets database across categories
+const workerPoolData = [
+  { name: "Tariq Mahmood", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=120&auto=format&fit=crop&q=60" },
+  { name: "Ayesha Khan", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=60" },
+  { name: "Usman Ali", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=60" },
+  { name: "Muhammad Rizwan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=60" },
+  { name: "Zainab Bibi", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=60" },
+  { name: "Bilal Ahmed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=60" },
+  { name: "Kamran Shah", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=60" },
+  { name: "Sana Malik", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=120&auto=format&fit=crop&q=60" },
+  { name: "Faisal Qureshi", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=60" },
+  { name: "Hamza Siddiqui", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=120&auto=format&fit=crop&q=60" },
+  { name: "Sadia Imran", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=60" },
+  { name: "Haris Javed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=120&auto=format&fit=crop&q=60" },
+  { name: "Zeeshan Khan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=60" },
+  { name: "Mariam Fatima", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=120&auto=format&fit=crop&q=60" },
+  { name: "Nabeel Munir", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=60" },
+  { name: "Asad Riaz", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&auto=format&fit=crop&q=60" },
+  { name: "Iqra Aziz", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&auto=format&fit=crop&q=60" },
+  { name: "Waqas Butt", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=60" },
+  { name: "Adnan Sami", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=60" },
+  { name: "Khadija Rehman", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1594744803329-e58b31de215f?w=120&auto=format&fit=crop&q=60" },
+  { name: "Umair Hassan", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1489980508314-941910ded1f4?w=120&auto=format&fit=crop&q=60" },
+  { name: "Arsalan Baig", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=60" },
+  { name: "Nida Yasir", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=120&auto=format&fit=crop&q=60" },
+  { name: "Tayyab Lodhi", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=60" },
+  { name: "Shoaib Akhtar", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1500048993953-d23a436266cf?w=120&auto=format&fit=crop&q=60" },
+  { name: "Amna Nawaz", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=60" },
+  { name: "Farhan Saeed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=120&auto=format&fit=crop&q=60" },
+  { name: "Junaid Jamshed", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=120&auto=format&fit=crop&q=60" },
+  { name: "Bushra Ansari", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1548142813-c348350df52b?w=120&auto=format&fit=crop&q=60" },
+  { name: "Sohail Tanvir", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?w=120&auto=format&fit=crop&q=60" },
+  { name: "Ahsan Khan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1488161628813-04466f872be2?w=120&auto=format&fit=crop&q=60" },
+  { name: "Mehwish Hayat", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=120&auto=format&fit=crop&q=60" },
+  { name: "Rizwan Ahmed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=120&auto=format&fit=crop&q=60" },
+  { name: "Babar Azam", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?w=120&auto=format&fit=crop&q=60" },
+  { name: "Sajal Aly", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1516534775068-ba3e84589d90?w=120&auto=format&fit=crop&q=60" },
+  { name: "Shadab Khan", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=60" },
+  { name: "Fawad Khan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1504257406231-899998963a08?w=120&auto=format&fit=crop&q=60" },
+  { name: "Mahira Khan", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&auto=format&fit=crop&q=60" },
+  { name: "Shaheen Afridi", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1541577140430-9a31d8a254be?w=120&auto=format&fit=crop&q=60" },
+  { name: "Imran Abbas", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=60" }
+];
+
+// Instantly construct component list upon load
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("matrixGridContainer");
+  
+  workerPoolData.forEach((worker, index) => {
+    const card = document.createElement("div");
+    card.className = "worker-record-card";
+    card.setAttribute("data-trade-type", worker.trade);
+    card.id = `worker-row-${index}`;
+    
+    card.innerHTML = `
+      <div class="profile-core-block">
+        <img src="${worker.img}" class="profile-avatar" alt="${worker.name}">
+        <div class="profile-info-stack">
+          <div class="profile-name">${worker.name}</div>
+          <div class="profile-meta-metrics">
+            ${worker.trade}<span class="divider-span">|</span>${worker.reviews} reviews
+          </div>
+        </div>
+      </div>
+      <div class="approve-action-trigger" onclick="approveWorkerFromMatrix('worker-row-${index}')" title="Approve Identity">
+        <i class="fa-solid fa-check"></i>
+      </div>
+    `;
+    
+    container.appendChild(card);
+  });
+});
+
+// Interactive dynamic filtration control matching standard pill designs
+function applyMatrixFilter(category, buttonElement) {
+  document.querySelectorAll('.pill-button').forEach(btn => btn.classList.remove('active'));
+  buttonElement.classList.add('active');
+  
+  const allCards = document.querySelectorAll('.worker-record-card');
+  allCards.forEach(card => {
+    const cardTrade = card.getAttribute('data-trade-type');
+    if (category === 'all' || cardTrade === category) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// Action Trigger Mechanism for approvals
+function approveWorkerFromMatrix(rowId) {
+  const targetElement = document.getElementById(rowId);
+  if(targetElement) {
+    targetElement.style.opacity = '0';
+    targetElement.style.transform = 'scale(0.97)';
+    setTimeout(() => {
+      targetElement.remove();
+    }, 200);
+  }
+}
+
+// Interface Light/Dark control mechanism
+function toggleInterfaceTheme() {
+  const root = document.documentElement;
+  const targetTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', targetTheme);
+  document.getElementById('themeWidgetIcon').className = targetTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+}
+</script>
+</body>
+</html>

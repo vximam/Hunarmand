@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile – HunarmandAdmin</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      /* Main App Colors */
+      --primary:       #2a7d4f;
+      --primary-dark:  #1d5c38;
+      --primary-light: #e6f4ed;
+      --primary-mid:   #c4e4d2;
+      --accent:        #34d07c;
+      --bg:            #f0f7f3;
+      --card-bg:       #ffffff;
+      --text-main:     #1a2e25;
+      --text-muted:    #6b8f7a;
+      --text-light:    #9db8a8;
+      --border:        #d4ead9;
+      --danger:        #e03131;
+      --warning:       #f08c00;
+      --radius:        14px;
+      --shadow:        0 2px 16px rgba(42,125,79,.10);
+      --shadow-lg:     0 8px 32px rgba(42,125,79,.14);
+      
+      /* Sidebar & Topbar Variables */
+      --g1: #1b5e37; --g2: #134228; --g3: #246843; --g4: #2e7d52; --g5: #3a9460;
+      --mint: #e8f5ed; --mint2: #d4ecde; --mint3: #c2e3d0;
+      --white: #fff; --near: #f5fbf7;
+      --ink: #0b1a10; --body: #1a2d1f; --faint: #8ca898;
+      --bdr: rgba(197, 222, 206, .55); --bdr2: rgba(197, 222, 206, .3);
+      --red: #ef4444; --red-bg: #fef2f2; --red-bdr: #fecaca;
+      
+      --muted: var(--text-muted); 
+      
+      --topbar-bg: rgba(245, 251, 247, 0.92);
+      --sidebar: 260px;
+      --hdr: 64px;
+      --e1: cubic-bezier(.4, 0, .2, 1);
+      --e2: cubic-bezier(.22, 1, .36, 1);
+      --e3: cubic-bezier(.34, 1.56, .64, 1);
+      --fd: 'Sora', sans-serif; 
+      --fi: 'Inter', sans-serif;
+      --overlay: rgba(11, 26, 16, .4);
+    }
+
+    /* Dark Mode Theme */
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0f1419;
+      --card-bg: #1a222c;
+      --text-main: #ecfdf3;
+      --text-muted: #8ca898;
+      --text-light: #56685c;
+      --border: rgba(255, 255, 255, 0.09);
+      --primary-light: rgba(42, 125, 79, 0.2);
+      
+      --g1: #6ee7a8; --g2: #4ade80; --g3: #5ecf8f; --g4: #86efac; --g5: #34d399;
+      --mint: rgba(110, 231, 168, .07); --mint2: rgba(110, 231, 168, .11); --mint3: rgba(110, 231, 168, .16);
+      --white: #1a222c; --near: #0f1419;
+      --ink: #ecfdf3; --body: #b8c9be; --faint: #56685c;
+      --bdr: rgba(255, 255, 255, .09); --bdr2: rgba(255, 255, 255, .05);
+      --red: #f87171; --red-bg: rgba(248, 113, 113, .12); --red-bdr: rgba(248, 113, 113, .28);
+      
+      --muted: var(--text-muted);
+      
+      --topbar-bg: rgba(15, 20, 25, .82);
+      --overlay: rgba(0, 0, 0, .55);
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+    }
+
+    html.theme-transition, html.theme-transition *, html.theme-transition *::before, html.theme-transition *::after {
+      transition: background-color .4s var(--e1), border-color .4s var(--e1), color .25s var(--e1), box-shadow .4s var(--e1), fill .25s var(--e1), stroke .25s var(--e1) !important;
+    }
+
+    [data-theme="dark"] body {
+      background: radial-gradient(ellipse 120% 80% at 50% -30%, rgba(46, 125, 82, .18), transparent 55%),
+                  radial-gradient(ellipse 60% 40% at 100% 0%, rgba(52, 211, 153, .06), transparent 50%),
+                  var(--near);
+    }
+    
+    [data-theme="dark"] .sidebar { background: linear-gradient(180deg, #141a22 0%, #10151b 100%); box-shadow: inset -1px 0 0 var(--bdr), 4px 0 24px rgba(0,0,0,.2); }
+    [data-theme="dark"] .req-table th { background: rgba(255,255,255,0.03); border-bottom-color: var(--border); }
+    [data-theme="dark"] .modal-content { background: var(--card-bg); }
+    [data-theme="dark"] .modal-header { background: var(--bg); border-bottom-color: var(--border); }
+    [data-theme="dark"] .modal-footer { border-top-color: var(--border); background: var(--bg); }
+    [data-theme="dark"] .form-control, [data-theme="dark"] .form-select { background: var(--bg); color: var(--text-main); border-color: var(--border); }
+    [data-theme="dark"] .btn-hero.outline { background: var(--card-bg); }
+    [data-theme="dark"] .btn-light { background: rgba(255,255,255,0.1); color: var(--text-main); border: none; }
+    [data-theme="dark"] .tag-status.inactive { background: rgba(224, 49, 49, 0.15); }
+    [data-theme="dark"] .tag-status.pending { background: rgba(240, 140, 0, 0.15); }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg); color: var(--text-main);
+      min-height: 100vh; display: flex;
+    }
+
+    /* ── SIDEBAR SYSTEM ── */
+    .sidebar {
+      width: var(--sidebar); min-height: 100vh; background: var(--white);
+      border-right: 1px solid var(--bdr); display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 1050;
+      transition: transform .3s var(--e2), box-shadow .3s;
+      opacity: 0; animation: sideIn .5s var(--e2) .2s forwards;
+    }
+    @keyframes sideIn { to { opacity: 1; } }
+
+    .sidebar-top { padding: 1.5rem 1.3rem 1rem; border-bottom: 1px solid var(--bdr2); }
+    .brand-name { font-family: var(--fd); font-size: 1.2rem; font-weight: 800; color: var(--g1); letter-spacing: -.04em; line-height: 1.1; }
+    .brand-sub { font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: .1rem; }
+    .brand-badge { display: inline-flex; align-items: center; gap: .3rem; margin-top: .5rem; font-size: .6rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--g1); background: var(--mint); border: 1px solid var(--bdr); padding: .16rem .55rem; border-radius: 100px; }
+    .brand-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--g3); animation: sonar 2s ease-in-out infinite; }
+    @keyframes sonar { 0% { box-shadow: 0 0 0 0 rgba(46,125,82,.45); } 60% { box-shadow: 0 0 0 7px rgba(46,125,82,0); } 100% { box-shadow: 0 0 0 0 rgba(46,125,82,0); } }
+
+    .sidebar-nav { flex: 1; padding: .8rem .7rem; overflow-y: auto; font-family: var(--fi); }
+    .nav-lbl { font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding: .5rem .55rem .35rem; margin-top: .3rem; }
+    .nav-item {
+      display: flex; align-items: center; gap: .7rem; text-decoration: none;
+      padding: .62rem .75rem; border-radius: 10px;
+      font-size: .845rem; font-weight: 500; color: var(--body);
+      cursor: pointer; position: relative; margin-bottom: .08rem;
+      transition: background .2s, color .2s, transform .18s var(--e3); user-select: none;
+    }
+    .nav-item:hover { background: var(--mint); color: var(--g1); transform: translateX(2px); }
+    .nav-item.active { background: var(--mint); color: var(--g1); font-weight: 600; }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px; border-radius: 0 3px 3px 0; background: var(--g1); }
+    .ni-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .2s, transform .25s var(--e3); }
+    .nav-item:hover .ni-icon, .nav-item.active .ni-icon { background: var(--mint2); }
+    .nav-item.active:hover .ni-icon { transform: scale(1.1); }
+    .ni-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-badge { margin-left: auto; font-size: .58rem; font-weight: 700; background: var(--red); color: #fff; border-radius: 100px; padding: .1rem .4rem; min-width: 18px; text-align: center; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .65; } }
+
+    .sidebar-bot { padding: .8rem .7rem; border-top: 1px solid var(--bdr2); font-family: var(--fi); }
+    .profile-chip { display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border-radius: 12px; background: var(--near); border: 1px solid var(--bdr); cursor: pointer; transition: background .2s, border-color .2s, transform .2s var(--e3); }
+    .profile-chip:hover { background: var(--mint); border-color: var(--mint3); transform: translateY(-1px); }
+    .p-av { width: 34px; height: 34px; border-radius: 50%; background: var(--g1); display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 8px rgba(27,94,55,.28); }
+    .p-name { font-size: .8rem; font-weight: 600; color: var(--ink); }
+    .p-role { font-size: .65rem; color: var(--muted); }
+    .logout-btn { display: flex; align-items: center; gap: .55rem; width: 100%; margin-top: .5rem; padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(239,68,68,.22); background: transparent; cursor: pointer; font-size: .8rem; font-weight: 500; color: var(--red); transition: background .2s, border-color .2s, transform .18s var(--e3); }
+    .logout-btn:hover { background: var(--red-bg); border-color: var(--red-bdr); transform: translateX(2px); }
+    .logout-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .overlay { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 1040; opacity: 0; pointer-events: none; transition: opacity .3s var(--e1); }
+    .overlay.show { opacity: 1; pointer-events: all; display: block; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: var(--hdr); background: var(--topbar-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--bdr2); display: flex; align-items: center;
+      justify-content: space-between; padding: 0 1.8rem; gap: 1rem;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-l { display: flex; align-items: center; gap: .75rem; }
+    .hbg { display: none; flex-direction: column; gap: 4px; cursor: pointer; background: none; border: none; padding: 5px; }
+    .hbg span { display: block; height: 1.8px; width: 20px; background: var(--g1); border-radius: 2px; transition: transform .3s var(--e2), opacity .3s; }
+    .hbg span:nth-child(2) { width: 14px; }
+    .hbg.open span:nth-child(1) { transform: translateY(5.8px) rotate(45deg); width: 20px; }
+    .hbg.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hbg.open span:nth-child(3) { transform: translateY(-5.8px) rotate(-45deg); width: 20px; }
+    
+    .breadcrumb { font-size: .7rem; color: var(--faint); display: flex; align-items: center; gap: .3rem; font-family: var(--fi); }
+    .breadcrumb a { color: inherit; text-decoration: none; transition: color .2s; }
+    .breadcrumb a:hover { color: var(--primary); }
+    .breadcrumb b { color: var(--g1); font-weight: 600; }
+    .topbar-ttl { font-family: var(--fd); font-size: 1rem; font-weight: 700; color: var(--ink); letter-spacing: -.025em; margin-top: .05rem; }
+    
+    .topbar-r { display: flex; align-items: center; gap: .65rem; }
+    .tb-date { font-size: .75rem; color: var(--muted); white-space: nowrap; font-family: var(--fi); font-weight: 500; }
+    
+    /* Topbar Icon Buttons */
+    .tb-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--bdr); background: var(--card-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: background .2s, border-color .2s, transform .2s var(--e3); color: var(--muted); }
+    .tb-btn:hover { background: var(--mint); border-color: var(--mint3); transform: scale(1.06); color: var(--g1); }
+    .tb-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    
+    .tb-btn .ico-moon { display: none; }
+    [data-theme="dark"] .tb-btn .ico-sun { display: none; }
+    [data-theme="dark"] .tb-btn .ico-moon { display: block; }
+    .mob-close { display: none; background: none; border: none; cursor: pointer; padding: 5px; color: var(--muted); }
+
+    /* ── MAIN CONTENT & PAGE BODY ── */
+    .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; margin-left: var(--sidebar); transition: margin-left .3s ease; }
+    .page-body { padding: 1.6rem 1.8rem 3rem; flex: 1; }
+
+    /* ── PROFILE STYLES ── */
+    .breadcrumb-bar { display:flex; align-items:center; gap:8px; margin-bottom:22px; font-size:13px; }
+    .breadcrumb-bar a { color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:5px; }
+    .breadcrumb-bar a:hover { color:var(--primary); }
+    .breadcrumb-bar .sep { color:var(--text-light); }
+    .breadcrumb-bar .current { color:var(--text-main); font-weight:600; }
+
+    .profile-hero {
+      background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:28px; margin-bottom:20px; display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap;
+    }
+    .hero-avatar { width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:#fff; flex-shrink:0; box-shadow:0 6px 20px rgba(42,125,79,.25); position:relative; }
+    .hero-avatar .status-dot { position:absolute; bottom:4px; right:4px; width:16px; height:16px; border-radius:50%; border:3px solid var(--card-bg); transition: border-color .4s; }
+    .hero-info { flex:1; min-width:200px; }
+    .hero-name { font-family:'Sora',sans-serif; font-weight:700; font-size:22px; color:var(--text-main); }
+    .hero-email { font-size:13px; color:var(--text-muted); margin:3px 0 10px; }
+    .hero-tags { display:flex; gap:8px; flex-wrap:wrap; }
+    .hero-tag { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+    .tag-city { background:var(--primary-light); color:var(--primary); }
+    .tag-status.active   { background:#e6f4ed; color:var(--primary); }
+    .tag-status.inactive { background:#fdecea; color:var(--danger); }
+    .tag-status.pending  { background:#fff3e0; color:var(--warning); }
+
+    .hero-actions { display:flex; gap:10px; flex-wrap:wrap; align-self:center; }
+    .btn-hero {
+      padding:9px 20px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;
+      display:flex; align-items:center; gap:7px; font-family:'DM Sans',sans-serif; transition:all .18s; border:1.5px solid transparent;
+    }
+    .btn-hero.outline { background:var(--card-bg); border-color:var(--border); color:var(--text-muted); }
+    .btn-hero.outline:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+    
+    .btn-hero.danger-toggle { background:var(--card-bg); border-color:#fcc; color:var(--danger); }
+    .btn-hero.danger-toggle:hover { background:rgba(224, 49, 49, 0.1); }
+    .btn-hero.success-toggle { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
+
+    .profile-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .full-col { grid-column:1/-1; }
+
+    .info-card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    .card-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-head-title { font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px; }
+    .card-head-title i { color:var(--primary); }
+    .card-body-p { padding:20px; }
+
+    .info-row { display:flex; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); }
+    .info-row:last-child { border-bottom:none; }
+    .info-label { width:130px; flex-shrink:0; font-size:12px; font-weight:600; color:var(--text-light); text-transform:uppercase; letter-spacing:.4px; padding-top:2px; }
+    .info-val { font-size:13.5px; color:var(--text-main); font-weight:500; }
+
+    .mini-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .mini-stat { background:var(--primary-light); border-radius:10px; padding:14px 16px; text-align:center; }
+    .mini-stat .val { font-family:'Sora',sans-serif; font-size:22px; font-weight:700; color:var(--primary); }
+    .mini-stat .lbl { font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px; }
+
+    .star-row { display:flex; align-items:center; gap:8px; margin-top:8px; }
+    .stars { color:#f08c00; font-size:18px; letter-spacing:2px; }
+    .rating-num { font-family:'Sora',sans-serif; font-size:28px; font-weight:700; color:var(--text-main); }
+    .rating-label { font-size:12px; color:var(--text-muted); }
+
+    .timeline { list-style:none; padding:0; margin:0; }
+    .timeline li { display:flex; gap:14px; padding-bottom:18px; position:relative; }
+    .timeline li::before { content:''; position:absolute; left:15px; top:32px; width:1.5px; bottom:0; background:var(--border); }
+    .timeline li:last-child::before { display:none; }
+    .tl-icon { width:32px; height:32px; border-radius:50%; flex-shrink:0; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:14px; position:relative; z-index:1; }
+    .tl-content .tl-title { font-size:13px; font-weight:600; color:var(--text-main); }
+    .tl-content .tl-time  { font-size:11.5px; color:var(--text-light); margin-top:2px; }
+
+    .req-table { width:100%; border-collapse:collapse; }
+    .req-table th { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; padding:10px 14px; border-bottom:1px solid var(--border); background:#f7faf8; }
+    .req-table td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--border); color:var(--text-muted); }
+    .req-table tr:last-child td { border-bottom:none; }
+    .req-table tr:hover td { background:var(--primary-light); }
+    .badge-done    { background:#e6f4ed; color:var(--primary); border-radius:20px; padding:2px 10px; font-size:11px; font-weight:700; }
+    .badge-pending { background:#fff3e0; color:var(--warning); border-radius:20px; padding:2px 10px; font-size:11px; font-weight:700; }
+    .badge-cancel  { background:#fdecea; color:var(--danger);  border-radius:20px; padding:2px 10px; font-size:11px; font-weight:700; }
+
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:9999; }
+    .toast-msg { background:var(--ink); color:#fff; padding:12px 18px; border-radius:10px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px; box-shadow:0 8px 24px rgba(0,0,0,.3); animation:slideIn .3s ease; margin-top:8px; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    body.user-blocked .main-content { filter: grayscale(0.4); opacity: 0.95; }
+
+    /* ── RESPONSIVE OVERRIDES ── */
+    @media (max-width: 860px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); box-shadow: 8px 0 40px rgba(11,26,16,.18); }
+      .main-content { margin-left: 0; }
+      .topbar { display: flex; padding: 0 1rem; }
+      .hbg { display: flex; }
+      .mob-close { display: flex !important; }
+      .tb-date { display: none; }
+    }
+    @media (max-width:768px){
+      .profile-grid { grid-template-columns:1fr; }
+      .full-col { grid-column:1; }
+      .profile-hero { flex-direction:column; align-items:center; text-align:center; }
+      .hero-info { width:100%; display:flex; flex-direction:column; align-items:center; }
+      .hero-tags { justify-content:center; }
+      .hero-actions { width:100%; justify-content:center; margin-top:10px; }
+      .breadcrumb-bar { flex-wrap:wrap; }
+    }
+    @media (max-width: 576px) {
+      .page-body { padding: 1.2rem 1rem 3.5rem; }
+    }
+    @media (max-width:480px){
+      .hero-name { font-size:18px; }
+      .mini-stats { grid-template-columns:1fr; }
+      .info-row { flex-direction:column; padding:12px 0; gap:4px; }
+      .info-label { width:100%; padding-top:0; }
+      .info-val { word-break:break-word; }
+      .star-row { flex-wrap:wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="brand-name">Hunarmand</div>
+        <div class="brand-sub">Admin</div>
+      </div>
+      <button class="drw-close mob-close" onclick="document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); document.getElementById('hbg').classList.remove('open');" style="display:none;">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <span class="brand-badge"><span class="brand-dot"></span>System Management</span>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Main</div>
+    <a class="nav-item" href="dashboard.html" data-page="dashboard">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      Dashboard
+    </a>
+    <a class="nav-item" href="workers.html" data-page="workers">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      Workers
+    </a>
+    <a class="nav-item active" href="users.html" data-page="users">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      Users
+    </a>
+    
+    <div class="nav-lbl">Management</div>
+    <a class="nav-item" href="reports.html#reports" data-page="reports">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      Reports
+    </a>
+    <a class="nav-item" href="reports.html#analytics" data-page="analytics">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+      Analytics
+    </a>
+    <a class="nav-item" href="reports.html#settings" data-page="settings">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      Settings
+    </a>
+  </nav>
+  
+  <div class="sidebar-bot">
+    <div class="profile-chip">
+      <div class="p-av">AK</div>
+      <div style="flex:1;min-width:0">
+        <div class="p-name">Admin Profile</div>
+        <div class="p-role">Super Administrator</div>
+      </div>
+      <span style="color:var(--faint);font-size:.7rem">›</span>
+    </div>
+    <button class="logout-btn" id="logoutBtn" onclick="logout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+</aside>
+
+<main class="main-content" id="mainContent">
+
+  <header class="topbar">
+    <div class="topbar-l">
+      <button class="hbg" id="hbg"><span></span><span></span><span></span></button>
+      <div>
+        <div class="breadcrumb" id="breadcrumb">
+          <span>Admin</span> 
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 4px"><polyline points="9 18 15 12 9 6"/></svg> 
+          <a href="users.html">Users</a>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 4px"><polyline points="9 18 15 12 9 6"/></svg> 
+          <b id="breadPage">User Profile</b>
+        </div>
+        <div class="topbar-ttl" id="topbarTitle">User Profile</div>
+      </div>
+    </div>
+    <div class="topbar-r">
+      <div class="tb-date" id="tbDate"></div>
+      <button type="button" class="tb-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle light or dark theme">
+        <svg class="ico-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <!-- <button class="tb-btn" title="Export Profile Data" id="exportBtnTop">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 0 1-2-2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button> -->
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="breadcrumb-bar">
+      <a href="users.html"><i class="bi bi-arrow-left"></i> Back to Users</a>
+      <span class="sep">/</span>
+      <span class="current" id="breadName">User Profile</span>
+    </div>
+
+    <div class="profile-hero" id="profileHero">
+      <div class="hero-avatar" id="heroAvatar">
+        <span id="heroInitials">--</span>
+        <span class="status-dot" id="heroDot"></span>
+      </div>
+      <div class="hero-info">
+        <div class="hero-name" id="heroName">Loading…</div>
+        <div class="hero-email" id="heroEmail"></div>
+        <div class="hero-tags">
+          <span class="hero-tag tag-city"><i class="bi bi-geo-alt-fill"></i><span id="heroCity"></span></span>
+          <span class="hero-tag tag-status" id="heroStatus"></span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-hero outline" data-bs-toggle="modal" data-bs-target="#reportModal">
+          <i class="bi bi-file-earmark-text"></i> Report User
+        </button>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-title"><i class="bi bi-person-lines-fill"></i> Personal Information</div>
+        </div>
+        <div class="card-body-p" id="personalInfo"></div>
+      </div>
+
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-title"><i class="bi bi-bar-chart-fill"></i> Activity Stats</div>
+        </div>
+        <div class="card-body-p">
+          <div class="mini-stats" id="miniStats"></div>
+          <div style="margin-top:18px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Rating</div>
+            <div class="star-row">
+              <div>
+                <div class="rating-num" id="ratingNum">–</div>
+                <div class="rating-label">out of 5.0</div>
+              </div>
+              <div class="stars" id="starsEl"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card full-col">
+        <div class="card-head">
+          <div class="card-head-title"><i class="bi bi-clipboard2-data-fill"></i> Request History</div>
+          <span style="font-size:12px;color:var(--text-muted);" id="reqCount"></span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="req-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Service</th>
+                <th>Worker</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="reqTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-title"><i class="bi bi-clock-history"></i> Recent Activity</div>
+        </div>
+        <div class="card-body-p">
+          <ul class="timeline" id="timeline"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: var(--radius); border: 1px solid var(--border);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+        <h5 class="modal-title" id="reportModalLabel" style="font-family:'Sora',sans-serif; font-weight:700; font-size:16px;">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Report User Account
+        </h5>
+        <button type="button" class="btn-close" data-bs-shadow="none" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="reportForm" onsubmit="submitReport(event)">
+        <div class="modal-body" style="padding: 24px;">
+          <div class="mb-3">
+            <label class="form-label style-label" style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Reason for Report</label>
+            <select class="form-select" id="reportReason" required style="font-size:13px; border-radius:10px;">
+              <option value="" selected disabled>Select a reason...</option>
+              <option value="Fake Account / Profile Details">Fake Account / Profile Details</option>
+              <option value="Fraudulent Payment Activities">Fraudulent Payment Activities</option>
+              <option value="Abusive Behavior towards Worker">Abusive Behavior towards Worker</option>
+              <option value="Frequent Cancellations">Frequent Cancellations</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Additional Details</label>
+            <textarea class="form-control" id="reportDetails" rows="4" required style="font-size:13px; border-radius:10px;" placeholder="Provide specific timestamps, worker interactions or reasons..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid var(--border);">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-size:13px; border-radius:10px;">Cancel</button>
+          <button type="submit" class="btn text-white" style="background:var(--danger); font-size:13px; border-radius:10px; font-weight:600; border: none;">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Theme, Sidebar and Topbar Logic
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById('overlay');
+  const sidebar = document.getElementById('sidebar');
+  const hbg = document.getElementById('hbg');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const tbDate = document.getElementById('tbDate');
+
+  // Set Topbar Date
+  if (tbDate) {
+    tbDate.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+
+ // ═══════════════════════════════════════════════════
+//  UNIFIED REAL-TIME THEME WORKSPACE SYNCHRONIZATION
+// ═══════════════════════════════════════════════════
+
+// 1. Immediate Theme Application (Prevents White Flash on Load)
+const savedTheme = localStorage.getItem('hunarmand_theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+// 2. Initialize Toggle Button Listeners once the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggleBtn = document.getElementById('themeToggleBtn') || document.querySelector('.theme-toggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      let currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.classList.add('theme-transition');
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('hunarmand_theme', newTheme);
+      
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transition');
+      }, 450);
+    });
+  }
+});
+
+// 3. Real-Time Multi-Tab Sync Listener
+window.addEventListener('storage', (e) => {
+  if (e.key === 'hunarmand_theme') {
+    let newTheme = e.newValue || 'light';
+    document.documentElement.classList.add('theme-transition');
+    document.documentElement.setAttribute('data-theme', newTheme);
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 450);
+  }
+});
+
+  // Sidebar controls
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    hbg.classList.add('open');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    hbg.classList.remove('open');
+  }
+
+  hbg.addEventListener('click', () => {
+    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  
+  overlay.addEventListener('click', closeSidebar);
+});
+
+// Profile Logic
+const avatarColors = ['#2a7d4f','#1a73e8','#e67e22','#9b59b6','#c0392b','#16a085','#d35400','#2980b9'];
+function getColor(id){ return avatarColors[id % avatarColors.length]; }
+function getInitials(name){ return name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2); }
+
+const sampleRequests = [
+  { service:'Plumbing Fix',      worker:'Ahmed Raza',   date:'15 May 2026', amount:'Rs 1,800', status:'done' },
+  { service:'Electrical Repair', worker:'Yasir Khan',   date:'02 May 2026', amount:'Rs 2,500', status:'done' },
+  { service:'AC Service',        worker:'Tariq Mahmood',date:'22 Apr 2026', amount:'Rs 3,200', status:'pending' },
+  { service:'Painting',          worker:'Faisal Qureshi',date:'10 Apr 2026',amount:'Rs 5,000', status:'done' },
+  { service:'Carpentry',         worker:'Bilal Shah',   date:'01 Apr 2026', amount:'Rs 1,200', status:'cancel' },
+];
+
+const sampleTimeline = [
+  { icon:'bi-person-check-fill', text:'Account created', time:'12 July 2025 – 10:24 AM' },
+  { icon:'bi-telephone-fill',    text:'Phone number verified', time:'12 July 2025 – 10:26 AM' },
+  { icon:'bi-clipboard2-check-fill',text:'First service request placed', time:'14 July 2025 – 02:15 PM' },
+  { icon:'bi-star-fill',         text:'Left a 5-star review', time:'20 July 2025 – 06:40 PM' },
+  { icon:'bi-arrow-repeat',      text:'Profile info updated', time:'05 Sep 2025 – 11:00 AM' },
+];
+
+let currentUser = null;
+let allUsers = [];
+
+$(document).ready(function(){
+  const id  = parseInt(localStorage.getItem('selectedUserId') || '1');
+  const raw = localStorage.getItem('allUsers');
+  allUsers = raw ? JSON.parse(raw) : [];
+  currentUser = allUsers.find(x => x.id === id);
+
+  if(!currentUser){ 
+      $('#mainContent .page-body').html('<p style="padding:40px;color:var(--danger);">User not found. <a href="users.html">Go back</a></p>'); 
+      return; 
+  }
+
+  renderProfileData();
+
+  // Export Profile Data Event
+  $('#exportBtnTop').on('click', function() {
+    if (!currentUser) return;
+    const csv = `Name,Email,Phone,City,Status,Requests\n"${currentUser.name}","${currentUser.email}","${currentUser.phone}","${currentUser.city}","${currentUser.status}","${currentUser.requests}"`;
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Profile_${currentUser.name.replace(/\s+/g, '_')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Profile data exported as CSV!');
+  });
+});
+
+function renderProfileData() {
+  const u = currentUser;
+  $('#breadName').text(u.name);
+  $('#topbarTitle').text(u.name + " - Profile");
+  $('#heroAvatar').css('background', getColor(u.id));
+  $('#heroInitials').text(getInitials(u.name));
+  $('#heroName').text(u.name);
+  $('#heroEmail').text(u.email);
+  $('#heroCity').text(u.city);
+  
+  // Dynamic status color handling
+  const dotColor = {active: '#2a7d4f', inactive:'#e03131', pending:'#f08c00', blocked:'#e03131'};
+  $('#heroDot').css('background', dotColor[u.status] || '#ccc');
+  
+  const sLabel = u.status.charAt(0).toUpperCase()+u.status.slice(1);
+  $('#heroStatus').attr('class', 'hero-tag tag-status ' + u.status)
+                  .html(`<i class="bi bi-circle-fill" style="font-size:7px;"></i> ${sLabel}`);
+
+  /* Personal Info Table */
+  const rows = [
+    ['Full Name', u.name],
+    ['Email', u.email],
+    ['Phone', u.phone],
+    ['City', u.city],
+    ['Gender', u.gender ? (u.gender.charAt(0).toUpperCase()+u.gender.slice(1)) : '–'],
+    ['Joined', u.joined],
+    ['Status', sLabel],
+    ['User ID', '#USR-' + String(u.id).padStart(4,'0')],
+  ];
+  $('#personalInfo').html(rows.map(([l,v])=>`<div class="info-row"><div class="info-label">${l}</div><div class="info-val">${v}</div></div>`).join(''));
+
+  /* Mini stats */
+  const spentAmt = u.requests * 1850;
+  $('#miniStats').html(`
+    <div class="mini-stat"><div class="val">${u.requests}</div><div class="lbl">Total Requests</div></div>
+    <div class="mini-stat"><div class="val">Rs ${spentAmt.toLocaleString()}</div><div class="lbl">Total Spent</div></div>
+    <div class="mini-stat"><div class="val">${Math.max(0,u.requests-2)}</div><div class="lbl">Completed</div></div>
+    <div class="mini-stat"><div class="val">${Math.min(2,u.requests)}</div><div class="lbl">In Progress</div></div>
+  `);
+
+  /* Rating */
+  $('#ratingNum').text((u.rating || 0).toFixed(1));
+  const full = Math.round(u.rating || 0);
+  $('#starsEl').text('★'.repeat(full) + '☆'.repeat(5-full));
+
+  /* Request history */
+  $('#reqCount').text(u.requests + ' total');
+  const reqRows = sampleRequests.slice(0, Math.min(u.requests, 5));
+  const reqHtml = reqRows.map((r,i)=>`
+    <tr>
+      <td style="font-weight:600;color:var(--text-main);">#${i+1}</td>
+      <td style="font-weight:500;color:var(--text-main);">${r.service}</td>
+      <td>${r.worker}</td>
+      <td>${r.date}</td>
+      <td style="font-weight:600;color:var(--primary);">${r.amount}</td>
+      <td><span class="badge-${r.status}">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span></td>
+    </tr>`).join('');
+  $('#reqTable').html(reqRows.length ? reqHtml : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">No requests yet</td></tr>');
+
+  /* Timeline */
+  $('#timeline').html(sampleTimeline.map(t=>`<li><div class="tl-icon"><i class="bi ${t.icon}"></i></div><div class="tl-content"><div class="tl-title">${t.text}</div><div class="tl-time">${t.time}</div></div></li>`).join(''));
+
+  /* Setup Block Button State */
+  if(u.status === 'blocked') {
+    $('body').addClass('user-blocked');
+    $('#blockBtn').attr('class', 'btn-hero success-toggle').html('<i class="bi bi-check-circle"></i> Unblock');
+  } else {
+    $('body').removeClass('user-blocked');
+    $('#blockBtn').attr('class', 'btn-hero danger-toggle').html('<i class="bi bi-slash-circle"></i> Block');
+  }
+}
+
+function toggleBlock(){
+  if (!currentUser) return;
+
+  if (currentUser.status !== 'blocked') {
+    localStorage.setItem(`preBlockStatus_${currentUser.id}`, currentUser.status);
+    currentUser.status = 'blocked';
+    showToast('User has been blocked.');
+  } else {
+    const oldStatus = localStorage.getItem(`preBlockStatus_${currentUser.id}`) || 'active';
+    currentUser.status = oldStatus;
+    showToast('User has been unblocked.');
+  }
+
+  const index = allUsers.findIndex(x => x.id === currentUser.id);
+  if(index !== -1) {
+    allUsers[index] = currentUser;
+    localStorage.setItem('allUsers', JSON.stringify(allUsers));
+  }
+
+  renderProfileData();
+}
+
+function submitReport(e) {
+  e.preventDefault();
+  const reason = $('#reportReason').val();
+  const details = $('#reportDetails').val();
+  
+  const reportPayload = {
+    userId: currentUser.id,
+    userName: currentUser.name,
+    reason: reason,
+    details: details,
+    timestamp: new Date().toISOString()
+  };
+  
+  const savedReports = JSON.parse(localStorage.getItem('adminReports') || '[]');
+  savedReports.push(reportPayload);
+  localStorage.setItem('adminReports', JSON.stringify(savedReports));
+
+  $('#reportForm')[0].reset();
+  bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+  showToast('Report submitted successfully!');
+}
+
+function showToast(msg){
+  const $t = $(`<div class="toast-msg"><i class="bi bi-check-circle-fill" style="color:var(--accent)"></i>${msg}</div>`);
+  $('#toastContainer').append($t);
+  setTimeout(()=>$t.fadeOut(400,()=>$t.remove()),3000);
+}
+
+function logout(){ window.location.href = 'index.html'; }
+</script>
+</body>
+</html>

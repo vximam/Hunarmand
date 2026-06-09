@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hunarmand Admin — Executive Dashboard</title>
+<meta name="description" content="Hunarmand Admin System — Reports, Workers, Users, Analytics Dashboard"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ── ROOT TOKENS (Merged from Users & Dashboard) ── */
+:root {
+  /* Main App Colors */
+  --primary:       #2a7d4f;
+  --primary-dark:  #1d5c38;
+  --primary-light: #e6f4ed;
+  --primary-mid:   #c4e4d2;
+  --accent:        #34d07c;
+  --bg:            #f0f7f3;
+  --card-bg:       #ffffff;
+  --text-main:     #1a2e25;
+  --text-muted:    #6b8f7a;
+  --text-light:    #9db8a8;
+  --border:        #d4ead9;
+  --danger:        #e03131;
+  --warning:       #f08c00;
+  --radius:        14px;
+  --shadow:        0 2px 16px rgba(42,125,79,.10);
+  --shadow-lg:     0 8px 32px rgba(42,125,79,.14);
+  
+  /* Sidebar & Topbar Variables */
+  --g1: #1b5e37; --g2: #134228; --g3: #246843; --g4: #2e7d52; --g5: #3a9460;
+  --mint: #e8f5ed; --mint2: #d4ecde; --mint3: #c2e3d0;
+  --white: #fff; --near: #f5fbf7;
+  --ink: #0b1a10; --body: #1a2d1f; --faint: #8ca898;
+  --bdr: rgba(197, 222, 206, .55); --bdr2: rgba(197, 222, 206, .3);
+  --red: #ef4444; --red-bg: #fef2f2; --red-bdr: #fecaca;
+  --amber:#f59e0b; --amber-bg:#fffbeb; --amber-bdr:#fde68a;
+  
+  --muted: var(--text-muted); 
+  
+  --topbar-bg: rgba(245, 251, 247, 0.92);
+  --sidebar: 260px;
+  --hdr: 64px;
+  --e1: cubic-bezier(.4, 0, .2, 1);
+  --e2: cubic-bezier(.22, 1, .36, 1);
+  --e3: cubic-bezier(.34, 1.56, .64, 1);
+  --fd: 'Sora', sans-serif; 
+  --fi: 'Inter', sans-serif;
+  --overlay: rgba(11, 26, 16, .4);
+
+  /* Dashboard Specific */
+  --shadow-soft: 0 2px 12px rgba(27,94,55,0.03);
+  --shadow-deep: 0 8px 24px rgba(27,94,55,0.08);
+  --emerald-accent: #10b981;
+  --transition-smooth: all 0.2s ease;
+  --transition-spring: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ── DARK MODE OVERRIDES ── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1419;
+  --card-bg: #1a222c;
+  --text-main: #ecfdf3;
+  --text-muted: #8ca898;
+  --text-light: #56685c;
+  --border: rgba(255, 255, 255, 0.09);
+  --primary-light: rgba(42, 125, 79, 0.2);
+  
+  --g1: #6ee7a8; --g2: #4ade80; --g3: #5ecf8f; --g4: #86efac; --g5: #34d399;
+  --mint: rgba(110, 231, 168, .07); --mint2: rgba(110, 231, 168, .11); --mint3: rgba(110, 231, 168, .16);
+  --white: #1a222c; --near: #0f1419;
+  --ink: #ecfdf3; --body: #b8c9be; --faint: #56685c;
+  --bdr: rgba(255, 255, 255, .09); --bdr2: rgba(255, 255, 255, .05);
+  --red: #f87171; --red-bg: rgba(248, 113, 113, .12); --red-bdr: rgba(248, 113, 113, .28);
+  --amber: #fbbf24; --amber-bg: rgba(251, 191, 36, 0.1); --amber-bdr: rgba(251, 191, 36, 0.2);
+  
+  --muted: var(--text-muted);
+  
+  --topbar-bg: rgba(15, 20, 25, .82);
+  --overlay: rgba(0, 0, 0, .55);
+  --shadow: 0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-soft: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-deep: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+html.theme-transition, html.theme-transition *, html.theme-transition *::before, html.theme-transition *::after {
+  transition: background-color .4s var(--e1), border-color .4s var(--e1), color .25s var(--e1), box-shadow .4s var(--e1), fill .25s var(--e1), stroke .25s var(--e1) !important;
+}
+
+[data-theme="dark"] body {
+  background: radial-gradient(ellipse 120% 80% at 50% -30%, rgba(46, 125, 82, .18), transparent 55%),
+              radial-gradient(ellipse 60% 40% at 100% 0%, rgba(52, 211, 153, .06), transparent 50%),
+              var(--bg);
+}
+
+[data-theme="dark"] .sidebar { background: linear-gradient(180deg, #141a22 0%, #10151b 100%); box-shadow: inset -1px 0 0 var(--bdr), 4px 0 24px rgba(0,0,0,.2); }
+[data-theme="dark"] .sector-progress-track { background: #1e2f23; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg); color: var(--text-main);
+  min-height: 100vh; display: flex;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+button { font-family: var(--fi); border: none; outline: none; background: none; }
+
+/* ── SIDEBAR SYSTEM ── */
+.sidebar {
+  width: var(--sidebar); min-height: 100vh; background: var(--white);
+  border-right: 1px solid var(--bdr); display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 1050;
+  transition: transform .3s var(--e2), box-shadow .3s;
+  opacity: 0; animation: sideIn .5s var(--e2) .2s forwards;
+}
+@keyframes sideIn { to { opacity: 1; } }
+
+.sidebar-top { padding: 1.5rem 1.3rem 1rem; border-bottom: 1px solid var(--bdr2); }
+.brand-name { font-family: var(--fd); font-size: 1.2rem; font-weight: 800; color: var(--g1); letter-spacing: -.04em; line-height: 1.1; }
+.brand-sub { font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: .1rem; }
+.brand-badge { display: inline-flex; align-items: center; gap: .3rem; margin-top: .5rem; font-size: .6rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--g1); background: var(--mint); border: 1px solid var(--bdr); padding: .16rem .55rem; border-radius: 100px; }
+.brand-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--g3); animation: sonar 2s ease-in-out infinite; }
+@keyframes sonar { 0% { box-shadow: 0 0 0 0 rgba(46,125,82,.45); } 60% { box-shadow: 0 0 0 7px rgba(46,125,82,0); } 100% { box-shadow: 0 0 0 0 rgba(46,125,82,0); } }
+
+.sidebar-nav { flex: 1; padding: .8rem .7rem; overflow-y: auto; font-family: var(--fi); }
+.nav-lbl { font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding: .5rem .55rem .35rem; margin-top: .3rem; }
+.nav-item {
+  display: flex; align-items: center; gap: .7rem; text-decoration: none;
+  padding: .62rem .75rem; border-radius: 10px;
+  font-size: .845rem; font-weight: 500; color: var(--body);
+  cursor: pointer; position: relative; margin-bottom: .08rem;
+  transition: background .2s, color .2s, transform .18s var(--e3); user-select: none;
+}
+.nav-item:hover { background: var(--mint); color: var(--g1); transform: translateX(2px); }
+.nav-item.active { background: var(--mint); color: var(--g1); font-weight: 600; }
+.nav-item.active::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px; border-radius: 0 3px 3px 0; background: var(--g1); }
+.ni-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .2s, transform .25s var(--e3); }
+.nav-item:hover .ni-icon, .nav-item.active .ni-icon { background: var(--mint2); }
+.nav-item.active:hover .ni-icon { transform: scale(1.1); }
+.ni-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nav-badge { margin-left: auto; font-size: .58rem; font-weight: 700; background: var(--red); color: #fff; border-radius: 100px; padding: .1rem .4rem; min-width: 18px; text-align: center; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .65; } }
+
+.sidebar-bot { padding: .8rem .7rem; border-top: 1px solid var(--bdr2); font-family: var(--fi); }
+.profile-chip { display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border-radius: 12px; background: var(--near); border: 1px solid var(--bdr); cursor: pointer; transition: background .2s, border-color .2s, transform .2s var(--e3); }
+.profile-chip:hover { background: var(--mint); border-color: var(--mint3); transform: translateY(-1px); }
+.p-av { width: 34px; height: 34px; border-radius: 50%; background: var(--g1); display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 8px rgba(27,94,55,.28); }
+.p-name { font-size: .8rem; font-weight: 600; color: var(--ink); }
+.p-role { font-size: .65rem; color: var(--muted); }
+.logout-btn { display: flex; align-items: center; gap: .55rem; width: 100%; margin-top: .5rem; padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(239,68,68,.22); background: transparent; cursor: pointer; font-size: .8rem; font-weight: 500; color: var(--red); transition: background .2s, border-color .2s, transform .18s var(--e3); }
+.logout-btn:hover { background: var(--red-bg); border-color: var(--red-bdr); transform: translateX(2px); }
+.logout-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.overlay { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 1040; opacity: 0; pointer-events: none; transition: opacity .3s var(--e1); }
+.overlay.show { opacity: 1; pointer-events: all; display: block; }
+
+/* ── TOPBAR ── */
+.topbar {
+  height: var(--hdr); background: var(--topbar-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--bdr2); display: flex; align-items: center;
+  justify-content: space-between; padding: 0 1.8rem; gap: 1rem;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-l { display: flex; align-items: center; gap: .75rem; }
+.hbg { display: none; flex-direction: column; gap: 4px; cursor: pointer; background: none; border: none; padding: 5px; }
+.hbg span { display: block; height: 1.8px; width: 20px; background: var(--g1); border-radius: 2px; transition: transform .3s var(--e2), opacity .3s; }
+.hbg span:nth-child(2) { width: 14px; }
+.hbg.open span:nth-child(1) { transform: translateY(5.8px) rotate(45deg); width: 20px; }
+.hbg.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hbg.open span:nth-child(3) { transform: translateY(-5.8px) rotate(-45deg); width: 20px; }
+
+.breadcrumb { font-size: .7rem; color: var(--faint); display: flex; align-items: center; gap: .3rem; font-family: var(--fi); }
+.breadcrumb b { color: var(--g1); font-weight: 600; }
+.topbar-ttl { font-family: var(--fd); font-size: 1rem; font-weight: 700; color: var(--ink); letter-spacing: -.025em; margin-top: .05rem; }
+
+.topbar-r { display: flex; align-items: center; gap: .65rem; }
+.tb-date { font-size: .75rem; color: var(--muted); white-space: nowrap; font-family: var(--fi); font-weight: 500; }
+
+.tb-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--bdr); background: var(--card-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: background .2s, border-color .2s, transform .2s var(--e3); color: var(--muted); }
+.tb-btn:hover { background: var(--mint); border-color: var(--mint3); transform: scale(1.06); color: var(--g1); }
+.tb-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tb-btn .ico-moon { display: none; }
+[data-theme="dark"] .tb-btn .ico-sun { display: none; }
+[data-theme="dark"] .tb-btn .ico-moon { display: block; }
+
+.mob-close { display: none; background: none; border: none; cursor: pointer; padding: 5px; color: var(--muted); }
+
+/* ── MAIN CONTENT ── */
+.main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; margin-left: var(--sidebar); transition: margin-left .3s ease; }
+.page-body { padding: 1.6rem 1.8rem 3rem; flex: 1; display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── QUICK ACTIONS BAR ── */
+.quick-actions-bar {
+  display: flex; align-items: center; gap: .55rem;
+  overflow-x: auto; padding-bottom: .1rem;
+  scrollbar-width: none;
+}
+.quick-actions-bar::-webkit-scrollbar { display: none; }
+.quick-actions-label { font-family: var(--fi); font-size: .6rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; margin-right: .25rem; flex-shrink: 0; }
+.qa-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .4rem .75rem; border-radius: 8px; font-size: .75rem; font-weight: 600; font-family: var(--fi);
+  cursor: pointer; transition: all .2s var(--e2); white-space: nowrap; flex-shrink: 0;
+  background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
+  box-shadow: var(--shadow-soft);
+}
+.qa-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-deep); }
+.qa-btn i { font-size: .7rem; }
+.qa-btn--primary { background: var(--g1); color: #fff; border-color: var(--g1); }
+.qa-btn--primary:hover { background: var(--g2); border-color: var(--g2); }
+.qa-btn--success { background: var(--mint); color: var(--g1); border-color: var(--mint3); }
+.qa-btn--success:hover { background: var(--mint2); border-color: var(--g4); }
+.qa-btn--amber { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-bdr); }
+.qa-btn--amber:hover { background: rgba(251, 191, 36, 0.2); border-color: var(--amber); }
+.qa-btn--outline { background: transparent; color: var(--muted); border-color: var(--border); }
+.qa-btn--outline:hover { color: var(--g1); border-color: var(--mint3); background: var(--mint); }
+.qa-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+
+/* ── METRICS GRID ── */
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.metric-card { background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; padding: 14px; transition: var(--transition-spring); position: relative; overflow: hidden; box-shadow: var(--shadow-soft); }
+.metric-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 3px; background: var(--g1); transition: width .3s ease; }
+.metric-card:hover { transform: translateY(-3px); border-color: rgba(16,185,129,.2); box-shadow: var(--shadow-deep); }
+.metric-card:hover::after { width: 100%; }
+.metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.metric-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--mint); color: var(--g1); display: flex; align-items: center; justify-content: center; font-size: .9rem; border: 1px solid var(--mint2); }
+.metric-badge { font-family: var(--fi); font-size: .65rem; font-weight: 600; color: var(--g1); background: var(--mint); padding: 2px 6px; border-radius: 100px; }
+.metric-badge.danger { color: var(--red); background: var(--red-bg); }
+.metric-label { font-family: var(--fi); font-size: .75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
+.metric-value { font-family: var(--fd); font-size: 1.4rem; font-weight: 700; color: var(--text-main); line-height: 1.1; }
+
+/* ── DASHBOARD 2-COL ── */
+.dashboard-details-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.dashboard-column { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── PANELS BASE ── */
+.approvals-panel, .activity-feed-panel, .verification-panel, .sectors-demand-panel, .health-panel {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem; box-shadow: var(--shadow-soft);
+}
+.approvals-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem; }
+.approvals-panel-header h2 { font-family: var(--fd); font-size: .95rem; font-weight: 700; color: var(--text-main); margin: 0; }
+.view-all-link { font-family: var(--fi); color: var(--g1); font-size: .75rem; font-weight: 700; display: inline-flex; align-items: center; gap: .25rem; transition: var(--transition-smooth); }
+.view-all-link:hover { color: var(--g4); transform: translateX(2px); }
+.approvals-list, .verification-list { display: flex; flex-direction: column; gap: .6rem; }
+.approval-row-item, .verification-card-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: .6rem .8rem; box-shadow: 0 1px 4px rgba(11,26,16,.01); transition: all .2s ease; }
+.approval-row-item:hover, .verification-card-row:hover { background-color: var(--mint); border-color: var(--mint3); transform: translateX(1px); }
+.worker-profile-box { display: flex; align-items: center; gap: .65rem; }
+.worker-img-avatar { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 6px rgba(11,26,16,.04); }
+.worker-meta-info h4 { font-family: var(--fd); font-size: .8rem; font-weight: 700; color: var(--text-main); margin: 0 0 .1rem 0; }
+.worker-meta-info p { font-family: var(--fi); font-size: .7rem; color: var(--text-muted); margin: 0; }
+.approval-check-action { width: 26px; height: 26px; border-radius: 6px; background: var(--mint); color: var(--g1); display: flex; align-items: center; justify-content: center; font-size: .75rem; transition: var(--transition-smooth); cursor: pointer; }
+.approval-check-action:hover { background: var(--g1); color: #fff; }
+
+/* ── FILTER TABS ── */
+.filter-tabs { display: flex; gap: .3rem; margin-bottom: .75rem; }
+.ftab { font-family: var(--fi); padding: .25rem .65rem; border-radius: 100px; font-size: .68rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); color: var(--text-muted); background: transparent; transition: all .2s; }
+.ftab:hover { background: var(--mint); color: var(--g1); border-color: var(--mint3); }
+.ftab.active { background: var(--g1); color: #fff; border-color: var(--g1); }
+
+/* ── ACTIVITY TIMELINE ── */
+.activity-timeline-wrapper { position: relative; padding-left: 1.2rem; margin-top: .25rem; }
+.activity-timeline-wrapper::before { content: ''; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 2px; background: rgba(19,185,129,.15); }
+.activity-feed-item { position: relative; margin-bottom: .6rem; }
+.activity-feed-item:last-child { margin-bottom: 0; }
+.activity-feed-node { position: absolute; left: -1.2rem; top: 14px; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; background: var(--emerald-accent); border: 2px solid var(--card-bg); box-shadow: 0 0 0 3px var(--mint2); z-index: 2; transition: var(--transition-spring); }
+.activity-feed-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: .55rem .75rem; box-shadow: 0 1px 4px rgba(11,26,16,.01); transition: var(--transition-spring); cursor: pointer; }
+.activity-feed-card h4 { font-family: var(--fi); font-size: .78rem; font-weight: 600; color: var(--text-main); margin: 0 0 .15rem 0; line-height: 1.3; }
+.activity-feed-card p { font-family: var(--fi); font-size: .68rem; color: var(--text-muted); margin: 0; font-weight: 500; }
+.activity-feed-item:hover .activity-feed-card { border-color: rgba(16,185,129,.35); transform: translateX(2px); box-shadow: 0 4px 12px rgba(27,94,55,.04); }
+.activity-feed-item:hover .activity-feed-node { background: var(--g1); box-shadow: 0 0 0 4px var(--mint); }
+.activity-feed-item.hidden-feed { display: none; }
+
+/* ── LOAD MORE ── */
+.load-more-btn { font-family: var(--fi); display: flex; align-items: center; justify-content: center; gap: .4rem; width: 100%; margin-top: .75rem; padding: .45rem; border-radius: 8px; font-size: .75rem; font-weight: 600; color: var(--g1); border: 1px dashed var(--border); background: transparent; cursor: pointer; transition: all .2s; }
+.load-more-btn:hover { background: var(--mint); border-style: solid; border-color: var(--mint3); }
+
+/* ── REVIEW ID BUTTON ── */
+.review-id-action-btn { background: var(--emerald-accent); color: #fff; font-family: var(--fi); font-size: .72rem; font-weight: 700; padding: .35rem .8rem; border-radius: 6px; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(16,185,129,.1); transition: var(--transition-smooth); }
+.review-id-action-btn:hover { background: var(--g1); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(27,94,55,.15); }
+
+/* ── SECTORS PANEL ── */
+.sectors-wrapper { display: flex; flex-direction: column; gap: .65rem; }
+.sector-demand-item { background: var(--bg); padding: .5rem .7rem; border-radius: 8px; border: 1px solid var(--border); }
+.sector-meta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .3rem; font-family: var(--fi); }
+.sector-title { font-size: .78rem; font-weight: 700; color: var(--text-main); }
+.sector-percentage { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+.sector-progress-track { width: 100%; height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; position: relative; }
+.sector-progress-fill { height: 100%; background: var(--emerald-accent); border-radius: 100px; transition: width 1s cubic-bezier(.34,1.56,.64,1); }
+.sector-demand-item:hover .sector-progress-fill { background: var(--g1); }
+
+/* ── PLATFORM HEALTH PANEL ── */
+.health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .25rem; font-family: var(--fi); }
+.health-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .65rem; display: flex; align-items: center; gap: .5rem; transition: all .2s; }
+.health-item:hover { border-color: var(--mint3); background: var(--mint); }
+.health-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.health-dot.online { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+.health-dot.warning { background: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.2); }
+.health-dot.offline { background: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
+.health-label { font-size: .72rem; font-weight: 600; color: var(--text-main); line-height: 1.1; }
+.health-status-txt { font-size: .62rem; color: var(--text-muted); }
+.health-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .65rem; padding-top: .5rem; border-top: 1px solid var(--border); font-family: var(--fi); }
+.health-last-check { font-size: .65rem; color: var(--text-muted); }
+.health-refresh-btn { display: inline-flex; align-items: center; gap: .25rem; font-size: .65rem; font-weight: 600; color: var(--g1); cursor: pointer; padding: .2rem .45rem; border-radius: 5px; border: 1px solid var(--mint3); background: transparent; transition: all .2s; }
+.health-refresh-btn:hover { background: var(--mint); }
+
+/* ── CUSTOM MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: var(--overlay-bg, rgba(0,0,0,0.6)); backdrop-filter: blur(4px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .25s var(--e1); font-family: var(--fi); }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box { background: var(--card-bg); border-radius: 16px; padding: 1.5rem; max-width: 420px; width: 100%; box-shadow: 0 24px 64px rgba(11,26,16,.18); border: 1px solid var(--border); transform: scale(.94) translateY(12px); transition: transform .3s var(--e2); position: relative; }
+.modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+.modal-icon-wrap { width: 44px; height: 44px; border-radius: 12px; background: var(--mint); border: 1px solid var(--mint3); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--g1); margin-bottom: .85rem; }
+.modal-icon-wrap.danger { background: var(--red-bg); border-color: var(--red-bdr); color: var(--red); }
+.modal-icon-wrap.amber { background: var(--amber-bg); border-color: var(--amber-bdr); color: var(--amber); }
+.modal-title-txt { font-family: var(--fd); font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: .35rem; }
+.modal-body-txt { font-size: .8rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1.1rem; }
+.modal-close-x { position: absolute; top: .85rem; right: .85rem; width: 26px; height: 26px; border-radius: 6px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .75rem; color: var(--text-muted); transition: all .2s; }
+.modal-close-x:hover { background: var(--red-bg); color: var(--red); border-color: var(--red-bdr); }
+.modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+.btn-modal-cancel { padding: .45rem .95rem; border-radius: 8px; font-size: .78rem; font-weight: 600; cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-muted); transition: all .2s; }
+.btn-modal-cancel:hover { background: var(--bg); border-color: var(--mint3); }
+.btn-modal-confirm { padding: .45rem .95rem; border-radius: 8px; font-size: .78rem; font-weight: 700; cursor: pointer; background: var(--g1); border: 1px solid var(--g1); color: #fff; transition: all .2s; }
+.btn-modal-confirm:hover { background: var(--g2); box-shadow: 0 3px 10px rgba(27,94,55,.25); }
+.btn-modal-confirm.danger { background: var(--red); border-color: var(--red); }
+.btn-modal-confirm.danger:hover { background: #dc2626; }
+.modal-form { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1rem; }
+.modal-field { display: flex; flex-direction: column; gap: .2rem; }
+.modal-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.modal-label { font-size: .72rem; font-weight: 600; color: var(--text-main); }
+.modal-input, .modal-select { width: 100%; padding: .42rem .65rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: .78rem; font-family: var(--fi); color: var(--text-main); transition: all .2s; outline: none; }
+.modal-input:focus, .modal-select:focus { border-color: var(--g3); box-shadow: 0 0 0 3px rgba(36,104,67,.12); }
+.modal-textarea { resize: none; min-height: 72px; }
+
+/* ── SEARCH OVERLAY ── */
+.search-overlay { position: fixed; inset: 0; background: var(--overlay-bg, rgba(0,0,0,0.6)); backdrop-filter: blur(6px); z-index: 8000; display: flex; align-items: flex-start; justify-content: center; padding-top: 6rem; opacity: 0; pointer-events: none; transition: opacity .25s; font-family: var(--fi); }
+.search-overlay.open { opacity: 1; pointer-events: all; }
+.search-box-inner { background: var(--card-bg); border-radius: 14px; width: 100%; max-width: 520px; padding: 1rem; box-shadow: 0 20px 60px rgba(11,26,16,.2); border: 1px solid var(--border); transform: translateY(-16px); transition: transform .3s var(--e2); }
+.search-overlay.open .search-box-inner { transform: translateY(0); }
+.search-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .75rem; }
+.search-input { flex: 1; padding: .5rem .8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: .85rem; font-family: var(--fi); color: var(--text-main); outline: none; transition: all .2s; }
+.search-input:focus { border-color: var(--g3); box-shadow: 0 0 0 3px rgba(36,104,67,.12); }
+.search-close-btn { width: 32px; height: 32px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .8rem; color: var(--text-muted); transition: all .2s; flex-shrink: 0; }
+.search-close-btn:hover { background: var(--red-bg); color: var(--red); }
+.search-results-wrap { display: flex; flex-direction: column; gap: .3rem; max-height: 280px; overflow-y: auto; }
+.search-result-item { display: flex; align-items: center; gap: .65rem; padding: .55rem .65rem; border-radius: 8px; cursor: pointer; transition: all .15s; border: 1px solid transparent; }
+.search-result-item:hover { background: var(--mint); border-color: var(--mint3); }
+.search-result-avatar { width: 30px; height: 30px; border-radius: 6px; background: var(--mint); border: 1px solid var(--mint3); display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 700; color: var(--g1); flex-shrink: 0; }
+.search-result-name { font-size: .78rem; font-weight: 600; color: var(--text-main); }
+.search-result-sub { font-size: .65rem; color: var(--text-muted); }
+.search-result-tag { margin-left: auto; font-size: .6rem; font-weight: 600; background: var(--mint); color: var(--g1); padding: .1rem .4rem; border-radius: 100px; flex-shrink: 0; }
+.search-empty { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: .78rem; }
+.search-hint { font-size: .65rem; color: var(--text-muted); margin-bottom: .4rem; }
+
+/* ── TOAST ── */
+.custom-toast { position: fixed; bottom: 16px; right: 16px; background: #1a222c; color: #fff; padding: .6rem 1rem; border-radius: 8px; font-size: .75rem; font-weight: 500; font-family: var(--fi); box-shadow: var(--sh3, 0 10px 24px rgba(11,26,16,.08)); z-index: 9999; display: flex; align-items: center; gap: .5rem; transform: translateY(100px); opacity: 0; transition: all .3s var(--e3); }
+.custom-toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 992px) {
+  .sidebar { transform: translateX(-100%); box-shadow: none; }
+  .sidebar.open { transform: translateX(0); box-shadow: 8px 0 40px rgba(11,26,16,.18); }
+  .main-content { margin-left: 0; }
+  .topbar { display: flex; padding: 0 1rem; }
+  .hbg { display: flex; }
+  .mob-close { display: flex !important; }
+  .dashboard-details-row { grid-template-columns: 1fr; }
+  .dashboard-column { display: contents; }
+  .tb-date { display: none; }
+}
+@media (max-width: 768px) {
+  .modal-field-row { grid-template-columns: 1fr; }
+  .health-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card { padding: 10px; }
+  .metric-value { font-size: 1.15rem; }
+  .approvals-panel, .activity-feed-panel, .verification-panel, .sectors-demand-panel, .health-panel { padding: .9rem; }
+  .quick-actions-bar { gap: .4rem; }
+  .qa-btn { padding: .35rem .55rem; font-size: .7rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="brand-name">Hunarmand</div>
+        <div class="brand-sub">Admin</div>
+      </div>
+      <button class="drw-close mob-close" onclick="document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); document.getElementById('hbg').classList.remove('open');" style="display:none;">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <span class="brand-badge"><span class="brand-dot"></span>System Management</span>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Main</div>
+    <a class="nav-item active" href="dashboard.html" data-page="dashboard">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      Dashboard
+    </a>
+    <a class="nav-item" href="workers.html" data-page="workers">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      Workers
+    </a>
+    <a class="nav-item" href="users.html" data-page="users">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      Users
+    </a>
+    
+    <div class="nav-lbl">Management</div>
+    <a class="nav-item" href="reports.html#reports">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      Reports
+    </a>
+    <a class="nav-item" href="reports.html#analytics">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+      Analytics
+    </a>
+    <a class="nav-item" href="reports.html#settings">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      Settings
+    </a>
+  </nav>
+  
+  <div class="sidebar-bot">
+    <div class="profile-chip" onclick="showToast('Viewing Super Administrator Profile Log')">
+      <div class="p-av">AK</div>
+      <div style="flex:1;min-width:0">
+        <div class="p-name">Admin Profile</div>
+        <div class="p-role">Super Administrator</div>
+      </div>
+      <span style="color:var(--faint);font-size:.7rem">›</span>
+    </div>
+    <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <header class="topbar">
+    <div class="topbar-l">
+      <button class="hbg" id="hbg"><span></span><span></span><span></span></button>
+      <div>
+        <div class="breadcrumb" id="breadcrumb"><span>Admin</span> <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg> <b id="breadPage">Dashboard</b></div>
+        <div class="topbar-ttl" id="topbarTitle">Executive Overview</div>
+      </div>
+    </div>
+    <div class="topbar-r">
+      <div class="tb-date" id="tbDate"></div>
+      
+      <button class="tb-btn" title="Global Search" onclick="openSearch()">
+        <i class="bi bi-search"></i>
+      </button>
+
+      <button class="tb-btn" title="Notifications" onclick="clearNotifications()">
+        <i class="bi bi-bell"></i>
+        <span class="notification-badge" id="bellBadge" style="position:absolute; top:-4px; right:-4px; background:var(--danger); color:#fff; font-size:9px; font-weight:bold; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border:2px solid var(--topbar-bg);">1</span>
+      </button>
+
+      <button type="button" class="tb-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle light or dark theme">
+        <svg class="ico-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+    <div class="quick-actions-bar">
+      <span class="quick-actions-label">Quick Actions</span>
+      <button class="qa-btn qa-btn--primary" onclick="openAddWorkerModal()">
+        <i class="fas fa-plus"></i> Add Worker
+      </button>
+      <button class="qa-btn qa-btn--success" onclick="openAddUserModal()">
+        <i class="fas fa-user-plus"></i> Add User
+      </button>
+      <div class="qa-divider"></div>
+      <button class="qa-btn qa-btn--outline" onclick="openGenerateReportModal()">
+        <i class="fas fa-file-chart-column"></i> Generate Report
+      </button>
+      <button class="qa-btn qa-btn--outline" onclick="exportCSVData()">
+        <i class="fas fa-download"></i> Export CSV
+      </button>
+      <div class="qa-divider"></div>
+      <button class="qa-btn qa-btn--amber" onclick="openBroadcastModal()">
+        <i class="fas fa-bullhorn"></i> Broadcast Alert
+      </button>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon"><i class="fas fa-briefcase"></i></div>
+          <span class="metric-badge">+12%</span>
+        </div>
+        <p class="metric-label">Total Workers</p>
+        <p class="metric-value" id="mWorkers">0</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon"><i class="fas fa-handshake"></i></div>
+          <span class="metric-badge">+5%</span>
+        </div>
+        <p class="metric-label">Total Clients</p>
+        <p class="metric-value" id="mClients">0</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon"><i class="fas fa-shopping-bag"></i></div>
+          <span class="metric-badge">+24%</span>
+        </div>
+        <p class="metric-label">Active Orders</p>
+        <p class="metric-value" id="mOrders">0</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon" style="color:var(--red);background:var(--red-bg);border-color:var(--red-bdr);">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <span class="metric-badge danger">Needs Action</span>
+        </div>
+        <p class="metric-label">Pending Verifications</p>
+        <p class="metric-value" id="metricsPendingCount">0</p>
+      </div>
+    </div>
+
+    <div class="dashboard-details-row">
+
+      <div class="dashboard-column">
+
+        <section class="approvals-panel">
+          <div class="approvals-panel-header">
+            <h2>Pending Worker Approvals</h2>
+            <a href="pending-approvals.html" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+          </div>
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="filterApprovals('all',this)">All</button>
+            <button class="ftab" onclick="filterApprovals('plumbing',this)">Plumbing</button>
+            <button class="ftab" onclick="filterApprovals('houseclean',this)">Houseclean</button>
+            <button class="ftab" onclick="filterApprovals('carpentry',this)">Carpentry</button>
+          </div>
+          <div class="approvals-list" id="approvalsList">
+            <div class="approval-row-item" data-cat="plumbing">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" alt="Tariq Mahmood" class="worker-img-avatar">
+                <div class="worker-meta-info">
+                  <h4>Tariq Mahmood</h4>
+                  <p>Plumbing | 0 reviews</p>
+                </div>
+              </div>
+              <div class="approval-check-action" title="Approve Worker" onclick="approveWorker(this,'Tariq Mahmood')">
+                <i class="fas fa-check"></i>
+              </div>
+            </div>
+            <div class="approval-row-item" data-cat="houseclean">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" alt="Ayesha Khan" class="worker-img-avatar">
+                <div class="worker-meta-info">
+                  <h4>Ayesha Khan</h4>
+                  <p>Houseclean | 0 reviews</p>
+                </div>
+              </div>
+              <div class="approval-check-action" title="Approve Worker" onclick="approveWorker(this,'Ayesha Khan')">
+                <i class="fas fa-check"></i>
+              </div>
+            </div>
+            <div class="approval-row-item" data-cat="carpentry">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" alt="Usman Ali" class="worker-img-avatar">
+                <div class="worker-meta-info">
+                  <h4>Usman Ali</h4>
+                  <p>Carpentry | 0 reviews</p>
+                </div>
+              </div>
+              <div class="approval-check-action" title="Approve Worker" onclick="approveWorker(this,'Usman Ali')">
+                <i class="fas fa-check"></i>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="verification-panel">
+          <div class="approvals-panel-header">
+            <h2>CNIC / Identity Verification</h2>
+          </div>
+          <div class="verification-list">
+            <div class="verification-card-row" id="v-row-1">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop" alt="Sajid Ali" class="worker-img-avatar">
+                <div class="worker-meta-info"><h4>Sajid Ali</h4><p>Tailoring Expert</p></div>
+              </div>
+              <button class="review-id-action-btn" onclick="triggerReviewID('v-row-1','Sajid Ali','Tailoring Expert')">Review ID</button>
+            </div>
+            <div class="verification-card-row" id="v-row-2">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&h=150&fit=crop" alt="Haris Raza" class="worker-img-avatar">
+                <div class="worker-meta-info"><h4>Haris Raza</h4><p>AC Technician</p></div>
+              </div>
+              <button class="review-id-action-btn" onclick="triggerReviewID('v-row-2','Haris Raza','AC Technician')">Review ID</button>
+            </div>
+            <div class="verification-card-row" id="v-row-3">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" alt="Zain Ahmed" class="worker-img-avatar">
+                <div class="worker-meta-info"><h4>Zain Ahmed</h4><p>Electrician</p></div>
+              </div>
+              <button class="review-id-action-btn" onclick="triggerReviewID('v-row-3','Zain Ahmed','Electrician')">Review ID</button>
+            </div>
+            <div class="verification-card-row" id="v-row-4">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop" alt="Bilal Hassan" class="worker-img-avatar">
+                <div class="worker-meta-info"><h4>Bilal Hassan</h4><p>Wall Painter</p></div>
+              </div>
+              <button class="review-id-action-btn" onclick="triggerReviewID('v-row-4','Bilal Hassan','Wall Painter')">Review ID</button>
+            </div>
+            <div class="verification-card-row" id="v-row-5">
+              <div class="worker-profile-box">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop" alt="Kamran Khan" class="worker-img-avatar">
+                <div class="worker-meta-info"><h4>Kamran Khan</h4><p>Welding Specialist</p></div>
+              </div>
+              <button class="review-id-action-btn" onclick="triggerReviewID('v-row-5','Kamran Khan','Welding Specialist')">Review ID</button>
+            </div>
+          </div>
+        </section>
+
+      </div><div class="dashboard-column">
+
+        <section class="activity-feed-panel">
+          <div class="approvals-panel-header">
+            <h2>Recent Activity Feed</h2>
+          </div>
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="filterActivity('all',this)">All</button>
+            <button class="ftab" onclick="filterActivity('order',this)">Orders</button>
+            <button class="ftab" onclick="filterActivity('worker',this)">Workers</button>
+            <button class="ftab" onclick="filterActivity('client',this)">Clients</button>
+          </div>
+          <div class="activity-timeline-wrapper" id="activityFeed">
+            <div class="activity-feed-item" data-type="order">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Details for Order #482 configuration log')">
+                <h4>Order #482 completed successfully.</h4><p>2 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item" data-type="client">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Viewing Client profile signup dashboard')">
+                <h4>New client signup: Zeshan S.</h4><p>45 mins ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item" data-type="order">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Opening Lahore spatial mapping profile summary')">
+                <h4>New planning order placed in Lahore.</h4><p>1 hour ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item" data-type="worker">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Opening logs for Operator Bilal verification')">
+                <h4>Worker Bilal verified manually.</h4><p>5 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item hidden-feed" data-type="order">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Order #479 details')">
+                <h4>Order #479 assigned to Usman A.</h4><p>6 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item hidden-feed" data-type="client">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Client Sara signup details')">
+                <h4>New client signup: Sara M.</h4><p>7 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item hidden-feed" data-type="worker">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Worker Kamran profile update')">
+                <h4>Worker Kamran profile updated.</h4><p>8 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-feed-item hidden-feed" data-type="order">
+              <div class="activity-feed-node"></div>
+              <div class="activity-feed-card" onclick="showToast('Order #470 cancelled')">
+                <h4>Order #470 cancelled by client.</h4><p>Yesterday</p>
+              </div>
+            </div>
+          </div>
+          <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreActivity()">
+            <i class="fas fa-chevron-down" style="font-size:.65rem;"></i> Load More Activity
+          </button>
+        </section>
+
+        <section class="sectors-demand-panel">
+          <div class="approvals-panel-header">
+            <h2>High-Demand Job Sectors</h2>
+          </div>
+          <div class="sectors-wrapper">
+            <div class="sector-demand-item">
+              <div class="sector-meta-header">
+                <span class="sector-title">Electrician</span>
+                <span class="sector-percentage">42% Demand</span>
+              </div>
+              <div class="sector-progress-track"><div class="sector-progress-fill" style="width:0%" data-target="42"></div></div>
+            </div>
+            <div class="sector-demand-item">
+              <div class="sector-meta-header">
+                <span class="sector-title">Plumber</span>
+                <span class="sector-percentage">28% Demand</span>
+              </div>
+              <div class="sector-progress-track"><div class="sector-progress-fill" style="width:0%" data-target="28"></div></div>
+            </div>
+            <div class="sector-demand-item">
+              <div class="sector-meta-header">
+                <span class="sector-title">Carpenter</span>
+                <span class="sector-percentage">18% Demand</span>
+              </div>
+              <div class="sector-progress-track"><div class="sector-progress-fill" style="width:0%" data-target="18"></div></div>
+            </div>
+            <div class="sector-demand-item">
+              <div class="sector-meta-header">
+                <span class="sector-title">AC Technician</span>
+                <span class="sector-percentage">9% Demand</span>
+              </div>
+              <div class="sector-progress-track"><div class="sector-progress-fill" style="width:0%" data-target="9"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="health-panel">
+          <div class="approvals-panel-header" style="margin-bottom:.65rem;">
+            <h2>Platform Health</h2>
+            <span style="font-size:.65rem;font-weight:600;color:#22c55e;background:rgba(34,197,94,.1);padding:.15rem .5rem;border-radius:100px;border:1px solid rgba(34,197,94,.25);">
+              <i class="fas fa-circle" style="font-size:.5rem;"></i> All Systems Operational
+            </span>
+          </div>
+          <div class="health-grid">
+            <div class="health-item">
+              <div class="health-dot online" id="h-api"></div>
+              <div><div class="health-label">API Gateway</div><div class="health-status-txt">Operational</div></div>
+            </div>
+            <div class="health-item">
+              <div class="health-dot online" id="h-db"></div>
+              <div><div class="health-label">Database</div><div class="health-status-txt">Online</div></div>
+            </div>
+            <div class="health-item">
+              <div class="health-dot online" id="h-auth"></div>
+              <div><div class="health-label">Auth Service</div><div class="health-status-txt">Operational</div></div>
+            </div>
+            <div class="health-item">
+              <div class="health-dot online" id="h-cdn"></div>
+              <div><div class="health-label">CDN</div><div class="health-status-txt">Online</div></div>
+            </div>
+          </div>
+          <div class="health-footer">
+            <span class="health-last-check" id="healthLastCheck">Last checked: just now</span>
+            <button class="health-refresh-btn" onclick="refreshHealthStatus()">
+              <i class="fas fa-rotate-right"></i> Refresh
+            </button>
+          </div>
+        </section>
+
+      </div></div></div></main>
+
+<div class="modal-overlay" id="customModal" onclick="handleModalOverlayClick(event)">
+  <div class="modal-box" id="modalBox">
+    <button class="modal-close-x" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-icon-wrap" id="modalIcon"><i class="fas fa-check-circle" id="modalIconInner"></i></div>
+    <div class="modal-title-txt" id="modalTitle">Confirm Action</div>
+    <div class="modal-body-txt" id="modalBodyTxt"></div>
+    <div id="modalFormSlot"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" id="modalCancelBtn" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal-confirm" id="modalConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="search-overlay" id="searchOverlay" onclick="handleSearchOverlayClick(event)">
+  <div class="search-box-inner">
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search workers, users, orders..." oninput="performSearch(this.value)" autocomplete="off">
+      <button class="search-close-btn" onclick="closeSearch()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="search-hint" id="searchHint">Start typing to search across the platform...</div>
+    <div class="search-results-wrap" id="searchResults"></div>
+  </div>
+</div>
+
+<div class="custom-toast" id="systemToast">
+  <i class="fas fa-info-circle" style="color:#4ade80;"></i>
+  <span id="toastMessage">Workspace parameters initialized successfully.</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  GLOBAL STATE & INTEGRATION LOGIC
+// ═══════════════════════════════════════════════════
+let pendingCount = 18;
+let modalConfirmCallback = null;
+let healthRefreshTimer = null;
+let activityExpanded = false;
+
+// Theme and Sidebar initialization from Users file
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById('overlay');
+  const sidebar = document.getElementById('sidebar');
+  const hbg = document.getElementById('hbg');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const tbDate = document.getElementById('tbDate');
+
+// ═══════════════════════════════════════════════════
+//  UNIFIED REAL-TIME THEME WORKSPACE SYNCHRONIZATION
+// ═══════════════════════════════════════════════════
+
+// 1. Immediate Theme Application (Prevents White Flash on Load)
+const savedTheme = localStorage.getItem('hunarmand_theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+// 2. Initialize Toggle Button Listeners once the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggleBtn = document.getElementById('themeToggleBtn') || document.querySelector('.theme-toggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      let currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.classList.add('theme-transition');
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('hunarmand_theme', newTheme);
+      
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transition');
+      }, 450);
+    });
+  }
+});
+
+// 3. Real-Time Multi-Tab Sync Listener
+window.addEventListener('storage', (e) => {
+  if (e.key === 'hunarmand_theme') {
+    let newTheme = e.newValue || 'light';
+    document.documentElement.classList.add('theme-transition');
+    document.documentElement.setAttribute('data-theme', newTheme);
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 450);
+  }
+});
+
+  // Sidebar controls
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    hbg.classList.add('open');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    hbg.classList.remove('open');
+  }
+
+  hbg.addEventListener('click', () => {
+    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  
+  overlay.addEventListener('click', closeSidebar);
+
+  // Initialize Dashboard components
+  startDateTime();
+  setTimeout(() => {
+    animateCounters();
+    animateProgressBars();
+  }, 350);
+  scheduleHealthPulse();
+});
+
+// Searchable data catalogue
+const searchData = [
+  {name:'Tariq Mahmood', sub:'Plumbing Worker', tag:'Worker'},
+  {name:'Ayesha Khan',   sub:'Houseclean Worker', tag:'Worker'},
+  {name:'Usman Ali',     sub:'Carpentry Worker',  tag:'Worker'},
+  {name:'Sajid Ali',     sub:'Tailoring Expert',  tag:'Verification'},
+  {name:'Haris Raza',    sub:'AC Technician',     tag:'Verification'},
+  {name:'Zain Ahmed',    sub:'Electrician',       tag:'Verification'},
+  {name:'Bilal Hassan',  sub:'Wall Painter',      tag:'Verification'},
+  {name:'Kamran Khan',   sub:'Welding Specialist',tag:'Verification'},
+  {name:'Zeshan S.',     sub:'Client Account',    tag:'Client'},
+  {name:'Sara M.',       sub:'Client Account',    tag:'Client'},
+  {name:'Order #482',    sub:'Completed',         tag:'Order'},
+  {name:'Order #479',    sub:'Assigned',          tag:'Order'},
+  {name:'Order #470',    sub:'Cancelled',         tag:'Order'},
+  {name:'Reports Module',sub:'Management Panel',  tag:'Page'},
+  {name:'Analytics',     sub:'Platform Statistics',tag:'Page'},
+  {name:'Settings',      sub:'System Configuration',tag:'Page'},
+];
+
+// ═══════════════════════════════════════════════════
+//  LIVE DATE/TIME
+// ═══════════════════════════════════════════════════
+function startDateTime() {
+  const days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function tick() {
+    const now = new Date();
+    const d = days[now.getDay()];
+    const m = months[now.getMonth()];
+    const dd = String(now.getDate()).padStart(2,'0');
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const tbDate = document.getElementById('tbDate');
+    if(tbDate) {
+      tbDate.innerHTML = `${d}, ${m} ${dd} &nbsp;&bull;&nbsp; ${hh}:${mm}:${ss}`;
+    }
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════════════
+//  ANIMATED COUNTERS
+// ═══════════════════════════════════════════════════
+function animateCounters() {
+  const targets = [
+    {id:'mWorkers',     end:1248, duration:1200},
+    {id:'mClients',     end:8430, duration:1400},
+    {id:'mOrders',      end:342,  duration:900},
+    {id:'metricsPendingCount', end:18, duration:700},
+  ];
+  targets.forEach(({id, end, duration}) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const start = performance.now();
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const val = Math.round(eased * end);
+      el.textContent = val.toLocaleString();
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  PROGRESS BAR ANIMATION
+// ═══════════════════════════════════════════════════
+function animateProgressBars() {
+  document.querySelectorAll('.sector-progress-fill[data-target]').forEach(bar => {
+    const target = bar.dataset.target + '%';
+    setTimeout(() => { bar.style.width = target; }, 100);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+function showToast(message) {
+  const toast = document.getElementById('systemToast');
+  document.getElementById('toastMessage').innerText = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════════════════
+//  CUSTOM MODAL ENGINE
+// ═══════════════════════════════════════════════════
+function openModal({ icon='fas fa-question-circle', iconType='', title='', body='', formHTML='', confirmText='Confirm', cancelText='Cancel', confirmDanger=false, onConfirm=null }) {
+  document.getElementById('modalIconInner').className = icon;
+  const iconWrap = document.getElementById('modalIcon');
+  iconWrap.className = 'modal-icon-wrap' + (iconType ? ' ' + iconType : '');
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBodyTxt').textContent = body;
+  document.getElementById('modalFormSlot').innerHTML = formHTML;
+  document.getElementById('modalCancelBtn').textContent = cancelText;
+  const confirmBtn = document.getElementById('modalConfirmBtn');
+  confirmBtn.textContent = confirmText;
+  confirmBtn.className = 'btn-modal-confirm' + (confirmDanger ? ' danger' : '');
+  modalConfirmCallback = onConfirm;
+  confirmBtn.onclick = () => { if (modalConfirmCallback) modalConfirmCallback(); closeModal(); };
+  document.getElementById('customModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('customModal').classList.remove('open');
+  document.body.style.overflow = '';
+  modalConfirmCallback = null;
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target === document.getElementById('customModal')) closeModal();
+}
+
+// ═══════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════════════════
+function clearNotifications() {
+  const badge = document.getElementById('bellBadge');
+  if (badge && badge.style.display !== 'none') {
+    badge.style.display = 'none';
+    showToast('All notifications marked as read.');
+  } else {
+    showToast('No new notifications.');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  SEARCH OVERLAY
+// ═══════════════════════════════════════════════════
+function openSearch() {
+  document.getElementById('searchOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('searchInput').focus(), 150);
+}
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('searchHint').textContent = 'Start typing to search across the platform...';
+}
+function handleSearchOverlayClick(e) {
+  if (e.target === document.getElementById('searchOverlay')) closeSearch();
+}
+function performSearch(query) {
+  const resultsEl = document.getElementById('searchResults');
+  const hint = document.getElementById('searchHint');
+  if (!query.trim()) {
+    resultsEl.innerHTML = '';
+    hint.textContent = 'Start typing to search across the platform...';
+    return;
+  }
+  const q = query.toLowerCase();
+  const matches = searchData.filter(d => d.name.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q) || d.tag.toLowerCase().includes(q));
+  hint.textContent = matches.length ? `${matches.length} result${matches.length>1?'s':''} found` : '';
+  if (!matches.length) {
+    resultsEl.innerHTML = `<div class="search-empty"><i class="fas fa-search" style="margin-bottom:.4rem;display:block;font-size:1.2rem;opacity:.3;"></i>No results for "${query}"</div>`;
+    return;
+  }
+  const initials = n => n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  resultsEl.innerHTML = matches.map(d => `
+    <div class="search-result-item" onclick="closeSearch();showToast('Opening: ${d.name}');">
+      <div class="search-result-avatar">${initials(d.name)}</div>
+      <div><div class="search-result-name">${highlight(d.name,q)}</div><div class="search-result-sub">${d.sub}</div></div>
+      <span class="search-result-tag">${d.tag}</span>
+    </div>`).join('');
+}
+function highlight(text, q) {
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx < 0) return text;
+  return text.slice(0,idx) + `<strong style="color:var(--g1);">${text.slice(idx,idx+q.length)}</strong>` + text.slice(idx+q.length);
+}
+// Keyboard shortcut: Ctrl+K or /
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && document.activeElement.tagName !== 'INPUT')) {
+    e.preventDefault(); openSearch();
+  }
+  if (e.key === 'Escape') { closeSearch(); closeModal(); }
+});
+
+// ═══════════════════════════════════════════════════
+//  WORKER APPROVAL
+// ═══════════════════════════════════════════════════
+function approveWorker(element, name) {
+  openModal({
+    icon: 'fas fa-user-check',
+    title: 'Approve Worker',
+    body: `Approve ${name} onto the Hunarmand platform? They will be notified and activated immediately.`,
+    confirmText: 'Approve',
+    cancelText: 'Not Yet',
+    onConfirm: () => {
+      const row = element.closest('.approval-row-item');
+      row.style.opacity = '0.3';
+      row.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        row.remove();
+        decrementPendingVerifications();
+        showToast(`✓ ${name} approved and activated on platform.`);
+        const list = document.getElementById('approvalsList');
+        const visible = list.querySelectorAll('.approval-row-item:not([style*="display: none"])');
+        if (!visible.length) {
+          list.innerHTML = `<p style="text-align:center;color:var(--muted);font-size:.75rem;padding:.75rem 0;">No pending approvals. ✓</p>`;
+        }
+      }, 280);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  IDENTITY VERIFICATION
+// ═══════════════════════════════════════════════════
+function triggerReviewID(rowId, workerName, specialty) {
+  openModal({
+    icon: 'fas fa-id-card',
+    title: 'Review Identity',
+    body: `Confirm and approve the verified CNIC / identity documents for ${workerName} (${specialty})? This action is permanent.`,
+    confirmText: 'Approve ID',
+    cancelText: 'Cancel',
+    onConfirm: () => {
+      const row = document.getElementById(rowId);
+      row.style.opacity = '0.3';
+      setTimeout(() => {
+        row.remove();
+        decrementPendingVerifications();
+        showToast(`✓ Identity verified and stored for ${workerName}.`);
+      }, 250);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  PENDING COUNT SYNC
+// ═══════════════════════════════════════════════════
+function decrementPendingVerifications() {
+  if (pendingCount > 0) {
+    pendingCount--;
+    document.getElementById('metricsPendingCount').textContent = pendingCount;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  APPROVAL FILTER TABS
+// ═══════════════════════════════════════════════════
+function filterApprovals(cat, tabEl) {
+  document.querySelectorAll('.approvals-panel .ftab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.querySelectorAll('#approvalsList .approval-row-item').forEach(row => {
+    const rowCat = row.dataset.cat || '';
+    row.style.display = (cat === 'all' || rowCat === cat) ? '' : 'none';
+  });
+  const visible = [...document.querySelectorAll('#approvalsList .approval-row-item')].filter(r=>r.style.display!=='none');
+  showToast(visible.length ? `Showing ${visible.length} ${cat === 'all' ? 'total' : cat} worker(s).` : `No ${cat} workers pending.`);
+}
+
+// ═══════════════════════════════════════════════════
+//  ACTIVITY FILTER TABS
+// ═══════════════════════════════════════════════════
+function filterActivity(type, tabEl) {
+  document.querySelectorAll('.activity-feed-panel .ftab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  const items = document.querySelectorAll('#activityFeed .activity-feed-item');
+  items.forEach(item => {
+    const match = type === 'all' || item.dataset.type === type;
+    if (activityExpanded) {
+      item.style.display = match ? '' : 'none';
+    } else {
+      item.style.display = (!item.classList.contains('hidden-feed') && match) ? '' : 'none';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  LOAD MORE ACTIVITY
+// ═══════════════════════════════════════════════════
+function loadMoreActivity() {
+  const hidden = document.querySelectorAll('#activityFeed .activity-feed-item.hidden-feed');
+  if (!hidden.length) {
+    showToast('All activity loaded.');
+    document.getElementById('loadMoreBtn').style.display = 'none';
+    return;
+  }
+  hidden.forEach(item => {
+    item.classList.remove('hidden-feed');
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(-8px)';
+    setTimeout(() => { item.style.transition = 'all .35s ease'; item.style.opacity='1'; item.style.transform=''; }, 50);
+  });
+  activityExpanded = true;
+  document.getElementById('loadMoreBtn').style.display = 'none';
+  showToast(`Loaded ${hidden.length} more activities.`);
+}
+
+// ═══════════════════════════════════════════════════
+//  QUICK ACTIONS — ADD WORKER
+// ═══════════════════════════════════════════════════
+function openAddWorkerModal() {
+  openModal({
+    icon: 'fas fa-hard-hat',
+    title: 'Add New Worker',
+    body: 'Fill in the worker details below. They will receive an activation SMS upon submission.',
+    formHTML: `
+      <div class="modal-form">
+        <div class="modal-field-row">
+          <div class="modal-field"><label class="modal-label">Full Name</label><input class="modal-input" id="wName" placeholder="e.g. Ahmed Raza"></div>
+          <div class="modal-field"><label class="modal-label">Phone Number</label><input class="modal-input" id="wPhone" placeholder="+92 3XX XXXXXXX"></div>
+        </div>
+        <div class="modal-field-row">
+          <div class="modal-field">
+            <label class="modal-label">Skill / Trade</label>
+            <select class="modal-input modal-select" id="wSkill">
+              <option value="">Select skill...</option>
+              <option>Electrician</option>
+              <option>Plumber</option>
+              <option>Carpenter</option>
+              <option>Painter</option>
+              <option>AC Technician</option>
+              <option>Welder</option>
+              <option>Tailor</option>
+              <option>Housecleaner</option>
+            </select>
+          </div>
+          <div class="modal-field"><label class="modal-label">City</label><input class="modal-input" id="wCity" placeholder="e.g. Karachi"></div>
+        </div>
+        <div class="modal-field"><label class="modal-label">CNIC Number</label><input class="modal-input" id="wCnic" placeholder="XXXXX-XXXXXXX-X" maxlength="15"></div>
+      </div>`,
+    confirmText: 'Submit Worker',
+    onConfirm: () => {
+      const name  = document.getElementById('wName')?.value.trim();
+      const phone = document.getElementById('wPhone')?.value.trim();
+      const skill = document.getElementById('wSkill')?.value;
+      if (!name || !phone || !skill) { showToast('⚠ Please fill in all required fields.'); return; }
+      showToast(`✓ Worker "${name}" submitted for review!`);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  QUICK ACTIONS — ADD USER
+// ═══════════════════════════════════════════════════
+function openAddUserModal() {
+  openModal({
+    icon: 'fas fa-user-plus',
+    title: 'Add New User',
+    body: 'Register a new client account. An OTP will be sent to their phone.',
+    formHTML: `
+      <div class="modal-form">
+        <div class="modal-field-row">
+          <div class="modal-field"><label class="modal-label">Full Name</label><input class="modal-input" id="uName" placeholder="Client name"></div>
+          <div class="modal-field"><label class="modal-label">Phone / Email</label><input class="modal-input" id="uContact" placeholder="Phone or Email"></div>
+        </div>
+        <div class="modal-field-row">
+          <div class="modal-field">
+            <label class="modal-label">Account Type</label>
+            <select class="modal-input modal-select" id="uType">
+              <option>Regular Client</option>
+              <option>Business Client</option>
+              <option>Corporate</option>
+            </select>
+          </div>
+          <div class="modal-field"><label class="modal-label">City</label><input class="modal-input" id="uCity" placeholder="e.g. Lahore"></div>
+        </div>
+      </div>`,
+    confirmText: 'Create Account',
+    onConfirm: () => {
+      const name = document.getElementById('uName')?.value.trim();
+      if (!name) { showToast('⚠ Name is required.'); return; }
+      showToast(`✓ User account created for "${name}".`);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  QUICK ACTIONS — GENERATE REPORT
+// ═══════════════════════════════════════════════════
+function openGenerateReportModal() {
+  openModal({
+    icon: 'fas fa-file-lines',
+    title: 'Generate Report',
+    body: 'Select the report type and date range to generate a platform analytics report.',
+    formHTML: `
+      <div class="modal-form">
+        <div class="modal-field">
+          <label class="modal-label">Report Type</label>
+          <select class="modal-input modal-select" id="rType">
+            <option>Worker Activity Summary</option>
+            <option>Client Acquisition Report</option>
+            <option>Order Completion Rate</option>
+            <option>Revenue Overview</option>
+            <option>Verification Backlog</option>
+          </select>
+        </div>
+        <div class="modal-field-row">
+          <div class="modal-field"><label class="modal-label">From Date</label><input class="modal-input" type="date" id="rFrom"></div>
+          <div class="modal-field"><label class="modal-label">To Date</label><input class="modal-input" type="date" id="rTo"></div>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Format</label>
+          <select class="modal-input modal-select" id="rFormat">
+            <option>PDF Report</option>
+            <option>CSV Export</option>
+            <option>Excel Spreadsheet</option>
+          </select>
+        </div>
+      </div>`,
+    confirmText: 'Generate',
+    onConfirm: () => {
+      const type = document.getElementById('rType')?.value;
+      const fmt  = document.getElementById('rFormat')?.value;
+      showToast(`📊 Generating: "${type}" as ${fmt}...`);
+      setTimeout(() => showToast('✓ Report ready for download.'), 2000);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  QUICK ACTIONS — EXPORT CSV
+// ═══════════════════════════════════════════════════
+function exportCSVData() {
+  const csvRows = [
+    ['Type','Name','Specialty','Status','Date'],
+    ['Worker','Tariq Mahmood','Plumbing','Pending','2026-06-02'],
+    ['Worker','Ayesha Khan','Houseclean','Pending','2026-06-02'],
+    ['Worker','Usman Ali','Carpentry','Pending','2026-06-02'],
+    ['Verification','Sajid Ali','Tailoring Expert','Under Review','2026-06-01'],
+    ['Verification','Haris Raza','AC Technician','Under Review','2026-06-01'],
+    ['Verification','Zain Ahmed','Electrician','Under Review','2026-06-01'],
+    ['Verification','Bilal Hassan','Wall Painter','Under Review','2026-05-31'],
+    ['Verification','Kamran Khan','Welding Specialist','Under Review','2026-05-31'],
+    ['Client','Zeshan S.','N/A','Active','2026-06-02'],
+    ['Order','#482','Completed','Done','2026-06-02'],
+    ['Order','#479','Assigned','In Progress','2026-06-02'],
+    ['Order','#470','Cancelled','Closed','2026-06-01'],
+  ];
+  const csv = csvRows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `hunarmand_export_${Date.now()}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('✓ CSV exported and download started.');
+}
+
+// ═══════════════════════════════════════════════════
+//  QUICK ACTIONS — BROADCAST ALERT
+// ═══════════════════════════════════════════════════
+function openBroadcastModal() {
+  openModal({
+    icon: 'fas fa-bullhorn',
+    iconType: 'amber',
+    title: 'Broadcast System Alert',
+    body: 'This message will be sent to all active platform users and workers as a push notification.',
+    formHTML: `
+      <div class="modal-form">
+        <div class="modal-field">
+          <label class="modal-label">Target Audience</label>
+          <select class="modal-input modal-select" id="bTarget">
+            <option>All Users & Workers</option>
+            <option>Workers Only</option>
+            <option>Clients Only</option>
+            <option>Unverified Workers</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Alert Title</label>
+          <input class="modal-input" id="bTitle" placeholder="e.g. Scheduled Maintenance">
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Message</label>
+          <textarea class="modal-input modal-textarea" id="bMsg" placeholder="Enter broadcast message..."></textarea>
+        </div>
+      </div>`,
+    confirmText: 'Send Broadcast',
+    onConfirm: () => {
+      const title  = document.getElementById('bTitle')?.value.trim();
+      const msg    = document.getElementById('bMsg')?.value.trim();
+      const target = document.getElementById('bTarget')?.value;
+      if (!title || !msg) { showToast('⚠ Title and message are required.'); return; }
+      showToast(`📢 Broadcast sent to ${target}: "${title}"`);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  PLATFORM HEALTH
+// ═══════════════════════════════════════════════════
+function refreshHealthStatus() {
+  const services = ['h-api','h-db','h-auth','h-cdn'];
+  const btn = document.querySelector('.health-refresh-btn');
+  btn.innerHTML = '<i class="fas fa-rotate-right fa-spin"></i> Checking...';
+  btn.disabled = true;
+  services.forEach(id => {
+    const dot = document.getElementById(id);
+    if (dot) { dot.className = 'health-dot warning'; }
+  });
+  setTimeout(() => {
+    services.forEach(id => {
+      const dot = document.getElementById(id);
+      if (dot) dot.className = 'health-dot online';
+    });
+    const now = new Date();
+    document.getElementById('healthLastCheck').textContent =
+      `Last checked: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    btn.innerHTML = '<i class="fas fa-rotate-right"></i> Refresh';
+    btn.disabled = false;
+    showToast('✓ All systems operational. Health check passed.');
+  }, 1800);
+}
+
+function scheduleHealthPulse() {
+  setInterval(() => {
+    const now = new Date();
+    const el = document.getElementById('healthLastCheck');
+    if (el) el.textContent = `Last checked: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }, 60000);
+}
+
+// ═══════════════════════════════════════════════════
+//  LOGOUT
+// ═══════════════════════════════════════════════════
+function handleLogout() {
+  openModal({
+    icon: 'fas fa-arrow-right-from-bracket',
+    iconType: 'danger',
+    title: 'Confirm Logout',
+    body: 'You will be securely signed out of the Hunarmand Admin workspace. Any unsaved changes will be lost.',
+    confirmText: 'Yes, Logout',
+    cancelText: 'Stay',
+    confirmDanger: true,
+    onConfirm: () => {
+      showToast('Terminating secure session... Redirecting.');
+      setTimeout(() => alert('Logged out securely from Hunarmand Admin.'), 1200);
+    }
+  });
+}
+</script>
+</body>
+</html>

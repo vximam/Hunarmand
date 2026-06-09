@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Registry Suite — HunarmandAdmin</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        g1: '#1b5e37', g2: '#134228', g3: '#246843', g4: '#2e7d52', g5: '#3a9460',
+                        mint: '#e8f5ed', mint2: '#d4ecde', mint3: '#c2e3d0',
+                        near: '#f5fbf7', ink: '#0b1a10', body: '#1a2d1f', muted: '#6b8f7a', faint: '#8ca898',
+                    },
+                    fontFamily: { display: ['Sora', 'sans-serif'], interface: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ── UNIFIED THEME TOKENS ── */
+        :root {
+            --primary:       #2a7d4f;
+            --primary-dark:  #1d5c38;
+            --primary-light: #e6f4ed;
+            --primary-mid:   #c4e4d2;
+            --accent:        #34d07c;
+            --bg:            #f0f7f3;
+            --card-bg:       #ffffff;
+            --text-main:     #1a2e25;
+            --text-muted:    #6b8f7a;
+            --text-light:    #9db8a8;
+            --border:        #d4ead9;
+            --danger:        #e03131;
+            --warning:       #f08c00;
+            --radius:        14px;
+            --shadow:        0 2px 16px rgba(42,125,79,.10);
+            --shadow-lg:     0 8px 32px rgba(42,125,79,.14);
+            
+            --g1: #1b5e37; --g2: #134228; --g3: #246843; --g4: #2e7d52; --g5: #3a9460;
+            --mint: #e8f5ed; --mint2: #d4ecde; --mint3: #c2e3d0;
+            --white: #fff; --near: #f5fbf7;
+            --ink: #0b1a10; --body: #1a2d1f; --faint: #8ca898;
+            --bdr: rgba(197, 222, 206, .55); --bdr2: rgba(197, 222, 206, .3);
+            --red: #ef4444; --red-bg: #fef2f2; --red-bdr: #fecaca;
+            --amber: #f59e0b; --amber-bg: #fffbeb; --amber-bdr: #fde68a;
+            
+            --muted: var(--text-muted); 
+            --topbar-bg: rgba(245, 251, 247, 0.92);
+            --sidebar: 260px;
+            --hdr: 64px;
+            --e1: cubic-bezier(.4, 0, .2, 1);
+            --e2: cubic-bezier(.22, 1, .36, 1);
+            --e3: cubic-bezier(.34, 1.56, .64, 1);
+            --fd: 'Sora', sans-serif; 
+            --fi: 'Inter', sans-serif;
+            --overlay: rgba(11, 26, 16, .4);
+            --overlay-bg: rgba(11, 26, 16, 0.5);
+            --transition-smooth: all 0.2s ease;
+            --transition-spring: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        /* ── DARK MODE OVERRIDES ── */
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --bg: #0f1419;
+            --card-bg: #1a222c;
+            --text-main: #ecfdf3;
+            --text-muted: #8ca898;
+            --text-light: #56685c;
+            --border: rgba(255, 255, 255, 0.09);
+            --primary-light: rgba(42, 125, 79, 0.2);
+            
+            --g1: #6ee7a8; --g2: #4ade80; --g3: #5ecf8f; --g4: #86efac; --g5: #34d399;
+            --mint: rgba(110, 231, 168, .07); --mint2: rgba(110, 231, 168, .11); --mint3: rgba(110, 231, 168, .16);
+            --white: #1a222c; --near: #0f1419;
+            --ink: #ecfdf3; --body: #b8c9be; --faint: #56685c;
+            --bdr: rgba(255, 255, 255, .09); --bdr2: rgba(255, 255, 255, .05);
+            --red: #f87171; --red-bg: rgba(248, 113, 113, .12); --red-bdr: rgba(248, 113, 113, .28);
+            --amber: #fbbf24; --amber-bg: rgba(251, 191, 36, .1); --amber-bdr: rgba(251, 191, 36, .25);
+            
+            --muted: var(--text-muted);
+            --topbar-bg: rgba(15, 20, 25, .82);
+            --overlay: rgba(0, 0, 0, .55);
+            --overlay-bg: rgba(0, 0, 0, 0.65);
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+        }
+
+        html.theme-transition, html.theme-transition *, html.theme-transition *::before, html.theme-transition *::after {
+            transition: background-color .4s var(--e1), border-color .4s var(--e1), color .25s var(--e1), box-shadow .4s var(--e1), fill .25s var(--e1), stroke .25s var(--e1) !important;
+        }
+
+        [data-theme="dark"] body {
+            background: radial-gradient(ellipse 120% 80% at 50% -30%, rgba(46, 125, 82, .18), transparent 55%),
+                        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(52, 211, 153, .06), transparent 50%),
+                        var(--bg);
+        }
+        [data-theme="dark"] .sidebar { background: linear-gradient(180deg, #141a22 0%, #10151b 100%); box-shadow: inset -1px 0 0 var(--bdr), 4px 0 24px rgba(0,0,0,.2); }
+        [data-theme="dark"] .premium-data-card { background: var(--card-bg) !important; border-color: var(--border) !important; }
+        [data-theme="dark"] .custom-data-table { background: transparent !important; }
+        [data-theme="dark"] .custom-data-table th { background: rgba(255,255,255,0.03) !important; color: var(--text-main) !important; border-bottom-color: var(--border) !important; }
+        [data-theme="dark"] .custom-data-table td { color: var(--text-main); border-bottom-color: var(--border); background: transparent !important; }
+        [data-theme="dark"] .custom-data-table tbody { background: transparent !important; }
+        [data-theme="dark"] .custom-data-row { background: transparent !important; }
+        [data-theme="dark"] .custom-data-row:hover { background: rgba(255, 255, 255, 0.05) !important; }
+        [data-theme="dark"] .premium-data-card .px-4 { background: var(--card-bg) !important; }
+        [data-theme="dark"] .executive-form-control { background: var(--bg) !important; color: var(--text-main) !important; border-color: var(--border) !important; }
+        [data-theme="dark"] .view-info-item, [data-theme="dark"] .view-profile-stat { background: var(--bg); border-color: var(--border); }
+        [data-theme="dark"] .system-modal-header, [data-theme="dark"] .view-modal-actions { background: var(--bg); border-color: var(--border); }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg); color: var(--text-main);
+            min-height: 100vh; display: flex; overflow-x: hidden;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar); min-height: 100vh; background: var(--white);
+            border-right: 1px solid var(--bdr); display: flex; flex-direction: column;
+            position: fixed; top: 0; left: 0; bottom: 0; z-index: 1050;
+            transition: transform .3s var(--e2), box-shadow .3s;
+            opacity: 0; animation: sideIn .5s var(--e2) .2s forwards;
+        }
+        @keyframes sideIn { to { opacity: 1; } }
+
+        .sidebar-top { padding: 1.5rem 1.3rem 1rem; border-bottom: 1px solid var(--bdr2); }
+        .brand-name { font-family: var(--fd); font-size: 1.2rem; font-weight: 800; color: var(--g1); letter-spacing: -.04em; line-height: 1.1; }
+        .brand-sub { font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: .1rem; }
+        .brand-badge { display: inline-flex; align-items: center; gap: .3rem; margin-top: .5rem; font-size: .6rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--g1); background: var(--mint); border: 1px solid var(--bdr); padding: .16rem .55rem; border-radius: 100px; }
+        .brand-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--g3); animation: sonar 2s ease-in-out infinite; }
+        @keyframes sonar { 0% { box-shadow: 0 0 0 0 rgba(46,125,82,.45); } 60% { box-shadow: 0 0 0 7px rgba(46,125,82,0); } 100% { box-shadow: 0 0 0 0 rgba(46,125,82,0); } }
+
+        .sidebar-nav { flex: 1; padding: .8rem .7rem; overflow-y: auto; font-family: var(--fi); }
+        .nav-lbl { font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding: .5rem .55rem .35rem; margin-top: .3rem; }
+        .nav-item {
+            display: flex; align-items: center; gap: .7rem; text-decoration: none;
+            padding: .62rem .75rem; border-radius: 10px;
+            font-size: .845rem; font-weight: 500; color: var(--body);
+            cursor: pointer; position: relative; margin-bottom: .08rem;
+            transition: background .2s, color .2s, transform .18s var(--e3); user-select: none;
+        }
+        .nav-item:hover { background: var(--mint); color: var(--g1); transform: translateX(2px); }
+        .nav-item.active { background: var(--mint); color: var(--g1); font-weight: 600; }
+        .nav-item.active::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px; border-radius: 0 3px 3px 0; background: var(--g1); }
+        .ni-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .2s, transform .25s var(--e3); }
+        .nav-item:hover .ni-icon, .nav-item.active .ni-icon { background: var(--mint2); }
+        .nav-item.active:hover .ni-icon { transform: scale(1.1); }
+        .ni-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        
+        .sidebar-bot { padding: .8rem .7rem; border-top: 1px solid var(--bdr2); font-family: var(--fi); }
+        .profile-chip { display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border-radius: 12px; background: var(--near); border: 1px solid var(--bdr); cursor: pointer; transition: background .2s, border-color .2s, transform .2s var(--e3); }
+        .profile-chip:hover { background: var(--mint); border-color: var(--mint3); transform: translateY(-1px); }
+        .p-av { width: 34px; height: 34px; border-radius: 50%; background: var(--g1); display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 2px 8px rgba(27,94,55,.28); }
+        .p-name { font-size: .8rem; font-weight: 600; color: var(--ink); }
+        .p-role { font-size: .65rem; color: var(--muted); }
+        .logout-btn { display: flex; align-items: center; gap: .55rem; width: 100%; margin-top: .5rem; padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(239,68,68,.22); background: transparent; cursor: pointer; font-size: .8rem; font-weight: 500; color: var(--red); transition: background .2s, border-color .2s, transform .18s var(--e3); }
+        .logout-btn:hover { background: var(--red-bg); border-color: var(--red-bdr); transform: translateX(2px); }
+        .logout-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        .overlay { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 1040; opacity: 0; pointer-events: none; transition: opacity .3s var(--e1); }
+        .overlay.show { opacity: 1; pointer-events: all; display: block; }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            height: var(--hdr); background: var(--topbar-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--bdr2); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 1.8rem; gap: 1rem;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .topbar-l { display: flex; align-items: center; gap: .75rem; }
+        .hbg { display: none; flex-direction: column; gap: 4px; cursor: pointer; background: none; border: none; padding: 5px; }
+        .hbg span { display: block; height: 1.8px; width: 20px; background: var(--g1); border-radius: 2px; transition: transform .3s var(--e2), opacity .3s; }
+        .hbg span:nth-child(2) { width: 14px; }
+        .hbg.open span:nth-child(1) { transform: translateY(5.8px) rotate(45deg); width: 20px; }
+        .hbg.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hbg.open span:nth-child(3) { transform: translateY(-5.8px) rotate(-45deg); width: 20px; }
+        
+        .breadcrumb { font-size: .7rem; color: var(--faint); display: flex; align-items: center; gap: .3rem; font-family: var(--fi); }
+        .breadcrumb b { color: var(--g1); font-weight: 600; }
+        .topbar-ttl { font-family: var(--fd); font-size: 1rem; font-weight: 700; color: var(--ink); letter-spacing: -.025em; margin-top: .05rem; }
+        
+        .topbar-r { display: flex; align-items: center; gap: .65rem; }
+        .tb-date { font-size: .75rem; color: var(--muted); white-space: nowrap; font-family: var(--fi); font-weight: 500; }
+        
+        .tb-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--bdr); background: var(--card-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: background .2s, border-color .2s, transform .2s var(--e3); color: var(--muted); }
+        .tb-btn:hover { background: var(--mint); border-color: var(--mint3); transform: scale(1.06); color: var(--g1); }
+        .tb-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .tb-btn .ico-moon { display: none; }
+        [data-theme="dark"] .tb-btn .ico-sun { display: none; }
+        [data-theme="dark"] .tb-btn .ico-moon { display: block; }
+        .mob-close { display: none; background: none; border: none; cursor: pointer; padding: 5px; color: var(--muted); }
+
+        /* ── MAIN CONTENT ── */
+        .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; margin-left: var(--sidebar); transition: margin-left .3s ease; }
+        .workspace-inner { max-width: 1400px; margin: 0 auto; padding: 1.6rem 1.8rem 3rem; width: 100%; }
+
+        /* ── WORKERS SPECIFIC ── */
+        .metric-card-number { font-variant-numeric: tabular-nums; display: inline-block; min-width: 2.5ch; text-align: right; }
+        .premium-data-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); transition: var(--transition-spring); overflow: hidden; position: relative; }
+        .premium-data-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+        .premium-data-card::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--g1), var(--g4)); opacity: 0; transition: var(--transition-smooth); }
+        .premium-data-card:hover::before { opacity: 1; }
+
+        .custom-data-table { width: 100%; margin-bottom: 0; background: transparent; }
+        .custom-data-table th { background: var(--primary-light); color: var(--text-muted); font-family: var(--fd); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem 1.25rem !important; border-bottom: 1px solid var(--border) !important; }
+        .custom-data-row { transition: var(--transition-smooth); background: transparent; }
+        .custom-data-row:hover { background: rgba(42, 125, 79, 0.05); }
+        .custom-data-table td { padding: 1rem 1.25rem !important; vertical-align: middle; border-bottom: 1px solid var(--border); color: var(--text-main); font-size: 0.85rem; }
+
+        .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; transition: background .2s; }
+        .sortable-th:hover { background: var(--primary-light) !important; }
+        .sort-icon { margin-left: 0.35rem; font-size: 0.65rem; opacity: 0.4; transition: opacity .2s, color .2s; }
+        .sortable-th.sort-asc .sort-icon, .sortable-th.sort-desc .sort-icon { opacity: 1; color: var(--primary); }
+
+        .row-checkbox, .th-checkbox { width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary); border-radius: 3px; }
+        .status-toggle-badge { cursor: pointer; user-select: none; transition: transform .15s, box-shadow .15s; }
+        .status-toggle-badge:hover { transform: scale(1.06); box-shadow: 0 2px 8px rgba(11,26,16,.08); }
+
+        .executive-input-group { margin-bottom: 1.25rem; }
+        .executive-input-label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+        .executive-form-control { width: 100%; padding: 0.65rem 1rem; border: 1.5px solid var(--border); background: var(--card-bg); border-radius: 8px; font-size: 0.88rem; font-family: var(--fi); color: var(--text-main); transition: var(--transition-smooth); outline: none; }
+        .executive-form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(42,125,79,.12); }
+        
+        .executive-primary-btn { background: var(--primary); color: #fff; font-weight: 600; padding: 0.65rem 1.25rem; border-radius: 8px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: var(--transition-smooth); border: none; box-shadow: 0 4px 12px rgba(42,125,79,.25); cursor: pointer; }
+        .executive-primary-btn:hover { background: var(--primary-dark); box-shadow: 0 6px 18px rgba(42,125,79,.3); transform: translateY(-1px); }
+        .executive-secondary-btn { background: var(--card-bg); color: var(--text-muted); font-weight: 600; padding: 0.65rem 1.25rem; border-radius: 8px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: var(--transition-smooth); border: 1.5px solid var(--border); cursor: pointer; }
+        .executive-secondary-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+        /* ── MODALS ── */
+        .system-modal-overlay, .view-modal-overlay, .delete-modal-overlay, .logout-modal-overlay {
+            display: none; position: fixed; inset: 0; background: var(--overlay-bg); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .system-modal-overlay.active, .view-modal-overlay.active, .delete-modal-overlay.active, .logout-modal-overlay.active { display: flex; }
+        
+        .system-modal-box, .view-modal-box, .delete-modal-box, .logout-modal-box { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); width: 100%; max-width: 520px; animation: modalEntrance .35s var(--e3); overflow: hidden; }
+        @keyframes modalEntrance { from{opacity:0; transform:scale(.92) translateY(15px)} to{opacity:1; transform:scale(1) translateY(0)} }
+        
+        .system-modal-header { background: var(--bg); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .system-modal-title { font-family: var(--fd); font-weight: 700; font-size: 1.15rem; color: var(--text-main); }
+        .system-modal-close-trigger { font-size: 1.25rem; color: var(--text-muted); cursor: pointer; transition: var(--transition-smooth); }
+        .system-modal-close-trigger:hover { color: var(--danger); }
+        .system-modal-body { padding: 1.5rem; }
+
+        .view-modal-box { max-width: 480px; }
+        .view-modal-banner { height: 90px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); position: relative; display: flex; align-items: flex-end; padding: 0 1.5rem; }
+        .view-modal-avatar { width: 70px; height: 70px; border-radius: 14px; border: 3px solid var(--card-bg); object-fit: cover; position: absolute; bottom: -28px; box-shadow: 0 4px 16px rgba(11,26,16,.15); }
+        .view-modal-avatar-init { width: 70px; height: 70px; border-radius: 14px; border: 3px solid var(--card-bg); background: var(--primary); display: flex; align-items: center; justify-content: center; font-family: var(--fd); font-size: 1.4rem; font-weight: 700; color: #fff; position: absolute; bottom: -28px; box-shadow: 0 4px 16px rgba(11,26,16,.15); }
+        .view-modal-content { padding: 2.5rem 1.5rem 1.5rem; }
+        .view-worker-name { font-family: var(--fd); font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+        .view-worker-badge-pill { display: inline-flex; align-items: center; gap: .3rem; font-size: .68rem; font-weight: 700; padding: .2rem .55rem; border-radius: 100px; margin-left: .4rem; background: var(--bg); border: 1px solid var(--border); color: var(--primary); }
+        .view-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 1rem 0; }
+        .view-info-item { padding: .55rem .75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; }
+        .view-info-label { font-size: .62rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem; }
+        .view-info-value { font-size: .82rem; font-weight: 600; color: var(--text-main); }
+        .view-profile-stat { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: .5rem .75rem; text-align: center; }
+        .view-profile-stat-val { font-family: var(--fd); font-size: 1rem; font-weight: 700; color: var(--primary); }
+        .view-profile-stat-lbl { font-size: .62rem; color: var(--text-muted); font-weight: 600; }
+        .view-modal-actions { display: flex; gap: .6rem; padding: 1rem 1.5rem; border-top: 1px solid var(--border); background: var(--bg); }
+
+        .delete-modal-box, .logout-modal-box { max-width: 400px; padding: 1.75rem; text-align: center; }
+        .delete-icon-ring { width: 60px; height: 60px; border-radius: 50%; background: var(--red-bg); border: 1px solid var(--red-bdr); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.4rem; color: var(--danger); }
+        .delete-modal-title { font-family: var(--fd); font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: .4rem; }
+        .delete-modal-body { font-size: .83rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6; }
+        .delete-modal-actions { display: flex; gap: .65rem; justify-content: center; }
+
+        /* ── BULK ACTION BAR ── */
+        .bulk-action-bar { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(120px); z-index: 1500; background: var(--g2); color: #fff; border-radius: 14px; padding: .75rem 1.25rem; display: flex; align-items: center; gap: .75rem; box-shadow: 0 8px 32px rgba(11,26,16,.25); transition: transform .4s var(--e3); white-space: nowrap; border: 1px solid rgba(255,255,255,.1); }
+        .bulk-action-bar.visible { transform: translateX(-50%) translateY(0); }
+        .bulk-count-label { font-size: .82rem; font-weight: 700; padding-right: .5rem; border-right: 1px solid rgba(255,255,255,.2); }
+        .bulk-divider { width: 1px; height: 20px; background: rgba(255,255,255,.2); }
+        .bulk-btn { display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .75rem; border-radius: 7px; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .2s; border: 1px solid transparent; background: transparent; }
+        .bulk-btn-red { background: rgba(239,68,68,.2); color: #fca5a5; border-color: rgba(239,68,68,.3); }
+        .bulk-btn-red:hover { background: rgba(239,68,68,.35); }
+        .bulk-btn-green { background: rgba(232,245,237,.15); color: #a7f3d0; border-color: rgba(232,245,237,.2); }
+        .bulk-btn-green:hover { background: rgba(232,245,237,.25); }
+        .bulk-btn-clear { color: rgba(255,255,255,.6); }
+        .bulk-btn-clear:hover { color: #fff; }
+
+        /* ── TOAST ── */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,.15); transform: translateX(120%); opacity: 0; transition: all .35s var(--e3); pointer-events: all; min-width: 260px; max-width: 320px; color: #fff; }
+        .toast-item.show { transform: translateX(0); opacity: 1; }
+        .toast-item.toast-success { background: var(--g1); }
+        .toast-item.toast-error { background: var(--danger); }
+        .toast-item.toast-warning { background: var(--warning); }
+        .toast-item.toast-info { background: #1a73e8; }
+        .toast-icon { font-size: 15px; flex-shrink: 0; }
+        .toast-close { margin-left: auto; font-size: 12px; cursor: pointer; opacity: .7; background: none; border: none; color: inherit; padding: 0; flex-shrink: 0; }
+        .toast-close:hover { opacity: 1; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); box-shadow: 8px 0 40px rgba(11,26,16,.18); }
+            .main-content { margin-left: 0; }
+            .topbar { display: flex; padding: 0 1rem; }
+            .hbg { display: flex; }
+            .mob-close { display: flex !important; }
+            .tb-date { display: none; }
+            .bulk-action-bar { left: 1rem; right: 1rem; transform: translateY(120px); max-width: calc(100vw - 2rem); }
+            .bulk-action-bar.visible { transform: translateY(0); }
+        }
+        @media (max-width: 640px) {
+            .view-info-grid { grid-template-columns: 1fr; }
+            .delete-modal-actions { flex-direction: column; }
+            .workspace-inner { padding: 1.2rem 1rem 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="brand-name">Hunarmand</div>
+        <div class="brand-sub">Admin</div>
+      </div>
+      <button class="drw-close mob-close" onclick="document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); document.getElementById('hbg').classList.remove('open');" style="display:none;">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <span class="brand-badge"><span class="brand-dot"></span>System Management</span>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Main</div>
+    <a class="nav-item" href="dashboard.html" data-page="dashboard">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      Dashboard
+    </a>
+    <a class="nav-item active" href="workers.html" data-page="workers">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      Workers
+    </a>
+    <a class="nav-item" href="users.html" data-page="users">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      Users
+    </a>
+    
+    <div class="nav-lbl">Management</div>
+    <a class="nav-item" href="reports.html#reports" data-page="reports">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      Reports
+    </a>
+    <a class="nav-item" href="reports.html#analytics" data-page="analytics">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+      Analytics
+    </a>
+    <a class="nav-item" href="reports.html#settings" data-page="settings">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      Settings
+    </a>
+  </nav>
+  
+  <div class="sidebar-bot">
+    <div class="profile-chip">
+      <div class="p-av">AK</div>
+      <div style="flex:1;min-width:0">
+        <div class="p-name">Admin Profile</div>
+        <div class="p-role">Super Administrator</div>
+      </div>
+      <span style="color:var(--faint);font-size:.7rem">›</span>
+    </div>
+    <button class="logout-btn" id="logoutBtn" onclick="document.getElementById('logoutConfirmModal').classList.add('active');">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <header class="topbar">
+    <div class="topbar-l">
+      <button class="hbg" id="hbg"><span></span><span></span><span></span></button>
+      <div>
+        <div class="breadcrumb" id="breadcrumb">
+            <span>Admin</span> 
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg> 
+            <b id="breadPage">Workers</b>
+        </div>
+        <div class="topbar-ttl" id="topbarTitle">Worker Registry Suite</div>
+      </div>
+    </div>
+    <div class="topbar-r">
+      <div class="tb-date" id="tbDate"></div>
+      <button type="button" class="tb-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle light or dark theme">
+        <svg class="ico-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="tb-btn" title="Export CSV Data" id="exportBtnTop">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 0 1-2-2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace-inner">
+
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+              <h1 class="font-display font-bold text-2xl md:text-3xl text-[var(--text-main)] tracking-tight m-0">Worker Registry</h1>
+              <p class="text-xs md:text-sm text-[var(--text-muted)] mt-0.5">Perform high-tier verification, profile curation, and system optimization.</p>
+          </div>
+          <div class="flex gap-2">
+              <button id="addWorkerBtn" class="executive-primary-btn">
+                  <i class="fas fa-plus-circle"></i> Add Worker Manually
+              </button>
+          </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="premium-data-card p-4 flex items-center gap-3.5 h-[110px]">
+              <div class="w-12 h-12 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center text-lg flex-shrink-0"><i class="fas fa-user-check"></i></div>
+              <div>
+                  <p class="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider m-0">Active Specialists</p>
+                  <h4 class="font-display font-bold text-xl text-[var(--text-main)] mt-0.5 m-0"><span id="metricWorkers" class="metric-card-number">0</span> <span class="text-xs font-normal text-[var(--text-light)]">pax</span></h4>
+              </div>
+          </div>
+          <div class="premium-data-card p-4 flex items-center gap-3.5 h-[110px]">
+              <div class="w-12 h-12 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center text-lg flex-shrink-0"><i class="fas fa-star"></i></div>
+              <div>
+                  <p class="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider m-0">Quality Satisfaction</p>
+                  <h4 class="font-display font-bold text-xl text-[var(--text-main)] mt-0.5 m-0"><span id="metricRating" class="metric-card-number">0</span>% <span class="text-xs font-normal text-[var(--text-light)]">rating</span></h4>
+              </div>
+          </div>
+          <div class="premium-data-card p-4 flex items-center gap-3.5 h-[110px]">
+              <div class="w-12 h-12 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center text-lg flex-shrink-0"><i class="fas fa-wallet"></i></div>
+              <div>
+                  <p class="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider m-0">Gross Distributed</p>
+                  <h4 class="font-display font-bold text-xl text-[var(--text-main)] mt-0.5 m-0"><span id="metricPayout" class="metric-card-number">0</span>% <span class="text-xs font-normal text-[var(--text-light)]">payout</span></h4>
+              </div>
+          </div>
+          <div class="premium-data-card p-4 flex items-center gap-3.5 h-[110px]">
+              <div class="w-12 h-12 rounded-lg bg-[rgba(224,49,49,0.15)] text-[var(--danger)] flex items-center justify-center text-lg flex-shrink-0"><i class="fas fa-shield-halved"></i></div>
+              <div>
+                  <p class="text-[11px] font-bold text-[var(--danger)] uppercase tracking-wider m-0">Pending Audits</p>
+                  <h4 class="font-display font-bold text-xl text-[var(--danger)] mt-0.5 m-0"><span id="metricAudits" class="metric-card-number">0</span> <span class="text-xs font-normal text-[var(--text-light)]">profiles</span></h4>
+              </div>
+          </div>
+      </div>
+
+      <div class="premium-data-card p-4 mb-6">
+          <div class="row g-3">
+              <div class="col-12 col-lg-4">
+                  <div class="relative">
+                      <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--text-muted)] opacity-70 pointer-events-none"><i class="fas fa-search text-xs"></i></span>
+                      <input type="text" id="searchInput" placeholder="Search specialists by name, credentials, or contact..." class="executive-form-control !pl-9 text-xs py-2">
+                  </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-2">
+                  <select id="zoneFilter" class="executive-form-control text-xs py-2 cursor-pointer">
+                      <option value="">Provincial Zones</option>
+                      <option value="Karachi">Karachi Central</option>
+                      <option value="Lahore">Lahore Elite</option>
+                      <option value="Islamabad">Islamabad Capital</option>
+                  </select>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-2">
+                  <select id="skillFilter" class="executive-form-control text-xs py-2 cursor-pointer">
+                      <option value="">Expertise Domain</option>
+                      <option value="Plumbing">Plumbing</option>
+                      <option value="HVAC">HVAC</option>
+                      <option value="Carpentry">Carpentry</option>
+                      <option value="Electrical">Electrical</option>
+                  </select>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-2">
+                  <select id="statusFilter" class="executive-form-control text-xs py-2 cursor-pointer">
+                      <option value="">All Statuses</option>
+                      <option value="green">Verified Match</option>
+                      <option value="amber">Reviewing Docs</option>
+                  </select>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-2">
+                  <button id="resetBtn" class="executive-secondary-btn w-full justify-center text-xs py-2">
+                      <i class="fas fa-arrows-rotate"></i> Reset
+                  </button>
+              </div>
+          </div>
+      </div>
+
+      <div class="premium-data-card overflow-hidden mb-4">
+          <div class="overflow-x-auto">
+              <table class="table custom-data-table min-w-full">
+                  <thead>
+                      <tr id="tableHeaderRow">
+                          <th class="w-10 text-center"><input type="checkbox" class="th-checkbox" id="selectAllCheckbox" title="Select All"></th>
+                          <th class="sortable-th" data-col="name">Expert Bio Information <i class="fas fa-sort sort-icon"></i></th>
+                          <th class="sortable-th" data-col="skill">Skill Mapping <i class="fas fa-sort sort-icon"></i></th>
+                          <th class="sortable-th" data-col="city">Deployment City <i class="fas fa-sort sort-icon"></i></th>
+                          <th>Compliance Status</th>
+                          <th class="sortable-th" data-col="date">Registration Date <i class="fas fa-sort sort-icon"></i></th>
+                          <th class="text-center">Operation Panel</th>
+                      </tr>
+                  </thead>
+                  <tbody id="tableBody" class="divide-y divide-[var(--border)] bg-transparent"></tbody>
+              </table>
+          </div>
+          <div class="px-4 py-3 bg-[var(--card-bg)] border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span id="recordsInfo" class="text-xs text-[var(--text-muted)] font-medium">Showing 0 to 0 of 0 Specialists</span>
+              <div class="flex items-center gap-1.5">
+                  <button id="prevBtn" class="executive-secondary-btn !py-1 !px-2.5 text-xs">Prev</button>
+                  <div id="paginationNumbers" class="flex items-center gap-1.5"></div>
+                  <button id="nextBtn" class="executive-secondary-btn !py-1 !px-2.5 text-xs">Next</button>
+              </div>
+          </div>
+      </div>
+
+  </div>
+</main>
+
+<div id="addWorkerModal" class="system-modal-overlay">
+    <div class="system-modal-box">
+        <div class="system-modal-header">
+            <div class="system-modal-title" id="workerModalTitle">Add New Worker Profile</div>
+            <div class="system-modal-close-trigger" id="closeModal"><i class="fas fa-times"></i></div>
+        </div>
+        <form id="addWorkerForm">
+            <input type="hidden" id="editWorkerId" value="">
+            <div class="system-modal-body">
+                <div class="executive-input-group">
+                    <label class="executive-input-label" for="workerName">Full Name</label>
+                    <input type="text" id="workerName" placeholder="Enter specialist full identity name" class="executive-form-control" required>
+                </div>
+                <div class="executive-input-group">
+                    <label class="executive-input-label" for="workerEmail">Email Address</label>
+                    <input type="email" id="workerEmail" placeholder="example@hunarmand.pk" class="executive-form-control" required>
+                </div>
+                <div class="executive-input-group">
+                    <label class="executive-input-label" for="workerPhone">Phone Number</label>
+                    <input type="tel" id="workerPhone" placeholder="+92 300 0000000" class="executive-form-control" required>
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="executive-input-group">
+                            <label class="executive-input-label" for="workerSkill">Expertise Domain</label>
+                            <select id="workerSkill" class="executive-form-control" required>
+                                <option value="">Select skill...</option>
+                                <option value="Plumbing">Plumbing Engineering</option>
+                                <option value="HVAC">HVAC Technician</option>
+                                <option value="Carpentry">Master Carpentry</option>
+                                <option value="Electrical">Electrical Tech</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="executive-input-group">
+                            <label class="executive-input-label" for="workerCity">Deployment City</label>
+                            <select id="workerCity" class="executive-form-control" required>
+                                <option value="">Select city...</option>
+                                <option value="Karachi">Karachi Central</option>
+                                <option value="Lahore">Lahore Elite</option>
+                                <option value="Islamabad">Islamabad Capital</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 py-3 bg-[var(--bg)] border-t border-[var(--border)] flex justify-end gap-2">
+                <button type="button" class="executive-secondary-btn" id="cancelBtn">Cancel</button>
+                <button type="submit" class="executive-primary-btn" id="workerSubmitBtn"><i class="fas fa-paper-plane"></i> Deploy Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="viewWorkerModal" class="view-modal-overlay">
+    <div class="view-modal-box">
+        <div class="view-modal-banner" id="viewBanner">
+            <div class="view-modal-avatar-init" id="viewAvatar">AK</div>
+        </div>
+        <div class="view-modal-content">
+            <div class="flex items-start justify-between" style="margin-top:.25rem;">
+                <div>
+                    <span class="view-worker-name" id="viewName">—</span>
+                    <span class="view-worker-badge-pill" id="viewBadgePill">Pro</span>
+                </div>
+                <button onclick="closeViewModal()" style="font-size:1rem;color:var(--muted);cursor:pointer;background:none;border:none;padding:.25rem;border-radius:6px;transition:all .2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="view-info-grid">
+                <div class="view-info-item">
+                    <div class="view-info-label"><i class="fas fa-envelope" style="margin-right:.2rem;"></i>Email</div>
+                    <div class="view-info-value" id="viewEmail">—</div>
+                </div>
+                <div class="view-info-item">
+                    <div class="view-info-label"><i class="fas fa-phone" style="margin-right:.2rem;"></i>Phone</div>
+                    <div class="view-info-value" id="viewPhone">—</div>
+                </div>
+                <div class="view-info-item">
+                    <div class="view-info-label"><i class="fas fa-wrench" style="margin-right:.2rem;"></i>Skill</div>
+                    <div class="view-info-value" id="viewSkill">—</div>
+                </div>
+                <div class="view-info-item">
+                    <div class="view-info-label"><i class="fas fa-map-marker-alt" style="margin-right:.2rem;"></i>City</div>
+                    <div class="view-info-value" id="viewCity">—</div>
+                </div>
+                <div class="view-info-item">
+                    <div class="view-info-label"><i class="fas fa-shield-halved" style="margin-right:.2rem;"></i>Status</div>
+                    <div class="view-info-value" id="viewStatus">—</div>
+                </div>
+                <div class="view-info-item">
+                    <div class="view-info-label"><i class="fas fa-calendar" style="margin-right:.2rem;"></i>Registered</div>
+                    <div class="view-info-value" id="viewDate">—</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-1">
+                <div class="view-profile-stat">
+                    <div class="view-profile-stat-val">4.8</div>
+                    <div class="view-profile-stat-lbl">Rating</div>
+                </div>
+                <div class="view-profile-stat">
+                    <div class="view-profile-stat-val" id="viewJobCount">24</div>
+                    <div class="view-profile-stat-lbl">Jobs Done</div>
+                </div>
+                <div class="view-profile-stat">
+                    <div class="view-profile-stat-val">97%</div>
+                    <div class="view-profile-stat-lbl">Completion</div>
+                </div>
+            </div>
+        </div>
+        <div class="view-modal-actions">
+            <button class="executive-primary-btn flex-1 justify-center" id="viewEditBtn"><i class="fas fa-pen"></i> Edit Profile</button>
+            <button class="executive-secondary-btn justify-center" style="border-color:var(--red-bdr);color:var(--danger);background:var(--red-bg);" id="viewDeleteBtn"><i class="fas fa-trash-alt"></i> Remove</button>
+        </div>
+    </div>
+</div>
+
+<div id="deleteConfirmModal" class="delete-modal-overlay">
+    <div class="delete-modal-box">
+        <div class="delete-icon-ring"><i class="fas fa-trash-alt"></i></div>
+        <div class="delete-modal-title">Remove Worker Record?</div>
+        <div class="delete-modal-body" id="deleteModalBody">This action will permanently decommission the specialist profile from all active platform registries. This cannot be undone.</div>
+        <div class="delete-modal-actions">
+            <button class="executive-secondary-btn" onclick="closeDeleteModal()">Cancel</button>
+            <button class="executive-primary-btn" style="background:var(--danger);" id="confirmDeleteBtn">Yes, Remove</button>
+        </div>
+    </div>
+</div>
+
+<div id="logoutConfirmModal" class="logout-modal-overlay">
+    <div class="logout-modal-box">
+        <div style="width:52px;height:52px;border-radius:50%;background:var(--amber-bg);border:1px solid var(--amber-bdr);display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;font-size:1.2rem;color:var(--amber);"><i class="fas fa-sign-out-alt"></i></div>
+        <div style="font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:.4rem;">Confirm Session Logout</div>
+        <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">You will be securely signed out of the Hunarmand Admin workspace. Any unsaved changes will be discarded.</div>
+        <div style="display:flex;gap:.65rem;justify-content:center;">
+            <button onclick="document.getElementById('logoutConfirmModal').classList.remove('active')" class="executive-secondary-btn">Stay</button>
+            <button onclick="executeLogout()" class="executive-primary-btn">Yes, Logout</button>
+        </div>
+    </div>
+</div>
+
+<div class="bulk-action-bar" id="bulkActionBar">
+    <span class="bulk-count-label" id="bulkCountLabel">0 Selected</span>
+    <button class="bulk-btn bulk-btn-green" onclick="bulkVerify()"><i class="fas fa-circle-check"></i> Verify All</button>
+    <div class="bulk-divider"></div>
+    <button class="bulk-btn bulk-btn-green" onclick="bulkExportSelected()"><i class="fas fa-download"></i> Export</button>
+    <div class="bulk-divider"></div>
+    <button class="bulk-btn bulk-btn-red" onclick="bulkDelete()"><i class="fas fa-trash-alt"></i> Delete</button>
+    <div class="bulk-divider"></div>
+    <button class="bulk-btn bulk-btn-clear" onclick="clearSelection()"><i class="fas fa-times"></i> Clear</button>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  THEME & SIDEBAR LOGIC
+// ═══════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById('overlay');
+    const sidebar = document.getElementById('sidebar');
+    const hbg = document.getElementById('hbg');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const tbDate = document.getElementById('tbDate');
+
+    // Set Topbar Date
+    if (tbDate) {
+        tbDate.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+   // ═══════════════════════════════════════════════════
+//  UNIFIED REAL-TIME THEME WORKSPACE SYNCHRONIZATION
+// ═══════════════════════════════════════════════════
+
+// 1. Immediate Theme Application (Prevents White Flash on Load)
+const savedTheme = localStorage.getItem('hunarmand_theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+// 2. Initialize Toggle Button Listeners once the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggleBtn = document.getElementById('themeToggleBtn') || document.querySelector('.theme-toggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      let currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.classList.add('theme-transition');
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('hunarmand_theme', newTheme);
+      
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transition');
+      }, 450);
+    });
+  }
+});
+
+// 3. Real-Time Multi-Tab Sync Listener
+window.addEventListener('storage', (e) => {
+  if (e.key === 'hunarmand_theme') {
+    let newTheme = e.newValue || 'light';
+    document.documentElement.classList.add('theme-transition');
+    document.documentElement.setAttribute('data-theme', newTheme);
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 450);
+  }
+});
+    // Sidebar controls
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+        hbg.classList.add('open');
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        hbg.classList.remove('open');
+    }
+
+    hbg.addEventListener('click', () => {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    
+    overlay.addEventListener('click', closeSidebar);
+});
+
+// ═══════════════════════════════════════════════════
+//  WORKER DATABASE & LOGIC
+// ═══════════════════════════════════════════════════
+const allWorkers = [
+    { id:1, name:"Tariq Mahmood",  email:"tariq.mahmood@hunarmand.pk", phone:"+92 300 1234567", skill:"Plumbing",  city:"Lahore",     status:"Verified Match",  statusColor:"green", badge:"Pro",      date:"Feb 12, 2026", image:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" },
+    { id:2, name:"Sajid Ali",      email:"sajid.elec@hunarmand.pk",    phone:"+92 312 9876543", skill:"Electrical", city:"Karachi",    status:"Reviewing Docs",  statusColor:"amber", badge:"Standard", date:"Jan 05, 2026", image:null },
+    { id:3, name:"Kamran Khan",    email:"kamran.wood@work.pk",        phone:"+92 300 9876543", skill:"Carpentry",  city:"Islamabad",  status:"Verified Match",  statusColor:"green", badge:"Expert",   date:"Aug 22, 2025", image:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" },
+    { id:4, name:"Ahmed Hassan",   email:"ahmed.hassan@hunarmand.pk",  phone:"+92 321 5555555", skill:"HVAC",       city:"Lahore",     status:"Verified Match",  statusColor:"green", badge:"Pro",      date:"Mar 15, 2026", image:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" },
+    { id:5, name:"Fatima Khan",    email:"fatima.khan@work.pk",        phone:"+92 333 7777777", skill:"Plumbing",   city:"Karachi",    status:"Reviewing Docs",  statusColor:"amber", badge:"Standard", date:"Dec 01, 2025", image:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop" },
+    { id:6, name:"Muhammad Ali",   email:"m.ali@hunarmand.pk",         phone:"+92 345 2222222", skill:"Electrical", city:"Islamabad",  status:"Verified Match",  statusColor:"green", badge:"Expert",   date:"Nov 10, 2025", image:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" },
+    { id:7, name:"Hassan Raza",    email:"hassan.raza@work.pk",        phone:"+92 300 4444444", skill:"Carpentry",  city:"Lahore",     status:"Verified Match",  statusColor:"green", badge:"Pro",      date:"Oct 20, 2025", image:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" },
+    { id:8, name:"Zainab Ahmed",   email:"zainab.ahmed@hunarmand.pk",  phone:"+92 321 8888888", skill:"HVAC",       city:"Karachi",    status:"Reviewing Docs",  statusColor:"amber", badge:"Standard", date:"Sep 05, 2025", image:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop" },
+];
+
+let currentPage        = 1;
+const itemsPerPage     = 4;
+let filteredWorkers    = [...allWorkers];
+let sortConfig         = { column: null, direction: 'asc' };
+let selectedIds        = new Set();
+let editingWorkerId    = null;
+let pendingDeleteId    = null;
+
+// DOM Refs
+const searchInput       = document.getElementById('searchInput');
+const zoneFilter        = document.getElementById('zoneFilter');
+const skillFilter       = document.getElementById('skillFilter');
+const statusFilter      = document.getElementById('statusFilter');
+const resetBtn          = document.getElementById('resetBtn');
+const tableBody         = document.getElementById('tableBody');
+const recordsInfo       = document.getElementById('recordsInfo');
+const prevBtn           = document.getElementById('prevBtn');
+const nextBtn           = document.getElementById('nextBtn');
+const paginationNumbers = document.getElementById('paginationNumbers');
+const addWorkerModal    = document.getElementById('addWorkerModal');
+const addWorkerForm     = document.getElementById('addWorkerForm');
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    renderTable();
+    setTimeout(() => animateCounters(), 300);
+});
+
+// ANIMATED COUNTERS
+function animateCounters() {
+    [
+        { id:'metricWorkers', end:1482, decimal:false, duration:1200 },
+        { id:'metricRating',  end:98.2, decimal:true,  duration:1000 },
+        { id:'metricPayout',  end:84.5, decimal:true,  duration:900  },
+        { id:'metricAudits',  end:7,    decimal:false, duration:600  },
+    ].forEach(({ id, end, decimal, duration }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const start = performance.now();
+        function step(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased    = 1 - Math.pow(1 - progress, 3);
+            const val      = eased * end;
+            el.textContent = decimal ? val.toFixed(1) : Math.round(val).toLocaleString();
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    });
+}
+
+// TOAST SYSTEM
+const toastIcons = { success:'fa-circle-check', error:'fa-circle-xmark', warning:'fa-triangle-exclamation', info:'fa-circle-info' };
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast     = document.createElement('div');
+    toast.className = `toast-item toast-${type}`;
+    toast.innerHTML = `<i class="fas ${toastIcons[type] || 'fa-info-circle'} toast-icon"></i><span style="flex:1;">${message}</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => { requestAnimationFrame(() => toast.classList.add('show')); });
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
+}
+
+// EVENT LISTENERS
+function setupEventListeners() {
+    searchInput.addEventListener('input', applyFilters);
+    zoneFilter.addEventListener('change', applyFilters);
+    skillFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+    resetBtn.addEventListener('click', resetFilters);
+    prevBtn.addEventListener('click', previousPage);
+    nextBtn.addEventListener('click', nextPage);
+
+    document.getElementById('addWorkerBtn').addEventListener('click', openAddModal);
+    document.getElementById('closeModal').addEventListener('click', closeWorkerModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeWorkerModal);
+    addWorkerForm.addEventListener('submit', handleWorkerFormSubmit);
+    addWorkerModal.addEventListener('click', e => { if (e.target === addWorkerModal) closeWorkerModal(); });
+
+    document.getElementById('selectAllCheckbox').addEventListener('change', e => handleSelectAll(e.target.checked));
+    
+    // Topbar Export CSV function mapping
+    document.getElementById('exportBtnTop').addEventListener('click', exportCSV);
+
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', () => sortByColumn(th.dataset.col, th));
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeWorkerModal(); closeViewModal(); closeDeleteModal(); }
+    });
+}
+
+// FILTERS & SORT
+function applyFilters() {
+    const q    = searchInput.value.toLowerCase();
+    const zone = zoneFilter.value;
+    const skill= skillFilter.value;
+    const stat = statusFilter.value;
+
+    filteredWorkers = allWorkers.filter(w =>
+        (!q    || w.name.toLowerCase().includes(q) || w.email.toLowerCase().includes(q) || w.phone.includes(q)) &&
+        (!zone || w.city === zone) &&
+        (!skill|| w.skill === skill) &&
+        (!stat || w.statusColor === stat)
+    );
+    currentPage = 1;
+    applySortToFiltered();
+    renderTable();
+}
+
+function resetFilters() {
+    searchInput.value = ''; zoneFilter.value = ''; skillFilter.value = ''; statusFilter.value = '';
+    filteredWorkers = [...allWorkers];
+    currentPage = 1; sortConfig = { column:null, direction:'asc' };
+    document.querySelectorAll('.sortable-th').forEach(th => th.className = th.className.replace(' sort-asc','').replace(' sort-desc',''));
+    renderTable();
+    showToast('All filters cleared.', 'info');
+}
+
+function sortByColumn(col, thEl) {
+    if (sortConfig.column === col) {
+        sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortConfig.column = col;
+        sortConfig.direction = 'asc';
+        document.querySelectorAll('.sortable-th').forEach(th => {
+            th.classList.remove('sort-asc','sort-desc');
+            th.querySelector('.sort-icon').className = 'fas fa-sort sort-icon';
+        });
+    }
+    thEl.classList.remove('sort-asc','sort-desc');
+    thEl.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+    const icon = thEl.querySelector('.sort-icon');
+    if (icon) icon.className = `fas fa-sort-${sortConfig.direction === 'asc' ? 'up' : 'down'} sort-icon`;
+    applySortToFiltered();
+    renderTable();
+}
+
+function applySortToFiltered() {
+    if (!sortConfig.column) return;
+    filteredWorkers.sort((a, b) => {
+        let va = a[sortConfig.column] || '', vb = b[sortConfig.column] || '';
+        if (sortConfig.column === 'date') { va = new Date(va); vb = new Date(vb); }
+        else { va = va.toString().toLowerCase(); vb = vb.toString().toLowerCase(); }
+        return sortConfig.direction === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+}
+
+// RENDER TABLE
+function renderTable() {
+    const start    = (currentPage - 1) * itemsPerPage;
+    const pageData = filteredWorkers.slice(start, start + itemsPerPage);
+
+    tableBody.innerHTML = '';
+
+    if (!pageData.length) {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-[var(--text-muted)] opacity-60"><i class="fas fa-folder-open text-2xl mb-2 d-block"></i>No active records match selected criteria.</td></tr>`;
+        updatePagination(); return;
+    }
+
+    pageData.forEach(w => {
+        const isChecked = selectedIds.has(w.id);
+        const statusStyle = w.statusColor === 'green'
+            ? 'background:rgba(42, 125, 79, 0.15);color:var(--primary);'
+            : 'background:rgba(240, 140, 0, 0.15);color:var(--warning);';
+        const statusIcon = w.statusColor === 'green' ? 'fa-circle-check' : 'fa-circle-exclamation';
+        const avatarHTML = w.image
+            ? `<img src="${w.image}" alt="" class="w-full h-full object-cover">`
+            : `<span class="text-xs font-bold" style="color:var(--white);">${w.name.split(' ').map(n=>n[0]).join('')}</span>`;
+        const avatarBg = w.image ? 'transparent' : 'var(--primary)';
+
+        const tr = document.createElement('tr');
+        tr.className = 'custom-data-row';
+        tr.dataset.id = w.id;
+        tr.innerHTML = `
+            <td class="text-center">
+                <input type="checkbox" class="row-checkbox" data-id="${w.id}" ${isChecked?'checked':''} onchange="handleRowSelect(${w.id}, this.checked)">
+            </td>
+            <td>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-md border border-[var(--border)] flex items-center justify-center overflow-hidden flex-shrink-0" style="background:${avatarBg}">${avatarHTML}</div>
+                    <div>
+                        <div class="font-bold text-[var(--text-main)] flex items-center gap-1.5" style="cursor:pointer;" onclick="openViewProfile(${w.id})">
+                            ${w.name}
+                            <span class="text-[9px] bg-[var(--bg)] text-[var(--primary)] px-1 rounded border border-[var(--border)] font-bold">${w.badge}</span>
+                        </div>
+                        <div class="text-xs text-[var(--text-muted)] font-medium">${w.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td><span class="px-2 py-0.5 bg-[var(--bg)] border border-[var(--border)] text-[var(--text-main)] text-xs font-semibold rounded">${w.skill}</span></td>
+            <td><span class="text-xs font-semibold text-[var(--text-main)]"><i class="fas fa-map-marker-alt text-[var(--text-muted)] mr-1"></i>${w.city}</span></td>
+            <td>
+                <span class="status-toggle-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold" 
+                      style="${statusStyle}" title="Click to toggle status" onclick="toggleStatus(${w.id})">
+                    <i class="fas ${statusIcon} text-[10px]"></i> ${w.status}
+                </span>
+            </td>
+            <td><span class="text-xs font-medium text-[var(--text-muted)]">${w.date}</span></td>
+            <td>
+                <div class="flex items-center justify-center gap-1.5">
+                    <button class="w-7 h-7 rounded bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--primary)] transition-all text-xs" title="View Profile" onclick="openViewProfile(${w.id})"><i class="fas fa-eye"></i></button>
+                    <button class="w-7 h-7 rounded bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--primary)] transition-all text-xs" title="Edit Profile" onclick="openEditWorker(${w.id})"><i class="fas fa-pen"></i></button>
+                    <button class="w-7 h-7 rounded bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-all text-xs" title="Remove Record" onclick="openDeleteConfirm(${w.id})"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </td>`;
+        tableBody.appendChild(tr);
+    });
+
+    updatePagination();
+    syncSelectAll();
+}
+
+// PAGINATION
+function updatePagination() {
+    const total = Math.ceil(filteredWorkers.length / itemsPerPage);
+    const s     = filteredWorkers.length === 0 ? 0 : (currentPage-1)*itemsPerPage + 1;
+    const e     = Math.min(currentPage*itemsPerPage, filteredWorkers.length);
+    recordsInfo.textContent = `Showing ${s} to ${e} of ${filteredWorkers.length} Specialists`;
+    paginationNumbers.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = i;
+        btn.className = i === currentPage
+            ? 'px-2.5 py-1 text-xs rounded font-bold bg-[var(--primary)] text-white shadow-sm border-none'
+            : 'px-2.5 py-1 text-xs rounded font-semibold bg-[var(--card-bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--primary)] transition-all';
+        btn.addEventListener('click', () => { currentPage = i; renderTable(); });
+        paginationNumbers.appendChild(btn);
+    }
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === total || total === 0;
+}
+
+function previousPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+function nextPage() { const t = Math.ceil(filteredWorkers.length/itemsPerPage); if (currentPage < t) { currentPage++; renderTable(); } }
+
+// ADD / EDIT MODAL
+function openAddModal() {
+    editingWorkerId = null;
+    addWorkerForm.reset();
+    document.getElementById('editWorkerId').value = '';
+    document.getElementById('workerModalTitle').textContent = 'Add New Worker Profile';
+    document.getElementById('workerSubmitBtn').innerHTML = '<i class="fas fa-paper-plane"></i> Deploy Record';
+    addWorkerModal.classList.add('active');
+}
+
+function openEditWorker(id) {
+    const w = allWorkers.find(x => x.id === id);
+    if (!w) return;
+    editingWorkerId = id;
+    document.getElementById('editWorkerId').value = id;
+    document.getElementById('workerName').value  = w.name;
+    document.getElementById('workerEmail').value = w.email;
+    document.getElementById('workerPhone').value = w.phone;
+    document.getElementById('workerSkill').value = w.skill;
+    document.getElementById('workerCity').value  = w.city;
+    document.getElementById('workerModalTitle').textContent = 'Edit Worker Profile';
+    document.getElementById('workerSubmitBtn').innerHTML = '<i class="fas fa-pen"></i> Update Record';
+    addWorkerModal.classList.add('active');
+    closeViewModal();
+}
+
+function closeWorkerModal() {
+    addWorkerModal.classList.remove('active');
+    addWorkerForm.reset();
+    editingWorkerId = null;
+    document.getElementById('editWorkerId').value = '';
+}
+
+function handleWorkerFormSubmit(e) {
+    e.preventDefault();
+    const id    = editingWorkerId;
+    const name  = document.getElementById('workerName').value.trim();
+    const email = document.getElementById('workerEmail').value.trim();
+    const phone = document.getElementById('workerPhone').value.trim();
+    const skill = document.getElementById('workerSkill').value;
+    const city  = document.getElementById('workerCity').value;
+
+    if (!name || !email || !phone || !skill || !city) {
+        showToast('Please complete all required fields.', 'warning'); return;
+    }
+
+    if (id) {
+        const idx = allWorkers.findIndex(w => w.id === id);
+        if (idx > -1) {
+            allWorkers[idx] = { ...allWorkers[idx], name, email, phone, skill, city };
+            showToast(`Profile updated: ${name}`, 'success');
+        }
+    } else {
+        allWorkers.unshift({
+            id: Date.now(),
+            name, email, phone, skill, city,
+            status:'Reviewing Docs', statusColor:'amber', badge:'Standard',
+            date: new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),
+            image: null
+        });
+        showToast(`New worker deployed: ${name}`, 'success');
+    }
+
+    filteredWorkers = [...allWorkers];
+    applyFilters();
+    currentPage = 1;
+    closeWorkerModal();
+    renderTable();
+}
+
+// VIEW PROFILE MODAL
+function openViewProfile(id) {
+    const w = allWorkers.find(x => x.id === id);
+    if (!w) return;
+
+    document.getElementById('viewName').textContent    = w.name;
+    document.getElementById('viewBadgePill').textContent = w.badge;
+    document.getElementById('viewEmail').textContent   = w.email;
+    document.getElementById('viewPhone').textContent   = w.phone;
+    document.getElementById('viewSkill').textContent   = w.skill;
+    document.getElementById('viewCity').textContent    = w.city;
+    document.getElementById('viewStatus').textContent  = w.status;
+    document.getElementById('viewDate').textContent    = w.date;
+    document.getElementById('viewJobCount').textContent= Math.floor(Math.random()*30 + 10);
+
+    const avatarEl = document.getElementById('viewAvatar');
+    if (w.image) {
+        avatarEl.outerHTML = `<img src="${w.image}" alt="" id="viewAvatar" class="view-modal-avatar">`;
+    } else {
+        const initials = w.name.split(' ').map(n=>n[0]).join('').slice(0,2);
+        document.getElementById('viewAvatar').textContent = initials;
+    }
+
+    const statusEl = document.getElementById('viewStatus');
+    statusEl.style.color = w.statusColor === 'green' ? 'var(--primary)' : 'var(--warning)';
+    statusEl.style.fontWeight = '700';
+
+    document.getElementById('viewEditBtn').onclick   = () => openEditWorker(w.id);
+    document.getElementById('viewDeleteBtn').onclick = () => { closeViewModal(); openDeleteConfirm(w.id); };
+
+    document.getElementById('viewWorkerModal').classList.add('active');
+}
+
+function closeViewModal() { document.getElementById('viewWorkerModal').classList.remove('active'); }
+document.getElementById('viewWorkerModal').addEventListener('click', e => { if (e.target === document.getElementById('viewWorkerModal')) closeViewModal(); });
+
+// DELETE MODAL
+function openDeleteConfirm(id) {
+    const w = allWorkers.find(x => x.id === id);
+    if (!w) return;
+    pendingDeleteId = id;
+    document.getElementById('deleteModalBody').textContent = `This will permanently remove the profile of "${w.name}" (${w.skill}, ${w.city}) from all platform registries.`;
+    document.getElementById('confirmDeleteBtn').onclick = () => executeDelete(id);
+    document.getElementById('deleteConfirmModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.remove('active');
+    pendingDeleteId = null;
+}
+
+function executeDelete(id) {
+    const idx = allWorkers.findIndex(w => w.id === id);
+    if (idx > -1) {
+        const name = allWorkers[idx].name;
+        allWorkers.splice(idx, 1);
+        selectedIds.delete(id);
+        filteredWorkers = allWorkers.filter(w => filteredWorkers.includes(w) || true);
+        applyFilters();
+        renderTable();
+        updateBulkBar();
+        closeDeleteModal();
+        showToast(`Worker "${name}" removed from registry.`, 'error');
+    }
+}
+
+document.getElementById('deleteConfirmModal').addEventListener('click', e => { if (e.target === document.getElementById('deleteConfirmModal')) closeDeleteModal(); });
+
+// STATUS TOGGLE
+function toggleStatus(id) {
+    const w = allWorkers.find(x => x.id === id);
+    if (!w) return;
+    if (w.statusColor === 'green') {
+        w.statusColor = 'amber'; w.status = 'Reviewing Docs';
+        showToast(`${w.name} moved to review queue.`, 'warning');
+    } else {
+        w.statusColor = 'green'; w.status = 'Verified Match';
+        showToast(`${w.name} verified successfully.`, 'success');
+    }
+    applyFilters();
+    renderTable();
+}
+
+// BULK SELECTION
+function handleRowSelect(id, checked) {
+    if (checked) selectedIds.add(id); else selectedIds.delete(id);
+    syncSelectAll(); updateBulkBar();
+}
+
+function handleSelectAll(checked) {
+    const pageData = filteredWorkers.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage);
+    pageData.forEach(w => checked ? selectedIds.add(w.id) : selectedIds.delete(w.id));
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checked);
+    updateBulkBar();
+}
+
+function syncSelectAll() {
+    const pageData  = filteredWorkers.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage);
+    const allChkd   = pageData.length > 0 && pageData.every(w => selectedIds.has(w.id));
+    const selectAll = document.getElementById('selectAllCheckbox');
+    if (selectAll) selectAll.checked = allChkd;
+}
+
+function updateBulkBar() {
+    const bar = document.getElementById('bulkActionBar');
+    const cnt = selectedIds.size;
+    document.getElementById('bulkCountLabel').textContent = `${cnt} Selected`;
+    bar.classList.toggle('visible', cnt > 0);
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateBulkBar();
+    showToast('Selection cleared.', 'info');
+}
+
+function bulkDelete() {
+    if (!selectedIds.size) return;
+    const count = selectedIds.size;
+    selectedIds.forEach(id => {
+        const idx = allWorkers.findIndex(w => w.id === id);
+        if (idx > -1) allWorkers.splice(idx, 1);
+    });
+    selectedIds.clear();
+    filteredWorkers = [...allWorkers]; applyFilters(); renderTable(); updateBulkBar();
+    showToast(`${count} worker(s) removed from registry.`, 'error');
+}
+
+function bulkVerify() {
+    if (!selectedIds.size) return;
+    let count = 0;
+    selectedIds.forEach(id => {
+        const w = allWorkers.find(x => x.id === id);
+        if (w && w.statusColor !== 'green') { w.statusColor = 'green'; w.status = 'Verified Match'; count++; }
+    });
+    applyFilters(); renderTable();
+    showToast(`${count} worker(s) marked as Verified.`, 'success');
+    clearSelection();
+}
+
+function bulkExportSelected() {
+    const workers = allWorkers.filter(w => selectedIds.has(w.id));
+    if (!workers.length) return;
+    generateCSV(workers);
+    showToast(`Exported ${workers.length} selected worker(s).`, 'success');
+    clearSelection();
+}
+
+// CSV EXPORT
+function exportCSV() {
+    generateCSV(filteredWorkers);
+    showToast(`Exported ${filteredWorkers.length} worker record(s) to CSV.`, 'success');
+}
+
+function generateCSV(data) {
+    const headers = ['ID','Name','Email','Phone','Skill','City','Status','Badge','Registration Date'];
+    const rows    = data.map(w => [w.id, w.name, w.email, w.phone, w.skill, w.city, w.status, w.badge, w.date]);
+    const csv     = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob    = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+    const url     = URL.createObjectURL(blob);
+    const a       = document.createElement('a');
+    a.href        = url;
+    a.download    = `hunarmand_workers_${Date.now()}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// LOGOUT
+function executeLogout() {
+    document.getElementById('logoutConfirmModal').classList.remove('active');
+    showToast('Terminating session... Goodbye.', 'warning');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hunarmand | Contact Us</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap"rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        html,
+        body { overflow-x: hidden;scroll-behavior: smooth;}
+        body {font-family: 'Inter', sans-serif;background: #f5fbf7;color: #1a2e1a; display: flex;flex-direction: column;min-height: 100vh;}
+        .serif {font-family: 'Playfair Display', serif;}
+        ::selection { background: #1a2e1a;color: white;}
+        ::-webkit-scrollbar {width: 6px;}
+        ::-webkit-scrollbar-track { background: #f1f1f1;}
+        ::-webkit-scrollbar-thumb { background: #1a2e1a; border-radius: 10px;}
+        a { text-decoration: none;}
+        button { border: none;cursor: pointer; font-family: inherit;}
+        img { max-width: 100%; }
+        :root {
+            --forest: #1b5e37;
+            --sage: #4a6741;
+            --moss: #8da083;
+            --light-bg: #f7f8f7;
+            --white: #ffffff;
+            --gray: #64748b;
+        }
+
+nav{position:fixed;top:0;width:100%;z-index:999;padding:20px 32px;display:flex;justify-content:space-between;align-items:center;transition:.4s ease;}
+nav.scrolled{background:rgba(255,255,255,.88);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.06);padding:14px 32px;}
+.logo{display:flex;align-items:center;gap:10px;z-index:1001;}
+.logo-text{font-size:30px;font-weight:800;color:#1b5e37;letter-spacing:-1px;}
+.nav-links{display:flex;align-items:center;gap:40px;}
+.nav-links a{color:#0b1a10;font-size:14px;font-weight:600;transition:.3s;}
+.nav-links a:hover{color:#4a6741;}
+.active-link{color:#4a6741!important;}
+.nav-buttons{display:flex;align-items:center;gap:16px;}
+.login-btn{background:transparent;color:#1b5e37;font-size:14px;font-weight:700;}
+.signup-btn{background:#1b5e37;color:#fff;padding:14px 28px;border-radius:999px;font-size:14px;font-weight:700;transition:.3s;position:relative;overflow:hidden;}
+.signup-btn:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.15);}
+.signup-btn::after{content:'';position:absolute;top:-50%;left:-100%;width:200%;height:200%;background:linear-gradient(45deg,transparent,rgba(255,255,255,.2),transparent);transform:rotate(45deg);transition:.7s;}
+.signup-btn:hover::after{left:100%;}
+
+.menu-btn{display:none;background:transparent;color:#1b5e37;z-index:1001;}
+.menu-btn span{font-size:34px;transition:.3s;}
+.mobile-menu{position:absolute;top:0;left:0;width:100%;background:#1b5e37;padding:110px 24px 40px;display:flex;flex-direction:column;gap:24px;transform:translateY(-120%);transition:.5s ease;z-index:1000;}
+.mobile-menu.active{transform:translateY(0);}
+.mobile-menu a{color:#fff;font-size:18px;font-weight:500;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:12px;}
+.mobile-buttons{display:flex;flex-direction:column;gap:14px;padding-top:10px;}
+.mobile-buttons button{padding:14px;border-radius:999px;font-weight:700;}
+.mobile-login{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;}
+.mobile-signup{background:#fff;color:#1b5e37;}
+
+main{flex:1;}
+.contact-section{padding:140px 24px 80px;}
+.container{max-width:1280px;margin:auto;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:flex-start;}
+.contact-card{background:#fff;border-radius:32px;padding:48px;box-shadow:0 20px 60px rgba(0,0,0,.06);}
+.contact-subtitle{text-transform:uppercase;letter-spacing:4px;font-size:12px;font-weight:700;color:#4a6741;margin-bottom:18px;}
+.contact-title{font-size:54px;font-weight:700;line-height:1.1;margin-bottom:24px; color: #164e2d;}
+.contact-description{color:#64748b;line-height:1.8;max-width:520px;margin-bottom:40px;}
+
+.form-group{margin-bottom:24px;}
+.form-group label{display:block;font-size:15px;font-weight:600;margin-bottom:12px;}
+.input-field{width:100%;border:1.5px solid #d9dfdb;border-radius:16px;padding:16px;background:#f8fbfa;font-size:15px;transition:.3s;outline:none;}
+.input-field:focus{border-color: #1b5e37;background:#fff;box-shadow:0 0 0 5px rgba(26,46,26,.07);}
+textarea{resize:none;min-height:140px;}
+.submit-btn{width:100%;background: #1b5e37;color:#fff;padding:18px;border-radius:18px;font-size:16px;font-weight:600;transition:.3s;}
+.submit-btn:hover{transform:translateY(-2px);opacity:.95;}
+.error{color:#dc2626;font-size:13px;margin-top:6px;display:none;}
+.success-message{margin-top:18px;color:#15803d;font-weight:600;display:none;}
+
+.contact-info{display:flex;flex-direction:column;gap:30px;}
+.info-card{background:#fff;border-radius:32px;padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.06);}
+.info-card h2{font-size:30px;margin-bottom:30px;}
+.contact-box{display:flex;align-items:center;gap:20px;padding:22px;border-radius:24px;border:1px solid #eef2ef;transition:.3s;cursor:pointer;margin-bottom:18px;}
+.contact-box:hover{transform:translateY(-4px);background:#f8fbfa;}
+.icon-box{width:56px;height:56px;border-radius:18px;background:#dcfce7;display:flex;align-items:center;justify-content:center;color: #1b5e37;flex-shrink:0;}
+.icon-box i{font-size:18px;}
+.contact-box p{font-size:14px;color:#64748b;margin-bottom:4px;}
+.contact-box h3{font-size:16px;font-weight:600;word-break:break-word;}
+
+.franchise-box{background: #1b5e37;color:#fff;border-radius:36px;padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.12);}
+.franchise-top{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+.franchise-icon{width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.franchise-icon i{font-size:22px;}
+.franchise-box h2{font-size:30px;}
+.franchise-box p{color:#cbd5e1;line-height:1.8;margin-bottom:30px;}
+.franchise-btn{width:100%;background:#fff;color: #1b5e37;padding:18px;border-radius:18px;font-size:16px;font-weight:600;transition:.3s;}
+.franchise-btn:hover{transform:translateY(-2px);}
+.loading{margin-top:18px;color:#d1d5db;display:none;}
+.nearest-branch{display:none;margin-top:24px;background:rgba(255,255,255,.1);border-radius:24px;padding:26px;}
+.nearest-branch h3{font-size:22px;margin-bottom:10px;}
+.nearest-branch p{margin-bottom:8px;}
+.map-btn{display:inline-flex;align-items:center;gap:10px;background:#fff;color: #1b5e37;padding:14px 20px;border-radius:14px;font-weight:600;margin-top:14px;}
+
+footer{background:#fff;border-top:1px solid rgba(26,46,26,.08);padding:60px 24px 30px;}
+.footer-container{max-width:1280px;margin:auto;text-align:center;}
+.footer-brand{margin-bottom:40px;}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:16px;}
+.footer-logo-text{color: #1b5e37; font-size:30px;font-weight:800;letter-spacing:-1px;}
+.footer-description{color:#64748b;font-size:14px;line-height:1.8;max-width:520px;margin:auto;font-style:italic;}
+.footer-links{display:flex;justify-content:center;flex-wrap:wrap;gap:28px;margin-bottom:40px;}
+.footer-links a{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:#64748b;position:relative;}
+.footer-links a::after{content:'';position:absolute;left:0;bottom:-5px;width:0%;height:1.5px;background: #1b5e37;transition:.3s;}
+.footer-links a:hover::after{width:100%;}
+.footer-links a:hover{color: #1b5e37;}
+.social-links{display:flex;justify-content:center;gap:24px;margin-bottom:40px;}
+.social-links a{color:#4a6741;font-size:22px;transition:.3s;}
+.social-links a:hover{color: #1b5e37;transform:translateY(-2px);}
+.copyright{border-top:1px solid rgba(26,46,26,.05);padding-top:24px;color:#94a3b8;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:600;}
+
+#backToTop{position:fixed;right:24px;bottom:24px;width:52px;height:52px;border-radius:50%;background: #1b5e37;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.2);opacity:0;visibility:hidden;transform:translateY(20px);transition:.3s;z-index:999;}
+#backToTop.show{opacity:1;visibility:visible;transform:translateY(0);}
+
+.reveal{opacity:0;transform:translateY(20px);transition:all .8s ease;}
+.reveal.active{opacity:1;transform:translateY(0);}
+
+@media(max-width:1100px){.contact-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){nav{padding:18px 20px;}nav.scrolled{padding:14px 20px;}.nav-links,.nav-buttons{display:none;}.menu-btn{display:flex;align-items:center;justify-content:center;}.contact-section{padding:120px 16px 60px;}.contact-card,.info-card,.franchise-box{padding:28px;border-radius:26px;}.contact-title{font-size:42px;}.logo-text,.footer-logo-text{font-size:26px;}}
+@media(max-width:500px){.contact-title{font-size:34px;}.contact-box{padding:18px;}.franchise-box h2,.info-card h2{font-size:24px;}.footer-links{gap:16px;}.footer-links a{font-size:11px;}}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <div class="logo-text">Hunarmand </div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html" class="active-link">Contact Us</a>
+        </div>
+        <div class="nav-buttons">
+            <button class="login-btn">Login</button>
+            <button class="signup-btn">Sign Up</button>
+        </div>
+        <button class="menu-btn" id="menuBtn">
+            <span class="material-symbols-outlined" id="menuIcon">menu</span>
+        </button>
+        <!-- MOBILE MENU -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact Us</a>
+            <div class="mobile-buttons">
+                <button class="mobile-login">Login</button>
+                <button class="mobile-signup">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+    <!-- MAIN -->
+    <main>
+        <section class="contact-section">
+            <div class="container">
+                <div class="contact-grid">
+                    <!-- LEFT -->
+                    <div class="contact-card reveal">
+                        <div class="contact-subtitle"> Contact Support</div>
+                        <h1 class="contact-title" style="font-family: ui-serif, Georgia, Cambria, 'Times New Roman', 'Times', serif;">Let's Talk.</h1>
+                        <p class="contact-description">Reach out to Hunarmand support for franchise inquiries,technical support, collaborations, or general assistance.</p>
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="fullName" class="input-field"
+                                    placeholder="Enter your full name">
+                                <div class="error" id="nameError">
+                                    Only English alphabets are allowed.
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Email or Phone Number</label>
+                                <input type="text" id="contactInput" class="input-field"
+                                    placeholder="Enter email or phone number">
+                                <div class="error" id="contactError">
+                                    Enter valid email or 10-11 digit phone number.
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea id="message" class="input-field"
+                                    placeholder="Write your message here..."></textarea>
+                                <div class="error" id="messageError">
+                                    Message should be at least 10 characters.
+                                </div>
+                            </div>
+                            <button type="submit" class="submit-btn">
+                                Submit Message
+                            </button>
+                            <div class="success-message" id="successMessage">
+                                Message submitted successfully.
+                            </div>
+                        </form>
+                    </div>
+                    <!-- RIGHT -->
+                    <div class="contact-info reveal">
+                        <!-- CONTACT -->
+                        <div class="info-card">
+                            <h2 style="color: #164e2d;">Direct Contact</h2>
+                            <div class="contact-box" id="emailBtn">
+                                <div class="icon-box">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <p>Email Support</p>
+                                    <h3>support@hunarmand.pk</h3>
+                                </div>
+                            </div>
+                            <div class="contact-box" id="phoneBtn">
+                                <div class="icon-box">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <div>
+                                    <p>Phone Support</p>
+                                    <h3>+92 300 1234567</h3>
+                                </div>
+                            </div>
+                            <div class="contact-box" id="mapBtn">
+                                <div class="icon-box">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <div>
+                                    <p>Head Office</p>
+                                    <h3>Islamabad, Pakistan</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- FRANCHISE -->
+                        <div class="franchise-box">
+                            <div class="franchise-top">
+                                <div class="franchise-icon">
+                                    <i class="fa-solid fa-store"></i>
+                                </div>
+                                <div>
+                                    <h2>Franchise Locator</h2>
+                                </div>
+                            </div>
+                            <p>
+                                Find your nearest Hunarmand franchise automatically
+                                using live device location.
+                            </p>
+                            <button id="findFranchiseBtn" class="franchise-btn">
+                                Find Nearby Franchise
+                            </button>
+                            <div class="loading" id="loadingText">
+                                Detecting your location...
+                            </div>
+                            <div class="nearest-branch" id="nearestBranch">
+                                <h3 id="branchName">
+                                    Karachi Central Franchise
+                                </h3>
+                                <p id="branchDistance">
+                                    Distance: 12 KM
+                                </p>
+                                <p id="branchAddress">
+                                    Shahrah-e-Faisal, Karachi
+                                </p>
+                                <a href="#" class="map-btn" id="openMapBtn">
+                                    Open in Maps
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <div class="footer-logo-text">Hunarmand</div>
+                </div>
+                <p class="footer-description">“Connecting Pakistan's finest artisans and experts with theglobal digital frontier.”</p>
+            </div>
+            <div class="footer-links">
+                <a href="about.html">About Us</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Help Center</a>
+            </div>
+            <div class="social-links">
+                <a href="https://www.instagram.com/"><i class="fa-brands fa-instagram"></i> </a>
+                <a href="https://www.facebook.com/"><i class="fa-brands fa-facebook-f"></i></a>
+            </div>
+            <div class="copyright">© 2026 Hunarmand Collective. Crafted in Pakistan.</div>
+        </div>
+    </footer>
+    <button id="backToTop">
+        <span class="material-symbols-outlined"> arrow_upward</span>
+    </button>
+    <script>
+        // REVEAL ANIMATION
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+
+        }, {
+            threshold: 0.1
+        });
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+        // NAVBAR SCROLL
+        const nav = document.querySelector('nav');
+        const backToTopBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+            if (window.scrollY > 500) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        // BACK TO TOP
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        // MOBILE MENU
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuIcon = document.getElementById('menuIcon');
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('active');
+            if (mobileMenu.classList.contains('active')) {
+                menuIcon.textContent = 'close';
+                menuIcon.style.transform = 'rotate(90deg)';
+            } else {
+                menuIcon.textContent = 'menu';
+                menuIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+        document.addEventListener('click', (e) => {
+            if (
+                !mobileMenu.contains(e.target) &&
+                !menuBtn.contains(e.target)
+            ) {
+                mobileMenu.classList.remove('active');
+                menuIcon.textContent = 'menu';
+                menuIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+        // CONTACT FUNCTIONS
+        $(document).ready(function () {
+            // FRANCHISES
+            const franchises = [
+                {
+                    branch: "Karachi Central Franchise",
+                    address: "Shahrah-e-Faisal, Karachi",
+                    lat: 24.8607,
+                    lng: 67.0011
+                },
+                {
+                    branch: "Karachi Clifton Franchise",
+                    address: "Clifton Block 5, Karachi",
+                    lat: 24.8138,
+                    lng: 67.0305
+                },
+                {
+                    branch: "Lahore DHA Franchise",
+                    address: "DHA Lahore",
+                    lat: 31.4697,
+                    lng: 74.3850
+                },
+                {
+                    branch: "Islamabad Blue Area Franchise",
+                    address: "Blue Area, Islamabad",
+                    lat: 33.6844,
+                    lng: 73.0479
+                },
+                {
+                    branch: "Peshawar Saddar Franchise",
+                    address: "Saddar Road",
+                    lat: 34.0050,
+                    lng: 71.5540
+                },
+                {
+                    branch: "Quetta Jinnah Road Franchise",
+                    address: "Jinnah Road",
+                    lat: 30.1798,
+                    lng: 66.9750
+                }
+            ];
+            // FORM VALIDATION
+            $("#contactForm").submit(function (e) {
+                e.preventDefault();
+                $(".error").hide();
+                let valid = true;
+                const name = $("#fullName").val().trim();
+                const contact = $("#contactInput").val().trim();
+                const message = $("#message").val().trim();
+                const nameRegex = /^[A-Za-z\s]+$/;
+                if (
+                    name.length < 3 ||
+                    !nameRegex.test(name)
+                ) {
+                    $("#nameError").show();
+                    valid = false;
+                }
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const phone = contact.replace(/\D/g, '');
+                const phoneValid =
+                    phone.length >= 10 &&
+                    phone.length <= 11;
+                const emailValid = emailRegex.test(contact);
+                if (!phoneValid && !emailValid) {
+                    $("#contactError").show();
+                    valid = false;
+                }
+                if (message.length < 10) {
+                    $("#messageError").show();
+                    valid = false;
+                }
+                if (valid) {
+                    $("#successMessage").fadeIn();
+                    $("#contactForm")[0].reset();
+                    setTimeout(() => {
+                        $("#successMessage").fadeOut();
+                    }, 4000);
+                }
+            });
+            // EMAIL
+            $("#emailBtn").click(function () {
+                const email = "support@hunarmand.pk";
+                window.open(
+                    `https://mail.google.com/mail/?view=cm&fs=1&to=${email}`,
+                    "_blank"
+                );
+            });
+            // PHONE
+            $("#phoneBtn").click(function () {
+                window.location.href = "tel:+923001234567";
+            });
+            // MAP
+            $("#mapBtn").click(function () {
+                window.open(
+                    "https://maps.google.com/?q=Islamabad Pakistan",
+                    "_blank"
+                );
+            });
+            // FIND FRANCHISE
+            $("#findFranchiseBtn").click(function () {
+                $("#loadingText")
+                    .text("Detecting your location...")
+                    .fadeIn();
+                $("#nearestBranch").hide();
+                if (!navigator.geolocation) {
+                    $("#loadingText")
+                        .text("Geolocation not supported.");
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        let nearest = null;
+                        let shortestDistance = Infinity;
+                        franchises.forEach(branch => {
+                            const distance = calculateDistance(
+                                userLat,
+                                userLng,
+                                branch.lat,
+                                branch.lng
+                            );
+                            if (distance < shortestDistance) {
+                                shortestDistance = distance;
+                                nearest = branch;
+                            }
+                        });
+                        $("#loadingText").hide();
+                        $("#nearestBranch").fadeIn();
+                        $("#branchName").text(nearest.branch);
+                        $("#branchDistance").text(
+                            `Distance: ${shortestDistance.toFixed(1)} KM`
+                        );
+                        $("#branchAddress").text(nearest.address);
+                        $("#openMapBtn")
+                            .off("click")
+                            .click(function (e) {
+                                e.preventDefault();
+                                window.open(
+                                    `https://www.google.com/maps/search/?api=1&query=${nearest.lat},${nearest.lng}`,
+                                    "_blank"
+                                );
+                            });
+                    },
+                    function (error) {
+                        let message = "Unable to get location.";
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                message = "Location access denied. Please allow location permission.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                message = "Location unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                message = "Location request timed out.";
+                                break;
+                        }
+                        $("#loadingText").text(message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+            // DISTANCE FUNCTION
+            function calculateDistance(
+                lat1,
+                lon1,
+                lat2,
+                lon2
+            ) {
+                const R = 6371;
+                const dLat =
+                    (lat2 - lat1) * Math.PI / 180;
+                const dLon =
+                    (lon2 - lon1) * Math.PI / 180;
+                const a =
+                    Math.sin(dLat / 2) *
+                    Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) *
+                    Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) *
+                    Math.sin(dLon / 2);
+                const c =
+                    2 * Math.atan2(
+                        Math.sqrt(a),
+                        Math.sqrt(1 - a)
+                    );
+                return R * c;
+            }
+        });
+    </script>
+</body>
+</html> 
