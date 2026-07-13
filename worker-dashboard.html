@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'worker'){
+    localStorage.setItem('authRedirect','worker-dashboard.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Worker Dashboard — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.wk-section{display:none}
+.wk-section.active{display:flex;flex-direction:column;gap:1.1rem}
+.status-hero{background:linear-gradient(135deg,var(--g1),var(--g3));border-radius:16px;padding:1.2rem 1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;color:#fff}
+.status-hero-l{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.status-hero img{width:52px;height:52px;border-radius:13px;object-fit:cover;border:2px solid rgba(255,255,255,.5);flex-shrink:0}
+.status-opts{display:flex;gap:.4rem;background:rgba(255,255,255,.15);padding:.3rem;border-radius:100px;flex-wrap:wrap}
+.status-opt{padding:.4rem .9rem;border-radius:100px;font-size:.76rem;font-weight:700;cursor:pointer;color:#fff;opacity:.75;transition:.15s;display:flex;align-items:center;gap:.35rem;white-space:nowrap}
+.status-opt.active{background:#fff;opacity:1}
+.status-opt.active .avail-dot{filter:none}
+.status-opt:not(.active) .avail-dot{background:#fff !important;opacity:.7}
+.tab-strip-simple{display:flex;gap:.25rem;padding:.55rem 1.4rem 0;border-bottom:1px solid var(--bdr2);overflow-x:auto}
+.tab-strip-simple .st{padding:.7rem .9rem;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-strip-simple .st.active{color:var(--g1);border-color:var(--g1)}
+.portfolio-tags-edit{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+.portfolio-tag-x{display:inline-flex;align-items:center;gap:.35rem;background:var(--mint);color:var(--g1);font-size:.72rem;font-weight:600;padding:.25rem .55rem .25rem .7rem;border-radius:100px}
+.portfolio-tag-x button{background:none;border:none;color:var(--g1);cursor:pointer;font-size:.8rem;padding:0}
+@media(max-width:640px){
+  .status-hero{padding:1rem}
+  .status-opts{flex-wrap:wrap;border-radius:12px;padding:.25rem}
+  .status-opt{padding:.35rem .65rem;font-size:.7rem}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body">
+
+      <div id="reviewBanner" class="review-banner" style="display:none">
+        <i class="fas fa-hourglass-half"></i>
+        <div>
+          <strong>Your profile is under review</strong><br>
+          <span style="font-size:.8rem;color:var(--muted)">Our team is verifying your documents. You'll be able to accept job requests once approved — usually within 24 hours.</span>
+        </div>
+      </div>
+      <div id="suspendedBanner" class="review-banner" style="display:none;background:var(--red-bg);border-color:var(--red-bdr)">
+        <i class="fas fa-ban" style="color:var(--red)"></i>
+        <div><strong>Your account has been suspended</strong><br><span style="font-size:.8rem;color:var(--muted)">Contact Hunarmand support for more details.</span></div>
+      </div>
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <section class="wk-section active" id="section-dashboard">
+        <div class="status-hero">
+          <div class="status-hero-l">
+            <img id="heroAvatar" src="" alt="">
+            <div><div style="font-family:var(--fd);font-weight:700;font-size:1.05rem" id="heroName">—</div><div style="font-size:.78rem;opacity:.85" id="heroSkill">—</div></div>
+          </div>
+          <div class="status-opts" id="statusOpts"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-hdr"><div class="stat-ico"><i class="fas fa-bell"></i></div><span class="stat-chip warn">New</span></div><p class="stat-lbl">Pending Requests</p><p class="stat-val" id="sc-req">0</p></div>
+          <div class="stat-card"><div class="stat-hdr"><div class="stat-ico"><i class="fas fa-briefcase"></i></div><span class="stat-chip">Active</span></div><p class="stat-lbl">Active Jobs</p><p class="stat-val" id="sc-active">0</p></div>
+          <div class="stat-card"><div class="stat-hdr"><div class="stat-ico"><i class="fas fa-circle-check"></i></div><span class="stat-chip">Total</span></div><p class="stat-lbl">Jobs Completed</p><p class="stat-val" id="sc-done">0</p></div>
+          <div class="stat-card"><div class="stat-hdr"><div class="stat-ico" style="background:var(--blue-bg);color:var(--blue)"><i class="fas fa-wallet"></i></div><span class="stat-chip">Wallet</span></div><p class="stat-lbl">Total Earnings</p><p class="stat-val" id="sc-earn">Rs. 0</p></div>
+        </div>
+
+        <div class="tbl-card">
+          <div class="tbl-top">
+            <div class="tbl-title-blk"><div class="tbl-title">New Job Requests</div><div class="tbl-sub">Clients who requested you directly</div></div>
+            <div class="tbl-actions"><button class="btn-outline" onclick="document.querySelector('[data-page=jobs]').click()">View All <i class="fas fa-arrow-right"></i></button></div>
+          </div>
+          <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.7rem" id="dashJobsPreview"></div>
+        </div>
+
+        <div class="tbl-card">
+          <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Recent Reviews</div></div>
+            <div class="tbl-actions"><button class="btn-outline" onclick="document.querySelector('[data-page=reviews]').click()">View All <i class="fas fa-arrow-right"></i></button></div>
+          </div>
+          <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.7rem" id="dashReviewsPreview"></div>
+        </div>
+      </section>
+
+      <!-- ═══ JOB REQUESTS ═══ -->
+      <section class="wk-section" id="section-jobs">
+        <div class="qa-bar"><span class="qa-lbl">Job Requests</span></div>
+        <div style="display:flex;flex-direction:column;gap:.7rem" id="jobRequestsList"></div>
+      </section>
+
+      <!-- ═══ MY JOBS ═══ -->
+      <section class="wk-section" id="section-mywork">
+        <div class="qa-bar"><span class="qa-lbl">My Jobs</span></div>
+        <div style="display:flex;flex-direction:column;gap:.7rem" id="myJobsList"></div>
+      </section>
+
+      <!-- ═══ EARNINGS ═══ -->
+      <section class="wk-section" id="section-earnings">
+        <div class="wallet-hero">
+          <div><div class="wh-lbl">Wallet Balance</div><div class="wh-amt" id="earn-balance">Rs. 0</div></div>
+          <button class="btn-primary" style="background:#fff;color:var(--g1)" onclick="WK.withdraw()"><i class="fas fa-money-bill-transfer"></i> Withdraw</button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><p class="stat-lbl">Total Earned</p><p class="stat-val" id="earn-total">Rs. 0</p></div>
+          <div class="stat-card"><p class="stat-lbl">Jobs Paid</p><p class="stat-val" id="earn-count">0</p></div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Transaction Ledger</div></div></div>
+          <div style="padding:.4rem 1.2rem 1.2rem" id="ledgerList"></div>
+        </div>
+      </section>
+
+      <!-- ═══ REVIEWS ═══ -->
+      <section class="wk-section" id="section-reviews">
+        <div class="tbl-card">
+          <div style="padding:1.3rem 1.4rem;display:flex;gap:2rem;flex-wrap:wrap;align-items:center">
+            <div style="text-align:center">
+              <div style="font-family:var(--fd);font-weight:800;font-size:2.4rem;color:var(--ink)" id="revAvg">5.0</div>
+              <div id="revStars" style="font-size:1rem"></div>
+              <div style="font-size:.74rem;color:var(--muted);margin-top:.2rem" id="revCount">0 reviews</div>
+            </div>
+            <div style="flex:1;min-width:220px" id="revBreakdown"></div>
+          </div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">All Reviews</div></div></div>
+          <div style="padding:0 1.4rem 1.2rem" id="revList"></div>
+        </div>
+      </section>
+
+      <!-- ═══ PROFILE ═══ -->
+      <section class="wk-section" id="section-profile">
+        <div class="tbl-card">
+          <div style="padding:1.3rem 1.4rem">
+            <div class="avatar-edit" style="margin-bottom:1.2rem">
+              <div class="avatar-upload" id="pAvatarZone">
+                <img id="pAvatarPreview" src="" alt="">
+                <div class="avatar-upload-overlay"><i class="fas fa-camera"></i></div>
+              </div>
+              <input type="file" id="pAvatarInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+              <div>
+                <div class="field-lbl">Profile Photo</div>
+                <div class="avatar-upload-hint">Click your photo to upload from your device (JPG/PNG/WEBP, up to 5MB)</div>
+              </div>
+            </div>
+
+            <div class="field-row"><div><div class="field-lbl">Full Name</div></div><input class="field-input" id="p-name"></div>
+            <div class="field-row"><div><div class="field-lbl">Phone</div></div><input class="field-input" id="p-phone"></div>
+            <div class="field-row"><div><div class="field-lbl">City</div></div>
+              <select class="field-input" id="p-city"><option>Lahore</option><option>Karachi</option><option>Islamabad</option><option>Rawalpindi</option><option>Faisalabad</option><option>Multan</option><option>Peshawar</option><option>Quetta</option></select>
+            </div>
+            <div class="field-row"><div><div class="field-lbl">Skill / Trade</div></div>
+              <select class="field-input" id="p-skill"><option>Plumbing</option><option>Electrical</option><option>Carpentry</option><option>HVAC</option><option>Painting</option><option>Cleaning</option><option>Appliance Repair</option><option>Security</option><option>General</option></select>
+            </div>
+            <div class="field-row"><div><div class="field-lbl">Experience</div></div>
+              <select class="field-input" id="p-experience"><option>Less than 1 year</option><option>1-2 years</option><option>3-5 years</option><option>6-10 years</option><option>10+ years</option></select>
+            </div>
+            <div class="field-row"><div><div class="field-lbl">Hourly Rate (Rs.)</div><div class="field-desc">Shown to clients as your starting rate</div></div><input class="field-input" type="number" min="0" id="p-rate"></div>
+            <div class="field-row"><div><div class="field-lbl">Bio</div><div class="field-desc">Shown on your public profile</div></div><textarea class="field-input" id="p-bio" rows="3" style="width:280px"></textarea></div>
+            <div class="field-row" style="align-items:flex-start"><div><div class="field-lbl">Portfolio Tags</div><div class="field-desc">Skills/specialties clients will see</div></div>
+              <div style="min-width:280px">
+                <div style="display:flex;gap:.5rem"><input class="field-input" id="p-tag-input" placeholder="e.g. Pipe Fitting" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addPortfolioTag()}"><button class="btn-outline" onclick="addPortfolioTag()"><i class="fas fa-plus"></i></button></div>
+                <div class="portfolio-tags-edit" id="portfolioTagsEdit"></div>
+              </div>
+            </div>
+            <div class="field-row" style="justify-content:flex-end;border-bottom:none"><button class="btn-primary" onclick="saveProfile()"><i class="fas fa-check"></i> Save Profile</button></div>
+          </div>
+        </div>
+
+        <div class="tbl-card">
+          <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Verification Status</div></div></div>
+          <div style="padding:1rem 1.4rem" id="verificationBlock"></div>
+        </div>
+      </section>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <section class="wk-section" id="section-settings">
+        <div class="tbl-card">
+          <div class="tab-strip-simple" id="settingsTabStrip"></div>
+          <div style="padding:1.3rem 1.4rem" id="settingsPaymentsSec">
+            <div class="paymethod-grid" id="wMethodsGrid"></div>
+          </div>
+          <div style="padding:1.3rem 1.4rem;display:none" id="settingsNotifSec">
+            <div class="field-row"><div><div class="field-lbl">New Job Requests</div><div class="field-desc">Notify when a client requests you directly</div></div><label class="toggle"><input type="checkbox" id="wnp-jobs" checked onchange="saveWorkerNotifPrefs()"><span class="toggle-sl"></span></label></div>
+            <div class="field-row"><div><div class="field-lbl">Payment Alerts</div><div class="field-desc">Notify when a payment lands in your wallet</div></div><label class="toggle"><input type="checkbox" id="wnp-payment" checked onchange="saveWorkerNotifPrefs()"><span class="toggle-sl"></span></label></div>
+            <div class="field-row"><div><div class="field-lbl">Review Alerts</div><div class="field-desc">Notify when a client leaves a review</div></div><label class="toggle"><input type="checkbox" id="wnp-reviews" checked onchange="saveWorkerNotifPrefs()"><span class="toggle-sl"></span></label></div>
+          </div>
+          <div style="padding:1.3rem 1.4rem;display:none" id="settingsSecuritySec">
+            <div class="field-row"><div><div class="field-lbl">Change Password</div><div class="field-desc">You'll need to sign in again after changing it</div></div><button class="btn-outline" onclick="changeWorkerPassword()"><i class="fas fa-key"></i> Change Password</button></div>
+            <div class="field-row"><div><div class="field-lbl">Dark Mode</div><div class="field-desc">Toggle from the topbar moon icon too</div></div><label class="toggle"><input type="checkbox" id="wDarkToggle" onchange="toggleDarkFromWorkerSettings(this)"><span class="toggle-sl"></span></label></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const WK = {};
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+
+function getMyWorkerRecord(){
+  const all = JSON.parse(localStorage.getItem('allWorkers')||'[]');
+  return all.find(w=>w.id===session.id) || {id:session.id,name:session.name,email:session.email,phone:session.phone,skill:'General',city:'—',status:'pending',cnic:'—',image:session.image};
+}
+function isVerified(){ return getMyWorkerRecord().status === 'verified'; }
+
+WK.showSection = function(id, navEl){
+  document.querySelectorAll('.wk-section').forEach(s=>s.classList.remove('active'));
+  const sec = document.getElementById('section-'+id);
+  if (sec) sec.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  if (id==='jobs') renderJobRequests();
+  if (id==='mywork') renderMyJobs();
+  if (id==='earnings') renderEarnings();
+  if (id==='reviews') renderReviews();
+  if (id==='profile') renderProfile();
+  if (id==='settings') { renderSettingsMethods(); loadWorkerNotifPrefs(); document.getElementById('wDarkToggle').checked = document.documentElement.getAttribute('data-theme')==='dark'; }
+};
+
+WK.logout = function(){
+  HC.modal({icon:'fas fa-arrow-right-from-bracket',iconType:'danger',title:'Confirm Logout',body:'You will be signed out of your Worker Portal.',confirmText:'Yes, Logout',cancelText:'Stay',danger:true,
+    onConfirm:()=>{ HC.toast('Signing out...'); localStorage.removeItem('currentUser'); setTimeout(()=>window.location.href='auth.html?action=login', 800); }
+  });
+};
+
+WK.acceptJob = function(id){
+  if (!isVerified()){ HC.toast('Your profile must be verified before accepting jobs', 'warning'); return; }
+  const jobs = HJ.getJobs();
+  const job = jobs.find(j=>j.id===id);
+  if (!job) return;
+  HC.modal({icon:'fas fa-handshake',title:'Accept Job',body:`Accept "${job.service}" from ${job.clientName} for ${HJ.money(job.budget)}?`,confirmText:'Accept Job',
+    onConfirm:()=>{
+      HJ.accept(id);
+      HC.toast('✓ Job accepted! Find it under My Jobs.','success');
+      renderJobRequests(); renderDashboard();
+    }});
+};
+
+WK.declineJob = function(id){
+  const jobs = HJ.getJobs();
+  const job = jobs.find(j=>j.id===id);
+  if (!job) return;
+  HC.modal({icon:'fas fa-xmark',iconType:'danger',title:'Decline Request',body:`Decline the request from ${job.clientName}?`,confirmText:'Decline',danger:true,
+    onConfirm:()=>{
+      HJ.decline(id);
+      HC.toast('Request declined.','warning');
+      renderJobRequests(); renderDashboard();
+    }});
+};
+
+WK.startJob = function(id){
+  const jobs = HJ.getJobs();
+  const job = jobs.find(j=>j.id===id);
+  if (!job) return;
+  HC.modal({icon:'fas fa-person-digging',title:'Start Job',body:`Mark "${job.service}" as started? The client will be notified you're on the job.`,confirmText:'Start Job',
+    onConfirm:()=>{
+      HJ.start(id);
+      HC.toast('✓ Job started!','success');
+      renderMyJobs(); renderDashboard();
+    }});
+};
+
+WK.completeJob = function(id){
+  const jobs = HJ.getJobs();
+  const job = jobs.find(j=>j.id===id);
+  if (!job) return;
+  HC.modal({icon:'fas fa-flag-checkered',title:'Mark as Completed',body:`Confirm "${job.service}" is complete? ${HJ.money(job.budget)} will be added to your wallet after the platform fee.`,confirmText:'Mark Complete',
+    onConfirm:()=>{
+      HJ.complete(id);
+      HC.toast('✓ Job marked complete. Earnings added to wallet!','success');
+      HC.confetti();
+      renderMyJobs(); renderDashboard();
+    }});
+};
+
+WK.withdraw = function(){
+  const bal = HJ.walletBalance('worker', session.id);
+  if (bal<=0){ HC.toast('No balance available to withdraw','warning'); return; }
+  const methods = HJ.getPaymentMethods('worker', session.id);
+  if (!methods.length){
+    HC.modal({icon:'fas fa-link',iconType:'amber',title:'Link a Payment Method First',body:'Add EasyPaisa, JazzCash, or a bank account under Settings so we know where to send your withdrawal.',confirmText:'Go to Settings',
+      onConfirm:()=>{ document.querySelector('[data-page=settings]').click(); }});
+    return;
+  }
+  const methodId = 'wWithdrawMethod';
+  HC.modal({
+    icon:'fas fa-money-bill-transfer', title:'Withdraw Funds',
+    body:`Withdraw ${HJ.money(bal)} to which account?`,
+    formHTML:`<select id="${methodId}" style="width:100%;margin-top:.8rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+      ${methods.map(m=>`<option value="${m.type}">${HJ.PAYMENT_BRANDS[m.type].label} (${HJ.maskAccount(m.number)})</option>`).join('')}
+    </select>`,
+    confirmText:'Withdraw',
+    onConfirm:()=>{
+      const method = document.getElementById(methodId).value;
+      HJ.addLedgerEntry('worker', session.id, `Withdrawal to ${HJ.PAYMENT_BRANDS[method].label}`, -bal, method);
+      HC.toast('✓ Withdrawal request submitted!','success');
+      renderEarnings();
+    }});
+};
+
+/* ═══ MESSAGING ═══ */
+function openWorkerChat(jobId){
+  const job = HJ.getJobs().find(j=>j.id===jobId);
+  if (!job) return;
+  const bodyId = 'wChatBody_'+jobId;
+  const inputId = 'wChatInput_'+jobId;
+  HC.modal({
+    icon:'fas fa-comment', title:'Chat with '+job.clientName,
+    formHTML:`<div class="chat-modal-body">
+      <div class="chat-msgs" id="${bodyId}"></div>
+      <div class="chat-input-row">
+        <input id="${inputId}" placeholder="Type a message..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendWorkerChat(${jobId},'${bodyId}','${inputId}')}">
+        <button class="btn-primary" onclick="sendWorkerChat(${jobId},'${bodyId}','${inputId}')"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>`,
+    confirmText:'Close',
+  });
+  renderWorkerChatMessages(jobId, bodyId);
+}
+function renderWorkerChatMessages(jobId, bodyId){
+  const msgs = HJ.getMessages(jobId);
+  const el = document.getElementById(bodyId);
+  if (!el) return;
+  el.innerHTML = msgs.length ? msgs.map(m=>`
+    <div class="chat-bubble ${m.sender==='worker'?'me':'them'}">
+      ${m.text}
+      <div class="chat-bubble-time">${m.senderName} · ${m.time}</div>
+    </div>`).join('') : `<div class="chat-empty">No messages yet.</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+function sendWorkerChat(jobId, bodyId, inputId){
+  const input = document.getElementById(inputId);
+  const text = input.value.trim();
+  if (!text) return;
+  HJ.sendMessage(jobId, 'worker', session.name, text);
+  input.value = '';
+  renderWorkerChatMessages(jobId, bodyId);
+}
+
+function jobCardHTML(job, mode){
+  let actions = '';
+  if (mode==='request') {
+    actions = `<div class="job-actions-row"><button class="btn-outline" onclick="WK.declineJob(${job.id})">Decline</button><button class="btn-primary" onclick="WK.acceptJob(${job.id})"><i class="fas fa-check"></i> Accept</button></div>`;
+  } else if (mode==='mine' && job.status==='accepted') {
+    actions = `<div class="job-actions-row"><button class="btn-outline" onclick="openWorkerChat(${job.id})"><i class="fas fa-comment"></i></button><button class="btn-primary" onclick="WK.startJob(${job.id})"><i class="fas fa-person-digging"></i> Start Job</button></div>`;
+  } else if (mode==='mine' && job.status==='in_progress') {
+    actions = `<div class="job-actions-row"><button class="btn-outline" onclick="openWorkerChat(${job.id})"><i class="fas fa-comment"></i></button><button class="btn-primary" onclick="WK.completeJob(${job.id})"><i class="fas fa-flag-checkered"></i> Mark Complete</button></div>`;
+  } else if (mode==='mine' && job.status==='completed') {
+    actions = `<div class="job-actions-row"><button class="btn-outline" onclick="openWorkerChat(${job.id})"><i class="fas fa-comment"></i></button>${HJ.statusBadge(job.status)}</div>`;
+  } else {
+    actions = HJ.statusBadge(job.status);
+  }
+  return `<div class="job-card">
+    <div class="job-main">
+      <div class="job-ico"><i class="fas fa-wrench"></i></div>
+      <div>
+        <div class="job-title">${job.service}${job.urgent?' <span class="urgent-badge">Urgent</span>':''}</div>
+        <div class="job-meta"><span><i class="fas fa-user"></i> ${job.clientName}</span><span><i class="fas fa-location-dot"></i> ${job.city}</span><span><i class="fas fa-clock"></i> ${job.createdAt}</span></div>
+        ${job.preferredDate ? `<div style="margin-top:.3rem"><span class="sched-chip"><i class="fas fa-calendar-day"></i> ${job.preferredDate} · ${job.timeWindow||'Any time'}</span></div>` : ''}
+        <div class="job-desc">${job.description||''}</div>
+      </div>
+    </div>
+    <div class="job-actions">
+      <div class="job-budget">${HJ.money(job.budget)}</div>
+      ${actions}
+    </div>
+  </div>`;
+}
+
+function renderJobRequests(){
+  const reqs = HJ.forWorkerRequests(session.id);
+  document.getElementById('jobRequestsList').innerHTML = reqs.length ? reqs.map(j=>jobCardHTML(j,'request')).join('') :
+    `<div class="empty-state"><i class="fas fa-inbox"></i>No new job requests right now. Clients will find you once you're verified and can request you directly from Find Artisans.</div>`;
+}
+
+function renderMyJobs(){
+  const jobs = HJ.forWorkerActive(session.id);
+  document.getElementById('myJobsList').innerHTML = jobs.length ? jobs.map(j=>jobCardHTML(j,'mine')).join('') :
+    `<div class="empty-state"><i class="fas fa-briefcase"></i>You haven't accepted any jobs yet.</div>`;
+}
+
+function renderEarnings(){
+  const ledger = HJ.getLedger('worker', session.id);
+  const total = ledger.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+  const balance = HJ.walletBalance('worker', session.id);
+  HC.animateCounter(document.getElementById('earn-balance'), HJ.moneySigned(balance));
+  HC.animateCounter(document.getElementById('earn-total'), HJ.money(total));
+  HC.animateCounter(document.getElementById('earn-count'), String(ledger.filter(t=>t.amount>0).length));
+  const el = document.getElementById('ledgerList');
+  el.innerHTML = ledger.length ? ledger.map(t=>`<div class="ledger-row"><div><div style="font-weight:600;font-size:.84rem">${t.desc}</div><div style="font-size:.72rem;color:var(--muted)">${t.date}</div></div><div style="font-weight:700;font-family:var(--fd);color:${t.amount>0?'var(--g1)':'var(--red)'}">${t.amount>0?'+':'-'}${HJ.money(t.amount)}</div></div>`).join('') :
+    `<div class="empty-state"><i class="fas fa-receipt"></i>No transactions yet. Complete a job to start earning.</div>`;
+}
+
+/* ═══ REVIEWS ═══ */
+function starHTML(rating){
+  const full = Math.round(rating);
+  let s = '';
+  for (let i=1;i<=5;i++) s += `<i class="fa-star ${i<=full?'fas':'far'}" style="color:var(--amber)"></i>`;
+  return s;
+}
+function renderReviews(){
+  const reviews = HJ.getReviews(session.id);
+  const meta = HJ.getWorkerMeta(session.id);
+  document.getElementById('revAvg').textContent = meta.avgRating.toFixed(1);
+  document.getElementById('revStars').innerHTML = starHTML(meta.avgRating);
+  document.getElementById('revCount').textContent = `${meta.reviewCount} review${meta.reviewCount===1?'':'s'}`;
+
+  const buckets = [5,4,3,2,1].map(n => reviews.filter(r=>Math.round(r.rating)===n).length);
+  const maxB = Math.max(1, ...buckets);
+  document.getElementById('revBreakdown').innerHTML = [5,4,3,2,1].map((n,i)=>`
+    <div class="rating-bar-row"><span style="width:38px">${n} <i class="fas fa-star" style="color:var(--amber);font-size:.68rem"></i></span>
+      <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${(buckets[i]/maxB*100)}%"></div></div>
+      <span style="width:20px;text-align:right;color:var(--muted)">${buckets[i]}</span></div>`).join('');
+
+  document.getElementById('revList').innerHTML = reviews.length ? reviews.map(r=>`
+    <div class="review-item">
+      <div class="review-item-top"><span>${r.clientName}</span><span>${starHTML(r.rating)}</span></div>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">${r.comment||'<em>No comment left</em>'}</div>
+      <div style="font-size:.7rem;color:var(--faint);margin-top:.2rem">${r.service} · ${r.date}</div>
+    </div>`).join('') : `<div class="empty-state"><i class="fas fa-star"></i>No reviews yet. Complete jobs to start building your reputation.</div>`;
+}
+
+/* ═══ PROFILE (editable) ═══ */
+let _pendingWorkerAvatar = null;
+let _portfolioTags = [];
+function renderProfile(){
+  const w = getMyWorkerRecord();
+  const meta = HJ.getWorkerMeta(session.id);
+  document.getElementById('p-name').value = w.name || '';
+  document.getElementById('p-phone').value = w.phone || '';
+  document.getElementById('p-city').value = w.city || 'Lahore';
+  document.getElementById('p-skill').value = w.skill || 'General';
+  document.getElementById('p-experience').value = meta.experience;
+  document.getElementById('p-rate').value = meta.hourlyRate || '';
+  document.getElementById('p-bio').value = meta.bio || '';
+  _portfolioTags = [...(meta.portfolio||[])];
+  renderPortfolioTagsEdit();
+  document.getElementById('pAvatarPreview').src = w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff');
+  HC.wireAvatarUpload('pAvatarZone','pAvatarInput', document.getElementById('pAvatarPreview'), (dataUrl)=>{ _pendingWorkerAvatar = dataUrl; });
+
+  const statusBadge = w.status==='verified' ? '<span class="badge green">✓ Verified</span>' : w.status==='suspended' ? '<span class="badge red">Suspended</span>' : '<span class="badge amber">⏳ Pending Review</span>';
+  document.getElementById('verificationBlock').innerHTML = `
+    <div style="margin-bottom:.8rem">${statusBadge}</div>
+    ${w.status==='verified'
+      ? `<div style="display:flex;align-items:center;gap:.6rem;color:var(--g1)"><i class="fas fa-circle-check" style="font-size:1.3rem"></i> Your CNIC and profile documents have been verified by the Hunarmand team. You can accept job requests.</div>`
+      : w.status==='suspended'
+      ? `<div style="display:flex;align-items:center;gap:.6rem;color:var(--red)"><i class="fas fa-ban" style="font-size:1.3rem"></i> Your account has been suspended. Contact support for details.</div>`
+      : `<div style="display:flex;align-items:center;gap:.6rem;color:var(--amber)"><i class="fas fa-hourglass-half" style="font-size:1.3rem"></i> CNIC (${w.cnic||'—'}) submitted and awaiting admin review. This usually takes under 24 hours.</div>`}`;
+}
+function renderPortfolioTagsEdit(){
+  document.getElementById('portfolioTagsEdit').innerHTML = _portfolioTags.map((t,i)=>
+    `<span class="portfolio-tag-x">${t}<button onclick="removePortfolioTag(${i})"><i class="fas fa-xmark"></i></button></span>`).join('');
+}
+function addPortfolioTag(){
+  const input = document.getElementById('p-tag-input');
+  const val = input.value.trim();
+  if (!val) return;
+  if (_portfolioTags.length >= 8){ HC.toast('Up to 8 tags allowed','warning'); return; }
+  _portfolioTags.push(val);
+  input.value = '';
+  renderPortfolioTagsEdit();
+}
+function removePortfolioTag(i){ _portfolioTags.splice(i,1); renderPortfolioTagsEdit(); }
+
+function saveProfile(){
+  const name = document.getElementById('p-name').value.trim();
+  const phone = document.getElementById('p-phone').value.trim();
+  const city = document.getElementById('p-city').value;
+  const skill = document.getElementById('p-skill').value;
+  const experience = document.getElementById('p-experience').value;
+  const hourlyRate = Number(document.getElementById('p-rate').value)||0;
+  const bio = document.getElementById('p-bio').value.trim();
+  if (!name){ HC.toast('Name cannot be empty','warning'); return; }
+
+  const avatar = _pendingWorkerAvatar || getMyWorkerRecord().image;
+
+  const allWorkers = JSON.parse(localStorage.getItem('allWorkers')||'[]');
+  const w = allWorkers.find(x=>x.id===session.id);
+  if (w) { w.name=name; w.phone=phone; w.city=city; w.skill=skill; if(avatar) w.image=avatar; localStorage.setItem('allWorkers', JSON.stringify(allWorkers)); }
+
+  const allUsers = JSON.parse(localStorage.getItem('allUsers')||'[]');
+  const u = allUsers.find(x=>x.id===session.id);
+  if (u) { u.name=name; u.phone=phone; u.city=city; localStorage.setItem('allUsers', JSON.stringify(allUsers)); }
+
+  session.name = name; session.phone = phone; if (avatar) session.image = avatar;
+  localStorage.setItem('currentUser', JSON.stringify(session));
+
+  HJ.saveWorkerMeta(session.id, { ...HJ.getWorkerMeta(session.id), experience, hourlyRate, bio, portfolio:_portfolioTags });
+
+  _pendingWorkerAvatar = null;
+  HC.toast('✓ Profile updated!','success');
+  renderHero();
+}
+
+/* ═══ AVAILABILITY STATUS ═══ */
+function renderStatusOpts(){
+  const meta = HJ.getWorkerMeta(session.id);
+  const opts = Object.entries(HJ.AVAILABILITY);
+  document.getElementById('statusOpts').innerHTML = opts.map(([key,a])=>
+    `<div class="status-opt${meta.availability===key?' active':''}" onclick="setAvailability('${key}')">
+      <span class="avail-dot" style="background:${a.dot}"></span>${a.label}
+    </div>`).join('');
+}
+function setAvailability(key){
+  const meta = HJ.getWorkerMeta(session.id);
+  meta.availability = key;
+  HJ.saveWorkerMeta(session.id, meta);
+  renderStatusOpts();
+  HC.toast(`Status set to ${HJ.AVAILABILITY[key].label}`,'success');
+}
+
+function renderHero(){
+  const w = getMyWorkerRecord();
+  document.getElementById('heroAvatar').src = w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=fff&color=1b5e37');
+  document.getElementById('heroName').textContent = w.name;
+  document.getElementById('heroSkill').textContent = w.skill || 'General';
+  renderStatusOpts();
+}
+
+/* ═══ SETTINGS ═══ */
+const SETTINGS_TABS = [
+  {id:'payments', label:'Payment Methods', sec:'settingsPaymentsSec'},
+  {id:'notifications', label:'Notifications', sec:'settingsNotifSec'},
+  {id:'security', label:'Security & Display', sec:'settingsSecuritySec'},
+];
+function renderSettingsTabs(active){
+  document.getElementById('settingsTabStrip').innerHTML = SETTINGS_TABS.map(t=>
+    `<div class="st${t.id===active?' active':''}" onclick="switchSettingsTab('${t.id}')">${t.label}</div>`).join('');
+}
+function switchSettingsTab(id){
+  SETTINGS_TABS.forEach(t=>{ document.getElementById(t.sec).style.display = t.id===id ? 'block' : 'none'; });
+  renderSettingsTabs(id);
+}
+function renderSettingsMethods(){
+  const linked = HJ.getPaymentMethods('worker', session.id);
+  const types = ['easypaisa','jazzcash','bank'];
+  document.getElementById('wMethodsGrid').innerHTML = types.map(type=>{
+    const brand = HJ.PAYMENT_BRANDS[type];
+    const m = linked.find(x=>x.type===type);
+    return `<div class="paymethod-tile${m?' linked':''}">
+      <div class="paymethod-top">
+        <div class="paymethod-ico" style="background:${brand.bg};color:${brand.color}"><i class="fas ${brand.icon}"></i></div>
+        <div><div class="paymethod-name">${brand.label}</div><div class="paymethod-status">${m ? HJ.maskAccount(m.number) : 'Not linked'}</div></div>
+      </div>
+      ${m
+        ? `<button class="btn-outline" onclick="unlinkWorkerMethod('${type}')"><i class="fas fa-unlink"></i> Disconnect</button>`
+        : `<button class="btn-primary" onclick="linkWorkerMethod('${type}')"><i class="fas fa-link"></i> Connect</button>`}
+    </div>`;
+  }).join('');
+}
+function linkWorkerMethod(type){
+  const brand = HJ.PAYMENT_BRANDS[type];
+  const isBank = type === 'bank';
+  const inputId = 'wLinkNum_'+Date.now();
+  HC.modal({
+    icon:'fas '+brand.icon, title:'Connect '+brand.label,
+    body: isBank ? 'Enter your bank account (IBAN) number.' : `Enter the mobile number linked to your ${brand.label} account.`,
+    formHTML:`<div style="margin-top:.9rem;text-align:left">
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted)">${isBank?'IBAN / ACCOUNT NUMBER':'MOBILE NUMBER'}</label>
+      <input id="${inputId}" placeholder="${isBank?'PK00 HABB 0000 0000 0000 0000':'03XX-XXXXXXX'}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+    </div>`,
+    confirmText:'Connect',
+    onConfirm:()=>{
+      const val = document.getElementById(inputId).value.trim();
+      if (!val || val.length<6){ HC.toast('Enter a valid number','warning'); return false; }
+      HJ.linkPaymentMethod('worker', session.id, type, val);
+      HC.toast(`✓ ${brand.label} connected!`,'success');
+      renderSettingsMethods();
+    }
+  });
+}
+function unlinkWorkerMethod(type){
+  const brand = HJ.PAYMENT_BRANDS[type];
+  HC.modal({icon:'fas fa-unlink',iconType:'danger',title:'Disconnect '+brand.label,body:`Remove your linked ${brand.label} account?`,confirmText:'Disconnect',danger:true,
+    onConfirm:()=>{ HJ.unlinkPaymentMethod('worker', session.id, type); HC.toast(`${brand.label} disconnected.`,'warning'); renderSettingsMethods(); }});
+}
+function saveWorkerNotifPrefs(){
+  const prefs = { jobs: document.getElementById('wnp-jobs').checked, payment: document.getElementById('wnp-payment').checked, reviews: document.getElementById('wnp-reviews').checked };
+  localStorage.setItem('hun_notifprefs_worker_'+session.id, JSON.stringify(prefs));
+  HC.toast('Preferences saved','success');
+}
+function loadWorkerNotifPrefs(){
+  const raw = localStorage.getItem('hun_notifprefs_worker_'+session.id);
+  if (!raw) return;
+  const p = JSON.parse(raw);
+  document.getElementById('wnp-jobs').checked = p.jobs;
+  document.getElementById('wnp-payment').checked = p.payment;
+  document.getElementById('wnp-reviews').checked = p.reviews;
+}
+function changeWorkerPassword(){
+  HC.modal({
+    icon:'fas fa-key', title:'Change Password',
+    formHTML:`<div style="margin-top:.9rem;text-align:left;display:flex;flex-direction:column;gap:.6rem">
+      <input type="password" id="wcp-current" placeholder="Current password" style="padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+      <input type="password" id="wcp-new" placeholder="New password" style="padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+    </div>`,
+    confirmText:'Update Password',
+    onConfirm:()=>{
+      const cur = document.getElementById('wcp-current').value;
+      const nw = document.getElementById('wcp-new').value;
+      if (!cur || !nw || nw.length<6){ HC.toast('Enter a valid current + new password (6+ chars)','warning'); return false; }
+      HC.toast('✓ Password updated!','success');
+    }
+  });
+}
+function toggleDarkFromWorkerSettings(el){
+  document.getElementById('hc-theme').click();
+  el.checked = document.documentElement.getAttribute('data-theme')==='dark';
+}
+
+function renderDashboard(){
+  const reqs = HJ.forWorkerRequests(session.id);
+  const active = HJ.forWorkerActive(session.id);
+  HC.animateCounter(document.getElementById('sc-req'), String(reqs.length));
+  HC.animateCounter(document.getElementById('sc-active'), String(active.filter(j=>j.status==='accepted'||j.status==='in_progress').length));
+  HC.animateCounter(document.getElementById('sc-done'), String(active.filter(j=>j.status==='completed').length));
+  HC.animateCounter(document.getElementById('sc-earn'), HJ.moneySigned(HJ.walletBalance('worker', session.id)));
+  document.getElementById('dashJobsPreview').innerHTML = reqs.length ? reqs.slice(0,3).map(j=>jobCardHTML(j,'request')).join('') :
+    `<div class="empty-state"><i class="fas fa-inbox"></i>No new job requests right now.</div>`;
+  const reviews = HJ.getReviews(session.id).slice(0,2);
+  document.getElementById('dashReviewsPreview').innerHTML = reviews.length ? reviews.map(r=>`
+    <div class="review-item"><div class="review-item-top"><span>${r.clientName}</span><span>${starHTML(r.rating)}</span></div><div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">${r.comment||''}</div></div>`).join('') :
+    `<div class="empty-state"><i class="fas fa-star"></i>No reviews yet.</div>`;
+  renderHero();
+}
+
+/* ══ BOOT ══ */
+HC.initWorker('Dashboard','Worker Dashboard','dashboard');
+renderSettingsTabs('payments');
+const myRecord = getMyWorkerRecord();
+if (myRecord.status === 'suspended') {
+  document.getElementById('suspendedBanner').style.display = 'flex';
+} else if (myRecord.status !== 'verified') {
+  document.getElementById('reviewBanner').style.display = 'flex';
+}
+renderDashboard();
+</script>
+</body>
+</html>

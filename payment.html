@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'user'){
+    localStorage.setItem('authRedirect','payment.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Payments & Wallet — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body" style="display:flex;flex-direction:column;gap:1.1rem">
+
+      <div class="wallet-hero">
+        <div><div class="wh-lbl">Wallet Balance</div><div class="wh-amt" id="wBalance">Rs. 0</div></div>
+        <button class="btn-primary" style="background:#fff;color:var(--g1)" onclick="addMoney()"><i class="fas fa-plus"></i> Add Money</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><p class="stat-lbl">Total Spent</p><p class="stat-val" id="wSpent">Rs. 0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Jobs Paid</p><p class="stat-val" id="wCount">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Pending Bookings</p><p class="stat-val" id="wPending">0</p></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Linked Payment Methods</div><div class="tbl-sub">Connect EasyPaisa, JazzCash or a bank account to top up instantly</div></div></div>
+        <div class="paymethod-grid" style="padding:0 1.2rem 1.2rem" id="methodsGrid"></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Transaction History</div><div class="tbl-sub">Payments are settled automatically once a job is marked complete</div></div></div>
+        <div style="padding:.4rem 1.2rem 1.2rem" id="ledgerList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+
+function renderMethods(){
+  const linked = HJ.getPaymentMethods('client', session.id);
+  const types = ['easypaisa','jazzcash','bank'];
+  document.getElementById('methodsGrid').innerHTML = types.map(type=>{
+    const brand = HJ.PAYMENT_BRANDS[type];
+    const m = linked.find(x=>x.type===type);
+    return `<div class="paymethod-tile${m?' linked':''}">
+      <div class="paymethod-top">
+        <div class="paymethod-ico" style="background:${brand.bg};color:${brand.color}"><i class="fas ${brand.icon}"></i></div>
+        <div><div class="paymethod-name">${brand.label}</div><div class="paymethod-status">${m ? HJ.maskAccount(m.number) : 'Not linked'}</div></div>
+      </div>
+      ${m
+        ? `<button class="btn-outline" onclick="unlinkMethod('${type}')"><i class="fas fa-unlink"></i> Disconnect</button>`
+        : `<button class="btn-primary" onclick="linkMethod('${type}')"><i class="fas fa-link"></i> Connect</button>`}
+    </div>`;
+  }).join('');
+}
+
+function linkMethod(type){
+  const brand = HJ.PAYMENT_BRANDS[type];
+  const isBank = type === 'bank';
+  const inputId = 'linkNum_'+Date.now();
+  HC.modal({
+    icon:'fas '+brand.icon,
+    title:'Connect '+brand.label,
+    body: isBank ? 'Enter your bank account (IBAN) number.' : `Enter the mobile number linked to your ${brand.label} account.`,
+    formHTML:`<div style="margin-top:.9rem;text-align:left">
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted)">${isBank?'IBAN / ACCOUNT NUMBER':'MOBILE NUMBER'}</label>
+      <input id="${inputId}" placeholder="${isBank?'PK00 HABB 0000 0000 0000 0000':'03XX-XXXXXXX'}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+    </div>`,
+    confirmText:'Connect',
+    onConfirm:()=>{
+      const val = document.getElementById(inputId).value.trim();
+      if (!val || val.length<6){ HC.toast('Enter a valid number','warning'); return false; }
+      HJ.linkPaymentMethod('client', session.id, type, val);
+      HC.toast(`✓ ${brand.label} connected!`,'success');
+      renderMethods();
+    }
+  });
+}
+
+function unlinkMethod(type){
+  const brand = HJ.PAYMENT_BRANDS[type];
+  HC.modal({icon:'fas fa-unlink',iconType:'danger',title:'Disconnect '+brand.label,body:`Remove your linked ${brand.label} account?`,confirmText:'Disconnect',danger:true,
+    onConfirm:()=>{ HJ.unlinkPaymentMethod('client', session.id, type); HC.toast(`${brand.label} disconnected.`,'warning'); renderMethods(); }});
+}
+
+function addMoney(){
+  const linked = HJ.getPaymentMethods('client', session.id);
+  if (!linked.length){ HC.toast('Link a payment method below before adding money','warning'); return; }
+  const formId = 'topupAmt';
+  const methodId = 'topupMethod';
+  HC.modal({
+    icon:'fas fa-wallet',
+    title:'Add Money to Wallet',
+    body:'Top up your Hunarmand wallet to pay for future bookings instantly.',
+    formHTML:`<div style="margin-top:.9rem;text-align:left">
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted)">PAY WITH</label>
+      <select id="${methodId}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+        ${linked.map(m=>`<option value="${m.type}">${HJ.PAYMENT_BRANDS[m.type].label} (${HJ.maskAccount(m.number)})</option>`).join('')}
+      </select>
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted);margin-top:.7rem;display:block">AMOUNT (Rs.)</label>
+      <input id="${formId}" type="number" min="100" placeholder="e.g. 5000" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+    </div>`,
+    confirmText:'Add Funds',
+    onConfirm:()=>{
+      const val = Number(document.getElementById(formId).value);
+      const method = document.getElementById(methodId).value;
+      if (!val || val<=0){ HC.toast('Enter a valid amount','warning'); return false; }
+      HJ.addLedgerEntry('client', session.id, `Wallet top-up via ${HJ.PAYMENT_BRANDS[method].label}`, val, method);
+      HC.toast(`✓ ${HJ.money(val)} added via ${HJ.PAYMENT_BRANDS[method].label}!`,'success');
+      renderAll();
+    }
+  });
+}
+
+function renderAll(){
+  const ledger = HJ.getLedger('client', session.id);
+  const balance = HJ.walletBalance('client', session.id);
+  const jobs = HJ.forClient(session.id);
+  HC.animateCounter(document.getElementById('wBalance'), HJ.moneySigned(balance));
+  HC.animateCounter(document.getElementById('wSpent'), HJ.money(jobs.filter(j=>j.status==='completed').reduce((s,j)=>s+j.budget,0)));
+  HC.animateCounter(document.getElementById('wCount'), String(jobs.filter(j=>j.status==='completed').length));
+  HC.animateCounter(document.getElementById('wPending'), String(jobs.filter(j=>j.status==='requested'||j.status==='accepted'||j.status==='in_progress').length));
+
+  const el = document.getElementById('ledgerList');
+  el.innerHTML = ledger.length ? ledger.map(t=>`
+    <div class="ledger-row">
+      <div><div style="font-weight:600;font-size:.84rem">${t.desc}</div><div style="font-size:.72rem;color:var(--muted)">${t.date}</div></div>
+      <div style="font-weight:700;font-family:var(--fd);color:${t.amount>0?'var(--g1)':'var(--red)'}">${t.amount>0?'+':'-'}${HJ.money(t.amount)}</div>
+    </div>`).join('') :
+    `<div class="empty-state"><i class="fas fa-receipt"></i>No transactions yet. Top up your wallet or complete a booking to see activity here.</div>`;
+}
+
+HC.initClient('Wallet','Payments & Wallet','payment');
+renderMethods();
+renderAll();
+</script>
+</body>
+</html>

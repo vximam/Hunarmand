@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'user'){
+    localStorage.setItem('authRedirect','findworker.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Find Artisans — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.worker-card-top{position:relative}
+.avail-badge{position:absolute;top:0;right:26px;display:flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;color:var(--muted)}
+.wc-fav{position:absolute;top:-4px;right:-4px}
+.rate-row{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--muted)}
+.wc-bio{font-size:.76rem;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.profile-modal-hero{display:flex;gap:1rem;align-items:center;text-align:left}
+.profile-tag{display:inline-block;background:var(--mint);color:var(--g1);font-size:.7rem;font-weight:600;padding:.22rem .6rem;border-radius:100px;margin:.15rem .25rem 0 0}
+.review-item{padding:.7rem 0;border-bottom:1px solid var(--row-line);text-align:left}
+.review-item:last-child{border-bottom:none}
+.review-item-top{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body" style="display:flex;flex-direction:column;gap:1.1rem">
+
+      <div class="tbl-card">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Browse by Service</div></div></div>
+        <div class="cat-grid" style="padding:0 1.2rem 1.2rem" id="categoryGrid"></div>
+      </div>
+
+      <div class="tbl-card">
+        <div style="padding:1.1rem 1.2rem 0">
+          <div class="search-filter-bar">
+            <div class="search-input-wrap"><i class="fas fa-search"></i><input id="searchInput" placeholder="Search by name, skill or city..." oninput="debouncedRenderGrid()"></div>
+            <button class="btn-outline" onclick="useMyLocation()"><i class="fas fa-location-crosshairs"></i> Use My Location</button>
+            <button class="filter-chip" id="favToggle" onclick="toggleFavFilter()"><i class="fas fa-heart"></i> Favorites</button>
+            <button class="filter-chip" id="mapToggle" onclick="toggleMapView()"><i class="fas fa-map-location-dot"></i> Map View</button>
+            <select class="sel" id="sortSelect" onchange="renderGrid()" style="border:1px solid var(--border);background:var(--card-bg);color:var(--ink);border-radius:10px;padding:.55rem .8rem;font-size:.8rem">
+              <option value="rating">Sort: Top Rated</option>
+              <option value="rate_low">Sort: Price (Low to High)</option>
+              <option value="rate_high">Sort: Price (High to Low)</option>
+              <option value="jobs">Sort: Most Experienced</option>
+            </select>
+          </div>
+          <div class="search-filter-bar" id="skillChips" style="margin-top:.8rem;padding-bottom:1.1rem"></div>
+        </div>
+      </div>
+
+      <div class="tbl-card" id="mapCard" style="display:none">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Hunarmand Network Map</div><div class="tbl-sub">Verified artisans across Pakistan — click a city to filter</div></div></div>
+        <div id="mapContainer" style="padding:0 1.2rem 1.2rem"></div>
+      </div>
+
+      <div class="worker-grid" id="workerGrid"></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="compare-bar" id="compareBar" style="display:none">
+  <span id="compareCount">0 selected</span>
+  <div style="display:flex;gap:.5rem">
+    <button class="btn-outline" onclick="clearCompare()">Clear</button>
+    <button class="btn-primary" onclick="openCompareModal()"><i class="fas fa-scale-balanced"></i> Compare</button>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+let _debounceTimer = null;
+function debouncedRenderGrid(){
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(renderGrid, 220);
+}
+let activeSkill = new URLSearchParams(location.search).get('skill') || 'All';
+let favOnly = false;
+
+const CATEGORY_ICONS = {
+  'Plumbing':'fa-faucet-drip','Electrical':'fa-bolt','Carpentry':'fa-hammer','HVAC':'fa-fan',
+  'Painting':'fa-paint-roller','Cleaning':'fa-broom','Appliance Repair':'fa-blender',
+  'Security':'fa-shield-halved','Welder':'fa-fire','Driver':'fa-car','General':'fa-toolbox'
+};
+
+function renderCategoryGrid(){
+  const skills = Object.keys(HJ.MARKET_RATES);
+  document.getElementById('categoryGrid').innerHTML = skills.map(s=>`
+    <div class="cat-tile" onclick="activeSkill='${s}';renderChips();renderGrid();window.scrollTo({top:400,behavior:'smooth'})">
+      <div class="cat-tile-ico"><i class="fas ${CATEGORY_ICONS[s]||'fa-toolbox'}"></i></div>
+      <div class="cat-tile-lbl">${s}</div>
+    </div>`).join('');
+}
+
+function getVerifiedWorkers(){
+  const all = JSON.parse(localStorage.getItem('allWorkers')||'[]');
+  return all.filter(w => (w.status||'').toLowerCase() === 'verified').map(w => ({ ...w, meta: HJ.getWorkerMeta(w.id) }));
+}
+
+function renderChips(){
+  const workers = getVerifiedWorkers();
+  const skills = ['All', ...new Set(workers.map(w=>w.skill).filter(Boolean))];
+  document.getElementById('skillChips').innerHTML = skills.map(s=>
+    `<button class="filter-chip${s===activeSkill?' active':''}" onclick="activeSkill='${s}';renderChips();renderGrid()">${s}</button>`).join('');
+}
+
+function toggleFavFilter(){
+  favOnly = !favOnly;
+  document.getElementById('favToggle').classList.toggle('active', favOnly);
+  renderGrid();
+}
+
+function starHTML(rating){
+  const full = Math.round(rating);
+  let s = '';
+  for (let i=1;i<=5;i++) s += `<i class="fa-star ${i<=full?'fas':'far'}"></i>`;
+  return `<span class="star-display">${s}</span>`;
+}
+
+function renderGrid(){
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+  let workers = getVerifiedWorkers();
+  if (activeSkill !== 'All') workers = workers.filter(w=>w.skill===activeSkill);
+  if (q) workers = workers.filter(w => (w.name+w.skill+w.city).toLowerCase().includes(q));
+  if (favOnly) { const favs = HJ.getFavorites(session.id); workers = workers.filter(w=>favs.includes(w.id)); }
+  if (window._preferredCity) {
+    workers.sort((a,b) => (a.city===window._preferredCity?-1:0) - (b.city===window._preferredCity?-1:0));
+  }
+  if (sort==='rating') workers.sort((a,b)=>b.meta.avgRating-a.meta.avgRating);
+  else if (sort==='rate_low') workers.sort((a,b)=>(a.meta.hourlyRate||0)-(b.meta.hourlyRate||0));
+  else if (sort==='rate_high') workers.sort((a,b)=>(b.meta.hourlyRate||0)-(a.meta.hourlyRate||0));
+  else if (sort==='jobs') workers.sort((a,b)=>b.meta.completedJobs-a.meta.completedJobs);
+
+  const grid = document.getElementById('workerGrid');
+  if (!workers.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-user-slash"></i>${favOnly ? "You haven't saved any favorites yet." : 'No verified artisans match your search yet. Try a different skill or city.'}</div>`;
+    return;
+  }
+  const favs = HJ.getFavorites(session.id);
+  grid.innerHTML = workers.map((w,i) => {
+    const av = HJ.AVAILABILITY[w.meta.availability] || HJ.AVAILABILITY.online;
+    const isFav = favs.includes(w.id);
+    return `
+    <div class="worker-card" style="animation-delay:${i*0.05}s">
+      <div class="worker-card-top">
+        <img src="${w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')}" alt="${w.name}" loading="lazy">
+        <div>
+          <div class="worker-card-name">${w.name}</div>
+          <div class="worker-card-skill">${w.skill||'General'} · ${w.meta.experience}</div>
+        </div>
+        <div class="avail-badge"><span class="avail-dot" style="background:${av.dot}"></span>${av.label}</div>
+        <button class="fav-btn wc-fav${isFav?' active':''}" onclick="toggleFav(${w.id}, this)"><i class="${isFav?'fas':'far'} fa-heart"></i></button>
+      </div>
+      <div class="rate-row">${starHTML(w.meta.avgRating)} <span>${w.meta.avgRating.toFixed(1)} (${w.meta.reviewCount})</span><span>${w.meta.hourlyRate?HJ.money(w.meta.hourlyRate)+'/hr':'Rate on request'}</span></div>
+      <div class="wc-bio">${w.meta.bio || 'No bio provided yet.'}</div>
+      <div class="worker-card-meta">
+        <span><i class="fas fa-location-dot"></i> ${w.city||'—'}</span>
+        <span><i class="fas fa-briefcase"></i> ${w.meta.completedJobs} jobs done</span>
+      </div>
+      <label class="compare-check"><input type="checkbox" ${window._compareIds?.includes(w.id)?'checked':''} onchange="toggleCompare(${w.id}, this)"> Compare</label>
+      <div class="worker-card-foot">
+        <button class="btn-outline" onclick="openProfileModal(${w.id})">View Profile</button>
+        <button class="btn-primary" onclick="openRequestModal(${w.id})"><i class="fas fa-paper-plane"></i> Request</button>
+      </div>
+    </div>
+  `;}).join('');
+  window._currentGridWorkers = workers;
+}
+
+function toggleFav(workerId, btn){
+  const isNowFav = HJ.toggleFavorite(session.id, workerId);
+  btn.classList.toggle('active', isNowFav);
+  btn.querySelector('i').className = (isNowFav?'fas':'far')+' fa-heart';
+  HC.toast(isNowFav ? '❤️ Added to favorites' : 'Removed from favorites', isNowFav?'success':'info');
+  if (favOnly) renderGrid();
+}
+
+/* ═══ COMPARE WORKERS ═══ */
+window._compareIds = window._compareIds || [];
+function toggleCompare(workerId, cb){
+  if (cb.checked) {
+    if (window._compareIds.length >= 3){ HC.toast('You can compare up to 3 artisans at a time','warning'); cb.checked=false; return; }
+    window._compareIds.push(workerId);
+  } else {
+    window._compareIds = window._compareIds.filter(id=>id!==workerId);
+  }
+  updateCompareBar();
+}
+function updateCompareBar(){
+  const bar = document.getElementById('compareBar');
+  const n = window._compareIds.length;
+  document.getElementById('compareCount').textContent = `${n} selected`;
+  bar.style.display = n >= 1 ? 'flex' : 'none';
+}
+function clearCompare(){
+  window._compareIds = [];
+  updateCompareBar();
+  renderGrid();
+}
+function openCompareModal(){
+  if (window._compareIds.length < 2){ HC.toast('Select at least 2 artisans to compare','warning'); return; }
+  const all = getVerifiedWorkers();
+  const chosen = window._compareIds.map(id => all.find(w=>w.id===id)).filter(Boolean);
+  const rows = [
+    ['Skill', w=>w.skill],
+    ['City', w=>w.city],
+    ['Rating', w=>starHTML(w.meta.avgRating)+` ${w.meta.avgRating.toFixed(1)}`],
+    ['Reviews', w=>w.meta.reviewCount],
+    ['Hourly Rate', w=>w.meta.hourlyRate?HJ.money(w.meta.hourlyRate):'On request'],
+    ['Experience', w=>w.meta.experience],
+    ['Jobs Done', w=>w.meta.completedJobs],
+    ['Response Time', w=>w.meta.responseTime],
+    ['Availability', w=>{const a=HJ.AVAILABILITY[w.meta.availability]||HJ.AVAILABILITY.online; return `<span style="color:${a.color};font-weight:700">${a.label}</span>`;}],
+  ];
+  HC.modal({
+    icon:'fas fa-scale-balanced', title:'Compare Artisans', wide:true,
+    body:'',
+    formHTML:`<div style="overflow-x:auto;margin-top:.5rem"><table class="compare-table">
+      <thead><tr><th></th>${chosen.map(w=>`<th><img src="${w.image||('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')}" class="compare-avatar"><div>${w.name}</div></th>`).join('')}</tr></thead>
+      <tbody>${rows.map(([label,fn])=>`<tr><td class="compare-lbl">${label}</td>${chosen.map(w=>`<td>${fn(w)}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`,
+    confirmText:'Close'
+  });
+}
+
+/* ═══ MAP VIEW ═══ */
+let mapVisible = false;
+function toggleMapView(){
+  mapVisible = !mapVisible;
+  document.getElementById('mapToggle').classList.toggle('active', mapVisible);
+  document.getElementById('mapCard').style.display = mapVisible ? 'block' : 'none';
+  if (mapVisible) renderMap();
+}
+function renderMap(){
+  const workers = getVerifiedWorkers();
+  const cityCounts = {};
+  workers.forEach(w => { cityCounts[w.city] = (cityCounts[w.city]||0) + 1; });
+
+  const cities = Object.keys(HJ.CITY_COORDS);
+  const lats = cities.map(c=>HJ.CITY_COORDS[c].lat), lngs = cities.map(c=>HJ.CITY_COORDS[c].lng);
+  const latMin=Math.min(...lats), latMax=Math.max(...lats), lngMin=Math.min(...lngs), lngMax=Math.max(...lngs);
+  const pad=40, w=420, h=480;
+  const toXY = (lat,lng) => ({
+    x: pad + ((lng-lngMin)/(lngMax-lngMin)) * (w-2*pad),
+    y: (h-pad) - ((lat-latMin)/(latMax-latMin)) * (h-2*pad)
+  });
+
+  let pins = '';
+  cities.forEach(city => {
+    const {x,y} = toXY(HJ.CITY_COORDS[city].lat, HJ.CITY_COORDS[city].lng);
+    const count = cityCounts[city]||0;
+    const r = count ? 10 + Math.min(count,6)*2 : 6;
+    pins += `<g class="map-pin${count?' has-workers':''}" onclick="filterByCity('${city}')" style="cursor:pointer">
+      ${count ? `<circle cx="${x}" cy="${y}" r="${r+8}" class="map-pin-pulse"/>` : ''}
+      <circle cx="${x}" cy="${y}" r="${r}" class="map-pin-dot"/>
+      <text x="${x}" y="${y+4}" class="map-pin-count">${count||''}</text>
+      <text x="${x}" y="${y+r+16}" class="map-pin-label">${city}</text>
+    </g>`;
+  });
+
+  document.getElementById('mapContainer').innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:460px;display:block;margin:0 auto">
+      <rect x="0" y="0" width="${w}" height="${h}" rx="16" class="map-bg"/>
+      ${pins}
+    </svg>
+    <div style="text-align:center;font-size:.72rem;color:var(--faint);margin-top:.4rem">Pin size reflects number of verified artisans in that city</div>`;
+}
+function filterByCity(city){
+  document.getElementById('searchInput').value = city;
+  renderGrid();
+  toggleMapView();
+  HC.toast(`Showing artisans in ${city}`,'info');
+  document.getElementById('workerGrid').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function useMyLocation(){
+  if (!navigator.geolocation){ HC.toast('Geolocation is not supported on this browser','warning'); return; }
+  HC.toast('Detecting your location...', 'info');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const city = HJ.nearestCity(pos.coords.latitude, pos.coords.longitude);
+    window._preferredCity = city;
+    HC.toast(`📍 Showing artisans near ${city} first`, 'success');
+    renderGrid();
+  }, err => {
+    HC.toast('Could not detect location — check browser permissions', 'warning');
+  }, { timeout: 8000 });
+}
+
+function openProfileModal(workerId){
+  const w = window._currentGridWorkers.find(x=>x.id===workerId);
+  if (!w) return;
+  const reviews = HJ.getReviews(w.id);
+  const av = HJ.AVAILABILITY[w.meta.availability] || HJ.AVAILABILITY.online;
+  HC.modal({
+    icon:'fas fa-user',
+    title:w.name,
+    wide:true,
+    body:`${w.skill} · ${w.city} · <span style="color:${av.color};font-weight:700">${av.label}</span>`,
+    formHTML:`
+      <div style="margin-top:1rem;text-align:left">
+        <p style="font-size:.85rem;color:var(--muted);line-height:1.5">${w.meta.bio||'No bio provided yet.'}</p>
+        <div style="margin-top:.6rem">${w.meta.portfolio.map(t=>`<span class="profile-tag">${t}</span>`).join('')}</div>
+        <div style="display:flex;gap:1.2rem;margin-top:1rem;flex-wrap:wrap">
+          <div><div style="font-size:.66rem;color:var(--faint);font-weight:700">RATING</div><div>${starHTML(w.meta.avgRating)} ${w.meta.avgRating.toFixed(1)} (${w.meta.reviewCount})</div></div>
+          <div><div style="font-size:.66rem;color:var(--faint);font-weight:700">JOBS DONE</div><div style="font-weight:700">${w.meta.completedJobs}</div></div>
+          <div><div style="font-size:.66rem;color:var(--faint);font-weight:700">RESPONSE TIME</div><div style="font-weight:700">${w.meta.responseTime}</div></div>
+          <div><div style="font-size:.66rem;color:var(--faint);font-weight:700">RATE</div><div style="font-weight:700">${w.meta.hourlyRate?HJ.money(w.meta.hourlyRate)+'/hr':'On request'}</div></div>
+        </div>
+        <div style="margin-top:1.1rem;border-top:1px solid var(--border);padding-top:.8rem">
+          <div style="font-weight:700;font-size:.85rem;margin-bottom:.3rem">Reviews</div>
+          ${reviews.length ? reviews.map(r=>`<div class="review-item"><div class="review-item-top"><span>${r.clientName}</span><span class="star-display">${starHTML(r.rating)}</span></div><div style="font-size:.78rem;color:var(--muted);margin-top:.15rem">${r.comment}</div><div style="font-size:.68rem;color:var(--faint);margin-top:.15rem">${r.service} · ${r.date}</div></div>`).join('') : '<div style="font-size:.8rem;color:var(--faint)">No reviews yet.</div>'}
+        </div>
+      </div>`,
+    confirmText:'Request Booking',
+    onConfirm:()=>{ openRequestModal(w.id); }
+  });
+}
+
+function openRequestModal(workerId){
+  const worker = window._currentGridWorkers.find(x=>x.id===workerId);
+  if (!worker) return;
+  const formId = 'reqForm_'+Date.now();
+  const addresses = HJ.getAddresses(session.id);
+  const today = new Date().toISOString().split('T')[0];
+  HC.modal({
+    icon:'fas fa-paper-plane',
+    title:'Request '+worker.name,
+    body:'Fill in the job details below and we\'ll send it straight to '+worker.name+'.',
+    wide:true,
+    formHTML:`
+      <form id="${formId}" style="display:flex;flex-direction:column;gap:.7rem;text-align:left;margin-top:.9rem">
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">SERVICE NEEDED</label>
+          <input required name="service" placeholder="e.g. Fix kitchen sink leak" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1"><label style="font-size:.72rem;font-weight:700;color:var(--muted)">PREFERRED DATE</label>
+            <input type="date" name="preferredDate" min="${today}" value="${today}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+          <div style="flex:1"><label style="font-size:.72rem;font-weight:700;color:var(--muted)">TIME WINDOW</label>
+            <select name="timeWindow" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+              <option>Morning (8am-12pm)</option><option>Afternoon (12pm-5pm)</option><option>Evening (5pm-9pm)</option><option selected>ASAP</option>
+            </select></div>
+        </div>
+        ${addresses.length ? `<div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">SAVED ADDRESS</label>
+          <select name="savedAddress" onchange="document.getElementById('${formId}_addr').value=this.value.split('|')[1]||''" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+            <option value="">— Type a new address below —</option>
+            ${addresses.map(a=>`<option value="${a.label}|${a.address}">${a.label} — ${a.address}</option>`).join('')}
+          </select></div>` : ''}
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">YOUR CITY</label>
+          <input required name="city" value="${session.city||''}" placeholder="e.g. Lahore" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">FULL ADDRESS</label>
+          <input id="${formId}_addr" name="address" placeholder="House #, Street, Area" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">BUDGET (Rs.)</label>
+          <input required type="number" min="100" name="budget" placeholder="e.g. 2000" oninput="updateFairnessHint('${worker.skill}', this.value, '${formId}')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <div id="${formId}_fair"></div>
+        </div>
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">PHOTO OF THE ISSUE <span style="font-weight:400;text-transform:none">(optional)</span></label>
+          <div style="display:flex;align-items:center;gap:.7rem;margin-top:.3rem">
+            <div class="avatar-upload" id="${formId}_photoZone" style="width:56px;height:56px;border-radius:10px">
+              <img id="${formId}_photoPreview" src="" style="border-radius:10px;display:none" alt="">
+              <div id="${formId}_photoPlaceholder" style="width:100%;height:100%;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--faint)"><i class="fas fa-camera"></i></div>
+              <div class="avatar-upload-overlay" style="border-radius:10px"><i class="fas fa-camera"></i></div>
+            </div>
+            <input type="file" id="${formId}_photoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+            <span style="font-size:.74rem;color:var(--faint)">Click to attach a photo from your device</span>
+          </div>
+        </div>
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">DESCRIPTION</label>
+          <textarea name="description" rows="2" placeholder="Add any details the artisan should know" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea></div>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--ink);cursor:pointer"><input type="checkbox" name="urgent"> Mark as urgent (same-day priority)</label>
+      </form>`,
+    confirmText:'Send Request',
+    onConfirm:()=>{
+      const form = document.getElementById(formId);
+      if (!form.service.value || !form.city.value || !form.budget.value){ HC.toast('Please fill in all required fields','warning'); return false; }
+      HJ.createRequest({
+        clientId: session.id, clientName: session.name, clientImage: session.image,
+        workerId: worker.id, workerName: worker.name, workerImage: worker.image,
+        service: form.service.value, skill: worker.skill, city: form.city.value, address: form.address.value,
+        budget: form.budget.value, description: form.description.value,
+        preferredDate: form.preferredDate.value, timeWindow: form.timeWindow.value,
+        photoUrl: window._pendingIssuePhoto || null, urgent: form.urgent.checked
+      });
+      window._pendingIssuePhoto = null;
+      HC.toast(`✓ Request sent to ${worker.name}!`,'success');
+    }
+  });
+  window._pendingIssuePhoto = null;
+  HC.wireAvatarUpload(formId+'_photoZone', formId+'_photoInput', document.getElementById(formId+'_photoPreview'), (dataUrl)=>{
+    window._pendingIssuePhoto = dataUrl;
+    const img = document.getElementById(formId+'_photoPreview');
+    const placeholder = document.getElementById(formId+'_photoPlaceholder');
+    if (img) img.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+  });
+}
+
+function updateFairnessHint(skill, budget, formId){
+  const hintEl = document.getElementById(formId+'_fair');
+  if (!hintEl) return;
+  const f = HJ.priceFairness(skill, budget);
+  if (!f) { hintEl.innerHTML = ''; return; }
+  const icon = f.level==='fair' ? 'fa-circle-check' : f.level==='low' ? 'fa-triangle-exclamation' : 'fa-coins';
+  hintEl.innerHTML = `<div class="fairness-hint ${f.level}"><i class="fas ${icon}"></i><span>${f.message}</span></div>`;
+}
+
+HC.initClient('Find Artisans','Browse Verified Artisans','findworker');
+renderCategoryGrid();
+renderChips();
+renderGrid();
+</script>
+</body>
+</html>

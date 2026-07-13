@@ -1,395 +1,233 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Pending Worker Approvals — Hunarmand</title>
+<script src="auth.js"></script>
+<script>checkAdminSession();</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pending Approvals — Hunarmand Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
 <style>
-/* ── INHERITED COLOR VARIABLES FROM DESIGN SYSTEM ── */
-:root {
-  --g1: #1b5e37;
-  --g2: #134228;
-  --mint: #e8f5ed;
-  --mint2: #d4ecde;
-  --white: #ffffff;
-  --near: #f5fbf7;
-  --ink: #0b1a10;
-  --muted: #4e6a57;
-  --faint: #8ca898;
-  --bdr: rgba(197, 222, 206, 0.55);
-  --bdr2: rgba(197, 222, 206, 0.25);
-  --sh1: 0 2px 8px rgba(11, 26, 16, 0.04);
-  --sh2: 0 4px 16px rgba(11, 26, 16, 0.06);
-  --fd: 'Sora', sans-serif;
-  --fi: 'Inter', sans-serif;
-  --transition: all 0.2s ease-in-out;
-}
-
-[data-theme="dark"] {
-  --white: #121c15;
-  --near: #0a110c;
-  --ink: #e8f5ed;
-  --muted: #7ba888;
-  --faint: #4e6a57;
-  --bdr: rgba(197, 222, 206, 0.15);
-  --bdr2: rgba(197, 222, 206, 0.08);
-  --mint: #1c3526;
-  --mint2: #234430;
-}
-
-/* ── BASE RESET ── */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: var(--fi);
-  color: var(--ink);
-  background: var(--near);
-  padding: 2.5rem 2rem;
-  min-height: 100vh;
-  transition: background 0.3s, color 0.3s;
-}
-
-/* ── CONTAINER ── */
-.workspace-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-/* ── BREADCRUMB COMPONENT (TOP LEFT) ── */
-.breadcrumb-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.78rem;
-  color: var(--muted);
-  font-weight: 500;
-}
-.breadcrumb-link {
-  color: var(--muted);
-  text-decoration: none;
-  transition: var(--transition);
-}
-.breadcrumb-link:hover {
-  color: var(--g1);
-}
-.breadcrumb-slash {
-  color: var(--faint);
-  font-weight: 400;
-}
-.breadcrumb-current {
-  color: var(--g1);
-  font-weight: 600;
-}
-
-/* ── ACTION HEADER BAR ── */
-.header-action-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.2rem;
-}
-.heading-primary {
-  font-family: var(--fd);
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-.view-all-action {
-  color: var(--g1);
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: var(--transition);
-}
-.view-all-action:hover {
-  color: var(--g2);
-  transform: translateX(2px);
-}
-
-/* ── PILL FILTER CAROUSEL (Image Matched) ── */
-.filter-pills-row {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-}
-.pill-button {
-  font-family: var(--fi);
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 0.45rem 1.2rem;
-  border-radius: 100px;
-  border: 1px solid var(--bdr);
-  background: var(--white);
-  color: var(--muted);
-  cursor: pointer;
-  transition: var(--transition);
-}
-.pill-button:hover {
-  border-color: var(--g1);
-  background: var(--near);
-  color: var(--g1);
-}
-.pill-button.active {
-  background: var(--g1);
-  color: var(--white);
-  border-color: var(--g1);
-  font-weight: 600;
-}
-
-/* ── WORKER COMPONENT DATA MATRIX (Image Matched Cards) ── */
-.matrix-grid-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.worker-record-card {
-  background: var(--white);
-  border: 1px solid var(--bdr2);
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: var(--sh1);
-  transition: var(--transition);
-}
-.worker-record-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh2);
-  border-color: var(--bdr);
-}
-
-/* Profile Left Block */
-.profile-core-block {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.profile-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  object-fit: cover;
-  background: var(--mint);
-  border: 1px solid var(--bdr2);
-}
-.profile-info-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.profile-name {
-  font-family: var(--fd);
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-.profile-meta-metrics {
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-.divider-span {
-  color: var(--faint);
-  margin: 0 4px;
-}
-
-/* Action Right Checkbox Box */
-.approve-action-trigger {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--mint);
-  border: 1px solid var(--mint2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--g1);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: var(--transition);
-}
-.approve-action-trigger:hover {
-  background: var(--g1);
-  color: var(--white);
-  border-color: var(--g1);
-  transform: scale(1.05);
-}
-
-/* Utility Utilities */
-.theme-switch-widget {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: var(--white);
-  border: 1px solid var(--bdr);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--sh2);
-  color: var(--g1);
-  z-index: 1000;
-}
+.hero-banner{background:linear-gradient(135deg,var(--g1),var(--g2));border-radius:15px;padding:1.5rem 1.8rem;color:#fff;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.hero-banner::before{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07)}
+.hero-banner::after{content:'';position:absolute;right:50px;bottom:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04)}
+.hero-ttl{font-family:var(--fd);font-size:1.4rem;font-weight:800;letter-spacing:-.04em;margin-bottom:.18rem}
+.hero-sub{font-size:.82rem;opacity:.75;font-family:var(--fi)}
+.hero-count{font-family:var(--fd);font-size:2.8rem;font-weight:800;letter-spacing:-.06em;position:relative;z-index:1;text-align:center}
+.hero-count-sub{font-size:.72rem;opacity:.7;font-family:var(--fi);text-align:center}
+.prog-banner{background:var(--mint);border:1px solid var(--mint3);border-radius:12px;padding:.8rem 1.05rem;display:flex;align-items:center;gap:.72rem}
+.prog-track{flex:1;height:7px;background:var(--mint2);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--g3),var(--accent));transition:width .8s var(--e2)}
+.ac{display:flex;align-items:center;gap:.9rem;background:var(--card-bg);border:1px solid var(--border);border-radius:13px;padding:.85rem 1.1rem;transition:all .22s var(--e2);position:relative;overflow:hidden;margin-bottom:.5rem}
+.ac::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:var(--g1);transition:width .28s}
+.ac:last-child{margin-bottom:0}
+.ac:hover{border-color:rgba(36,104,67,.3);box-shadow:var(--sh2)}
+.ac:hover::before{width:4px}
+.ac-av{width:50px;height:50px;border-radius:11px;object-fit:cover;flex-shrink:0;border:2px solid var(--mint2);box-shadow:var(--sh1)}
+.ac-name{font-family:var(--fd);font-size:.88rem;font-weight:800;color:var(--ink)}
+.ac-meta{display:flex;flex-wrap:wrap;gap:.3rem .6rem;align-items:center;margin-top:.2rem;font-size:.7rem;color:var(--muted);font-family:var(--fi)}
+.trade-pill{display:inline-flex;align-items:center;gap:.22rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--mint);color:var(--g1);padding:.1rem .45rem;border-radius:100px;border:1px solid var(--mint2)}
+.ac-actions{display:flex;flex-direction:column;gap:.38rem;flex-shrink:0;min-width:110px}
+.btn-approve{display:flex;align-items:center;justify-content:center;gap:.38rem;padding:.42rem .62rem;border-radius:8px;background:var(--g1);color:#fff;font-size:.73rem;font-weight:700;cursor:pointer;border:none;font-family:var(--fi);transition:all .2s var(--e3);box-shadow:0 3px 10px rgba(27,94,55,.2)}
+.btn-approve:hover{background:var(--g2);transform:translateY(-2px)}
+.btn-viewid{display:flex;align-items:center;justify-content:center;gap:.38rem;padding:.38rem .62rem;border-radius:8px;background:var(--blue-bg);color:var(--blue);font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--blue-bdr);font-family:var(--fi);transition:all .2s}
+.btn-viewid:hover{background:var(--blue);color:#fff}
+.btn-reject{display:flex;align-items:center;justify-content:center;gap:.38rem;padding:.38rem .62rem;border-radius:8px;background:transparent;color:var(--red);font-size:.7rem;font-weight:700;cursor:pointer;border:1px solid var(--red-bdr);font-family:var(--fi);transition:all .2s}
+.btn-reject:hover{background:var(--red);color:#fff}
+.batch-bar{position:sticky;bottom:18px;background:var(--g1);color:#fff;border-radius:12px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.72rem;box-shadow:0 8px 28px rgba(27,94,55,.35);transform:translateY(20px);opacity:0;pointer-events:none;transition:all .3s var(--e2);margin-top:.5rem}
+.batch-bar.show{transform:translateY(0);opacity:1;pointer-events:all}
+.empty-state{text-align:center;padding:3.5rem 1rem;color:var(--faint)}
+.empty-icon{font-size:2.8rem;margin-bottom:.65rem;opacity:.5}
 </style>
 </head>
 <body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body">
 
-<!-- ══ MAIN INTERFACE WORKSPACE ══ -->
-<div class="workspace-container">
-  
-  <!-- ══ TOP LEFT BREADCRUMB CORNER ══ -->
-  <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-    <a href="demoooo.html" class="breadcrumb-link">Dashboard</a>
-    <span class="breadcrumb-slash">/</span>
-    <span class="breadcrumb-current">Pending Worker Approvals</span>
-  </nav>
-
-  <!-- ══ TITLE BLOCK WITH VIEW ALL LINK ══ -->
-  <div class="header-action-bar">
-    <h1 class="heading-primary">Pending Worker Approvals</h1>
-  </div>
-
-  <!-- ══ PILL FILTERS (MATCHED TO image_39c807.png) ══ -->
-  <div class="filter-pills-row">
-    <button class="pill-button active" onclick="applyMatrixFilter('all', this)">All</button>
-    <button class="pill-button" onclick="applyMatrixFilter('Plumbing', this)">Plumbing</button>
-    <button class="pill-button" onclick="applyMatrixFilter('Houseclean', this)">Houseclean</button>
-    <button class="pill-button" onclick="applyMatrixFilter('Carpentry', this)">Carpentry</button>
-  </div>
-
-  <!-- ══ DATA MATRIX WRAPPER (40 WORKERS GENERATED HERE) ══ -->
-  <div class="matrix-grid-wrapper" id="matrixGridContainer">
-    <!-- Items are generated dynamically by engine script below -->
-  </div>
-</div>
-
-<!-- Floating Dark/Light Toggle for utility convenience -->
-<div class="theme-switch-widget" onclick="toggleInterfaceTheme()" title="Toggle Interface Color Scheme">
-  <i class="fa-solid fa-moon" id="themeWidgetIcon"></i>
-</div>
-
-<!-- ══ DATA ENGINE SCRIPT GENERATING 40 AUTHENTIC DEEP RECORDS ══ -->
-<script>
-// Mock profile assets database across categories
-const workerPoolData = [
-  { name: "Tariq Mahmood", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=120&auto=format&fit=crop&q=60" },
-  { name: "Ayesha Khan", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=60" },
-  { name: "Usman Ali", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=60" },
-  { name: "Muhammad Rizwan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=60" },
-  { name: "Zainab Bibi", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=60" },
-  { name: "Bilal Ahmed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=60" },
-  { name: "Kamran Shah", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=60" },
-  { name: "Sana Malik", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=120&auto=format&fit=crop&q=60" },
-  { name: "Faisal Qureshi", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=60" },
-  { name: "Hamza Siddiqui", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=120&auto=format&fit=crop&q=60" },
-  { name: "Sadia Imran", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=60" },
-  { name: "Haris Javed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=120&auto=format&fit=crop&q=60" },
-  { name: "Zeeshan Khan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=60" },
-  { name: "Mariam Fatima", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=120&auto=format&fit=crop&q=60" },
-  { name: "Nabeel Munir", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=60" },
-  { name: "Asad Riaz", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&auto=format&fit=crop&q=60" },
-  { name: "Iqra Aziz", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&auto=format&fit=crop&q=60" },
-  { name: "Waqas Butt", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=60" },
-  { name: "Adnan Sami", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=60" },
-  { name: "Khadija Rehman", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1594744803329-e58b31de215f?w=120&auto=format&fit=crop&q=60" },
-  { name: "Umair Hassan", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1489980508314-941910ded1f4?w=120&auto=format&fit=crop&q=60" },
-  { name: "Arsalan Baig", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=60" },
-  { name: "Nida Yasir", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=120&auto=format&fit=crop&q=60" },
-  { name: "Tayyab Lodhi", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=60" },
-  { name: "Shoaib Akhtar", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1500048993953-d23a436266cf?w=120&auto=format&fit=crop&q=60" },
-  { name: "Amna Nawaz", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=60" },
-  { name: "Farhan Saeed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=120&auto=format&fit=crop&q=60" },
-  { name: "Junaid Jamshed", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=120&auto=format&fit=crop&q=60" },
-  { name: "Bushra Ansari", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1548142813-c348350df52b?w=120&auto=format&fit=crop&q=60" },
-  { name: "Sohail Tanvir", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?w=120&auto=format&fit=crop&q=60" },
-  { name: "Ahsan Khan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1488161628813-04466f872be2?w=120&auto=format&fit=crop&q=60" },
-  { name: "Mehwish Hayat", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=120&auto=format&fit=crop&q=60" },
-  { name: "Rizwan Ahmed", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=120&auto=format&fit=crop&q=60" },
-  { name: "Babar Azam", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?w=120&auto=format&fit=crop&q=60" },
-  { name: "Sajal Aly", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1516534775068-ba3e84589d90?w=120&auto=format&fit=crop&q=60" },
-  { name: "Shadab Khan", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=60" },
-  { name: "Fawad Khan", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1504257406231-899998963a08?w=120&auto=format&fit=crop&q=60" },
-  { name: "Mahira Khan", trade: "Houseclean", reviews: 0, img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&auto=format&fit=crop&q=60" },
-  { name: "Shaheen Afridi", trade: "Carpentry", reviews: 0, img: "https://images.unsplash.com/photo-1541577140430-9a31d8a254be?w=120&auto=format&fit=crop&q=60" },
-  { name: "Imran Abbas", trade: "Plumbing", reviews: 0, img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=60" }
-];
-
-// Instantly construct component list upon load
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("matrixGridContainer");
-  
-  workerPoolData.forEach((worker, index) => {
-    const card = document.createElement("div");
-    card.className = "worker-record-card";
-    card.setAttribute("data-trade-type", worker.trade);
-    card.id = `worker-row-${index}`;
-    
-    card.innerHTML = `
-      <div class="profile-core-block">
-        <img src="${worker.img}" class="profile-avatar" alt="${worker.name}">
-        <div class="profile-info-stack">
-          <div class="profile-name">${worker.name}</div>
-          <div class="profile-meta-metrics">
-            ${worker.trade}<span class="divider-span">|</span>${worker.reviews} reviews
+      <div class="hero-banner fu">
+        <div>
+          <div class="hero-ttl">Pending Approvals</div>
+          <div class="hero-sub">Review and approve or reject worker applications</div>
+          <div style="margin-top:.9rem;display:flex;gap:.55rem;flex-wrap:wrap">
+            <button class="qa-btn" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:700" onclick="approveAll()"><i class="fas fa-check-double"></i> Approve All</button>
+            <button class="qa-btn" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff" onclick="exportList()"><i class="fas fa-download"></i> Export List</button>
           </div>
         </div>
+        <div style="position:relative;z-index:1">
+          <div class="hero-count" id="heroCount">0</div>
+          <div class="hero-count-sub">Workers Awaiting<br>Approval</div>
+        </div>
       </div>
-      <div class="approve-action-trigger" onclick="approveWorkerFromMatrix('worker-row-${index}')" title="Approve Identity">
-        <i class="fa-solid fa-check"></i>
-      </div>
-    `;
-    
-    container.appendChild(card);
-  });
-});
 
-// Interactive dynamic filtration control matching standard pill designs
-function applyMatrixFilter(category, buttonElement) {
-  document.querySelectorAll('.pill-button').forEach(btn => btn.classList.remove('active'));
-  buttonElement.classList.add('active');
-  
-  const allCards = document.querySelectorAll('.worker-record-card');
-  allCards.forEach(card => {
-    const cardTrade = card.getAttribute('data-trade-type');
-    if (category === 'all' || cardTrade === category) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
+      <div class="prog-banner fu">
+        <i class="fas fa-chart-simple" style="color:var(--g1)"></i>
+        <div style="font-size:.76rem;font-weight:600;color:var(--g1);white-space:nowrap">Approval Progress</div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+        <span style="font-size:.7rem;font-weight:700;color:var(--g1);white-space:nowrap" id="progText">0 of 20 approved</span>
+      </div>
+
+      <div class="qa-bar fu" id="tradeFilters">
+        <span class="qa-lbl">Filter</span>
+        <button class="qa-btn primary" onclick="setTrade('all',this)">All</button>
+        <button class="qa-btn" onclick="setTrade('Plumbing',this)">🔧 Plumbing</button>
+        <button class="qa-btn" onclick="setTrade('Houseclean',this)">🏠 Houseclean</button>
+        <button class="qa-btn" onclick="setTrade('Carpentry',this)">🪚 Carpentry</button>
+        <button class="qa-btn" onclick="setTrade('Electrical',this)">⚡ Electrical</button>
+        <button class="qa-btn" onclick="setTrade('Welding',this)">🔥 Welding</button>
+      </div>
+
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap" class="fu">
+        <div class="search-mini" style="flex:1;min-width:200px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="aSearch" placeholder="Search by name, trade, city..." oninput="renderList()"></div>
+        <select class="tbl-sel" id="sortSel" onchange="renderList()"><option value="name">Sort: Name A–Z</option><option value="trade">Sort: Trade</option><option value="city">Sort: City</option><option value="newest">Sort: Newest</option></select>
+      </div>
+
+      <div id="apprGrid"></div>
+
+      <div class="batch-bar" id="batchBar">
+        <i class="fas fa-user-check"></i>
+        <span style="flex:1;font-size:.82rem;font-weight:600;font-family:var(--fi)" id="batchTxt">0 selected</span>
+        <button style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:700;font-size:.76rem;padding:.4rem .95rem;border-radius:7px;cursor:pointer;font-family:var(--fi)" onclick="batchApprove()"><i class="fas fa-check"></i> Approve Selected</button>
+        <button style="background:var(--red-bg);border:1px solid var(--red-bdr);color:var(--red);font-weight:700;font-size:.76rem;padding:.4rem .95rem;border-radius:7px;cursor:pointer;font-family:var(--fi)" onclick="batchReject()"><i class="fas fa-times"></i> Reject Selected</button>
+        <button style="background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:1rem" onclick="clearSel()">✕</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+HC.init('Approvals','Pending Worker Approvals','approvals');
+
+const pool=[
+  {id:1,name:'Tariq Mahmood',trade:'Plumbing',city:'Karachi',cnic:'42101-1234567-1',phone:'+92 321 111 0001',img:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop'},
+  {id:2,name:'Ayesha Khan',trade:'Houseclean',city:'Lahore',cnic:'35201-2345678-2',phone:'+92 300 222 0002',img:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop'},
+  {id:3,name:'Usman Ali',trade:'Carpentry',city:'Islamabad',cnic:'61101-3456789-3',phone:'+92 333 333 0003',img:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop'},
+  {id:4,name:'Muhammad Rizwan',trade:'Plumbing',city:'Faisalabad',cnic:'33102-4567890-4',phone:'+92 345 444 0004',img:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop'},
+  {id:5,name:'Zainab Bibi',trade:'Houseclean',city:'Peshawar',cnic:'17301-5678901-5',phone:'+92 315 555 0005',img:'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop'},
+  {id:6,name:'Bilal Ahmed',trade:'Carpentry',city:'Lahore',cnic:'35202-6789012-6',phone:'+92 322 666 0006',img:'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop'},
+  {id:7,name:'Kamran Shah',trade:'Plumbing',city:'Karachi',cnic:'42201-7890123-7',phone:'+92 311 777 0007',img:'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop'},
+  {id:8,name:'Sana Malik',trade:'Houseclean',city:'Rawalpindi',cnic:'37501-8901234-8',phone:'+92 303 888 0008',img:'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=80&h=80&fit=crop'},
+  {id:9,name:'Faisal Qureshi',trade:'Carpentry',city:'Multan',cnic:'36302-9012345-9',phone:'+92 332 999 0009',img:'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop'},
+  {id:10,name:'Hamza Siddiqui',trade:'Welding',city:'Karachi',cnic:'42301-0123456-0',phone:'+92 344 000 0010',img:'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=80&h=80&fit=crop'},
+  {id:11,name:'Sadia Imran',trade:'Electrical',city:'Lahore',cnic:'35301-1234560-1',phone:'+92 307 111 0011',img:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop'},
+  {id:12,name:'Haris Javed',trade:'Carpentry',city:'Islamabad',cnic:'61201-2345601-2',phone:'+92 323 222 0012',img:'https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=80&h=80&fit=crop'},
+  {id:13,name:'Zeeshan Khan',trade:'Plumbing',city:'Quetta',cnic:'44102-3456702-3',phone:'+92 314 333 0013',img:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'},
+  {id:14,name:'Mariam Fatima',trade:'Houseclean',city:'Hyderabad',cnic:'41201-4567803-4',phone:'+92 306 444 0014',img:'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop'},
+  {id:15,name:'Nabeel Munir',trade:'Electrical',city:'Lahore',cnic:'35401-5678904-5',phone:'+92 331 555 0015',img:'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&h=80&fit=crop'},
+  {id:16,name:'Asad Riaz',trade:'Plumbing',city:'Sialkot',cnic:'51501-6789005-6',phone:'+92 305 666 0016',img:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop'},
+  {id:17,name:'Iqra Aziz',trade:'Houseclean',city:'Gujranwala',cnic:'34501-7890106-7',phone:'+92 328 777 0017',img:'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop'},
+  {id:18,name:'Waqas Butt',trade:'Carpentry',city:'Lahore',cnic:'35601-8901207-8',phone:'+92 320 888 0018',img:'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop'},
+  {id:19,name:'Adnan Sami',trade:'Welding',city:'Karachi',cnic:'42401-9012308-9',phone:'+92 340 999 0019',img:'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=80&h=80&fit=crop'},
+  {id:20,name:'Khadija Rehman',trade:'Houseclean',city:'Peshawar',cnic:'17401-0123409-0',phone:'+92 309 000 0020',img:'https://images.unsplash.com/photo-1594744803329-e58b31de215f?w=80&h=80&fit=crop'},
+];
+
+/* Merge real worker sign-ups awaiting approval (from auth.html) */
+(function syncRealPending(){
+  const real = JSON.parse(localStorage.getItem('allWorkers')||'[]');
+  real.forEach(w=>{
+    if (typeof w.id !== 'number' || w.id < 1000000000000) return;
+    let status=(w.status||'pending').toLowerCase();
+    if (status==='reviewing docs') status='pending';
+    if (status!=='pending') return; // already approved/suspended elsewhere
+    if (pool.some(x=>x.id===w.id)) return;
+    pool.unshift({id:w.id,name:w.name,trade:w.skill||'General',city:w.city||'—',cnic:w.cnic||'N/A',phone:w.phone||'N/A',img:w.image||('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')});
   });
+})();
+
+let pending=[...pool];
+let tradeFilter='all';
+let selected=new Set();
+const INIT=pool.length;
+
+function updateProgress(){
+  const approved=INIT-pending.length;
+  const pct=INIT>0?(approved/INIT*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progText').textContent=`${approved} of ${INIT} approved`;
+  document.getElementById('heroCount').textContent=pending.length;
 }
 
-// Action Trigger Mechanism for approvals
-function approveWorkerFromMatrix(rowId) {
-  const targetElement = document.getElementById(rowId);
-  if(targetElement) {
-    targetElement.style.opacity = '0';
-    targetElement.style.transform = 'scale(0.97)';
-    setTimeout(() => {
-      targetElement.remove();
-    }, 200);
+function renderList(){
+  const q=(document.getElementById('aSearch')?.value||'').toLowerCase();
+  const sort=document.getElementById('sortSel')?.value||'name';
+  let list=pending.filter(w=>{
+    if(tradeFilter!=='all'&&w.trade!==tradeFilter)return false;
+    if(q&&!w.name.toLowerCase().includes(q)&&!w.trade.toLowerCase().includes(q)&&!w.city.toLowerCase().includes(q))return false;
+    return true;
+  });
+  list=[...list].sort((a,b)=>sort==='name'?a.name.localeCompare(b.name):sort==='trade'?a.trade.localeCompare(b.trade):sort==='city'?a.city.localeCompare(b.city):b.id-a.id);
+  const grid=document.getElementById('apprGrid');
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🎉</div><div style="font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--muted);margin-bottom:.25rem">All clear!</div><div style="font-size:.78rem;font-family:var(--fi);color:var(--faint)">No pending workers in this filter.</div></div>`;
+    HC.applyGlobalSettings();
+    return;
   }
+  grid.innerHTML=list.map((w,i)=>`
+    <div class="ac" id="ac-${w.id}" style="animation:rowIn .35s var(--e2) ${i*.03}s both">
+      <input type="checkbox" style="accent-color:var(--g1);flex-shrink:0;width:15px;height:15px" ${selected.has(w.id)?'checked':''} onchange="toggleSel(${w.id},this)" onclick="event.stopPropagation()">
+      <img src="${w.img}" class="ac-av" alt="${w.name}">
+      <div style="flex:1;min-width:0">
+        <div class="ac-name">${w.name}</div>
+        <div class="ac-meta">
+          <span class="trade-pill"><i class="fas fa-hammer" style="font-size:.55rem"></i>${w.trade}</span>
+          <span><i class="fas fa-location-dot" style="color:var(--g3);font-size:.6rem;margin-right:.2rem"></i>${w.city}</span>
+          <span style="color:var(--faint)">${w.phone}</span>
+        </div>
+        <div style="font-size:.67rem;color:var(--faint);font-family:var(--fi);margin-top:.18rem"><i class="fas fa-id-card" style="color:var(--amber);margin-right:.2rem"></i>${w.cnic}</div>
+      </div>
+      <div class="ac-actions">
+        <button class="btn-approve" onclick="approveOne(${w.id},'${w.name}')"><i class="fas fa-check"></i> Approve</button>
+        <button class="btn-viewid" onclick="viewID(${w.id},'${w.name}','${w.trade}')"><i class="fas fa-id-card"></i> View ID</button>
+        <button class="btn-reject" onclick="rejectOne(${w.id},'${w.name}')"><i class="fas fa-times"></i> Reject</button>
+      </div>
+    </div>`).join('');
+  
+  HC.applyGlobalSettings();
 }
 
-// Interface Light/Dark control mechanism
-function toggleInterfaceTheme() {
-  const root = document.documentElement;
-  const targetTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  root.setAttribute('data-theme', targetTheme);
-  document.getElementById('themeWidgetIcon').className = targetTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+function removeWorker(id,approved){
+  const el=document.getElementById('ac-'+id);
+  if(el){el.style.transition='all .28s';el.style.opacity='0';el.style.transform=`translateX(${approved?'30px':'-30px'}) scale(.96)`;setTimeout(()=>el.remove(),300);}
+  const idx=pending.findIndex(w=>w.id===id);if(idx>-1)pending.splice(idx,1);
+  selected.delete(id);
+  if (typeof id==='number' && id>=1000000000000){
+    const real=JSON.parse(localStorage.getItem('allWorkers')||'[]');
+    const w=real.find(x=>x.id===id);
+    if(w){ w.status = approved?'verified':'rejected'; localStorage.setItem('allWorkers', JSON.stringify(real)); }
+    const users=JSON.parse(localStorage.getItem('allUsers')||'[]');
+    const u=users.find(x=>x.id===id);
+    if(u){ u.status = approved?'active':'rejected'; localStorage.setItem('allUsers', JSON.stringify(users)); }
+  }
+  updateProgress();updateBatchBar();
+  setTimeout(renderList,350);
 }
+
+function approveOne(id,name){openModal({icon:'fas fa-user-check',title:'Approve Worker',body:`Approve ${name}? They will be notified and activated immediately.`,confirmText:'✓ Approve',onConfirm:()=>{removeWorker(id,true);HC.toast(`✓ ${name} approved.`,'success');}});}
+function rejectOne(id,name){openModal({icon:'fas fa-user-times',iconType:'danger',title:'Reject Application',body:`Reject ${name}'s application?`,confirmText:'Reject',danger:true,formHTML:`<div class="mf-field"><label class="mf-lbl">Reason (optional)</label><select class="mf-sel"><option>Incomplete documents</option><option>Invalid CNIC</option><option>Duplicate account</option><option>Failed background check</option><option>Other</option></select></div>`,onConfirm:()=>{removeWorker(id,false);HC.toast(`${name} application rejected.`,'warning');}});}
+function viewID(id,name,trade){openModal({icon:'fas fa-id-card',iconType:'blue',title:'Identity Document',body:`Reviewing CNIC documents for ${name} (${trade}).`,formHTML:`<div style="background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:1.1rem;text-align:center;margin-bottom:.5rem"><div style="font-size:2.5rem;margin-bottom:.45rem">🪪</div><div style="font-weight:700;color:var(--text-main);font-family:var(--fd)">${name}</div><div style="font-size:.73rem;color:var(--muted);font-family:var(--fi);margin-top:.2rem">${trade} · CNIC Submitted</div><div style="margin-top:.65rem;padding:.45rem .75rem;background:var(--mint);border-radius:8px;font-size:.7rem;color:var(--g1);font-family:var(--fi)">✓ Document appears authentic — recommended for approval</div></div>`,confirmText:'Approve This Worker',onConfirm:()=>{removeWorker(id,true);HC.toast(`✓ ${name} ID verified and approved.`,'success');}});}
+
+function toggleSel(id,cb){if(cb.checked)selected.add(id);else selected.delete(id);updateBatchBar();}
+function updateBatchBar(){const bar=document.getElementById('batchBar');const txt=document.getElementById('batchTxt');if(selected.size>0){bar.classList.add('show');txt.textContent=`${selected.size} worker${selected.size>1?'s':''} selected`;}else bar.classList.remove('show');}
+function clearSel(){selected.clear();document.querySelectorAll('.ac input[type=checkbox]').forEach(cb=>cb.checked=false);updateBatchBar();}
+function batchApprove(){const ids=[...selected];openModal({icon:'fas fa-check-double',title:'Batch Approve',body:`Approve all ${ids.length} selected workers?`,confirmText:`Approve ${ids.length}`,onConfirm:()=>{ids.forEach(id=>removeWorker(id,true));HC.toast(`✓ ${ids.length} workers approved!`,'success');}});}
+function batchReject(){const ids=[...selected];openModal({icon:'fas fa-times-circle',iconType:'danger',title:'Batch Reject',body:`Reject all ${ids.length} selected applications?`,confirmText:`Reject ${ids.length}`,danger:true,onConfirm:()=>{ids.forEach(id=>removeWorker(id,false));HC.toast(`${ids.length} applications rejected.`,'warning');}});}
+function approveAll(){if(!pending.length){HC.toast('No pending workers!');return;}openModal({icon:'fas fa-check-double',title:'Approve All',body:`Approve all ${pending.length} pending workers?`,confirmText:`Approve All ${pending.length}`,onConfirm:()=>{const n=pending.length;pending.forEach(w=>{const el=document.getElementById('ac-'+w.id);if(el){el.style.transition='all .28s';el.style.opacity='0';el.style.transform='translateX(30px)';}});setTimeout(()=>{pending.length=0;updateProgress();renderList();},350);HC.toast(`✓ All ${n} workers approved!`,'success');}});}
+function exportList(){HC.exportCSV([['Name','Trade','City','Phone','CNIC'],...pending.map(w=>[w.name,w.trade,w.city,w.phone,w.cnic])],'pending_approvals.csv');}
+
+function setTrade(trade,btn){
+  document.querySelectorAll('#tradeFilters .qa-btn').forEach(b=>{b.classList.remove('primary');});
+  btn.classList.add('primary');
+  tradeFilter=trade;renderList();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{renderList();updateProgress();});
 </script>
 </body>
 </html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'user'){
+    localStorage.setItem('authRedirect','settings.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Settings — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.settings-tabs{display:flex;gap:.4rem;border-bottom:1px solid var(--border);padding:0 1.2rem;overflow-x:auto}
+.settings-tab{padding:.8rem 1rem;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.settings-tab.active{color:var(--g1);border-color:var(--g1)}
+.settings-sec{display:none;padding:1.3rem}
+.settings-sec.active{display:block}
+.field-row{display:flex;justify-content:space-between;align-items:center;padding:.9rem 0;border-bottom:1px solid var(--row-line);gap:1rem;flex-wrap:wrap}
+.field-row:last-child{border-bottom:none}
+.field-lbl{font-weight:600;font-size:.85rem;color:var(--ink)}
+.field-desc{font-size:.74rem;color:var(--muted);margin-top:.1rem}
+.field-input{padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);min-width:220px;font-family:inherit}
+.avatar-edit{display:flex;align-items:center;gap:1rem}
+.avatar-edit img{width:64px;height:64px;border-radius:14px;object-fit:cover;border:2px solid var(--mint2)}
+.toggle{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-sl{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:100px;transition:.2s}
+.toggle-sl:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked + .toggle-sl{background:var(--g1)}
+.toggle input:checked + .toggle-sl:before{transform:translateX(18px)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body">
+
+      <div class="tbl-card">
+        <div class="settings-tabs" id="settingsTabs"></div>
+
+        <div class="settings-sec active" id="sec-profile">
+          <div class="avatar-edit">
+            <div class="avatar-upload" id="avatarZone">
+              <img id="avatarPreview" src="" alt="Avatar">
+              <div class="avatar-upload-overlay"><i class="fas fa-camera"></i></div>
+            </div>
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+            <div>
+              <div class="field-lbl">Profile Photo</div>
+              <div class="avatar-upload-hint">Click your photo to upload from your device (JPG/PNG/WEBP, up to 5MB)</div>
+            </div>
+          </div>
+          <div class="field-row"><div><div class="field-lbl">Full Name</div></div><input class="field-input" id="f-name"></div>
+          <div class="field-row"><div><div class="field-lbl">Phone</div></div><input class="field-input" id="f-phone"></div>
+          <div class="field-row"><div><div class="field-lbl">City</div></div>
+            <select class="field-input" id="f-city">
+              <option>Lahore</option><option>Karachi</option><option>Islamabad</option><option>Rawalpindi</option><option>Faisalabad</option><option>Multan</option><option>Peshawar</option><option>Quetta</option>
+            </select>
+          </div>
+          <div class="field-row"><div><div class="field-lbl">Address</div><div class="field-desc">Used to help artisans find you</div></div><input class="field-input" id="f-address" placeholder="House #, Street, Area"></div>
+          <div class="field-row"><div><div class="field-lbl">About You</div><div class="field-desc">Optional note shown to artisans you request</div></div><textarea class="field-input" id="f-bio" rows="2" style="width:280px"></textarea></div>
+          <div class="field-row" style="justify-content:flex-end;border-bottom:none"><button class="btn-primary" onclick="saveProfile()"><i class="fas fa-check"></i> Save Changes</button></div>
+        </div>
+
+        <div class="settings-sec" id="sec-payments">
+          <div class="paymethod-grid" id="settingsMethodsGrid"></div>
+        </div>
+
+        <div class="settings-sec" id="sec-addresses">
+          <div id="addressList" style="display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem"></div>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end">
+            <div><label class="field-desc">LABEL</label><input class="field-input" id="addr-label" placeholder="Home, Office..." style="min-width:140px"></div>
+            <div style="flex:1"><label class="field-desc">ADDRESS</label><input class="field-input" id="addr-full" placeholder="House #, Street, Area" style="width:100%"></div>
+            <div><label class="field-desc">CITY</label>
+              <select class="field-input" id="addr-city"><option>Lahore</option><option>Karachi</option><option>Islamabad</option><option>Rawalpindi</option><option>Faisalabad</option><option>Multan</option><option>Peshawar</option><option>Quetta</option></select></div>
+            <button class="btn-primary" onclick="addAddress()"><i class="fas fa-plus"></i> Add</button>
+          </div>
+        </div>
+
+        <div class="settings-sec" id="sec-promo">
+          <div class="field-row" style="border-bottom:none">
+            <div><div class="field-lbl">Redeem a Promo Code</div><div class="field-desc">Try WELCOME500 for a one-time wallet credit</div></div>
+            <div style="display:flex;gap:.5rem">
+              <input class="field-input" id="promo-code" placeholder="e.g. WELCOME500" style="text-transform:uppercase;min-width:180px">
+              <button class="btn-primary" onclick="redeemPromo()"><i class="fas fa-tag"></i> Redeem</button>
+            </div>
+          </div>
+          <div id="promoHistory" style="margin-top:.8rem"></div>
+        </div>
+
+        <div class="settings-sec" id="sec-referrals">
+          <div class="wallet-hero" style="margin-bottom:1.2rem">
+            <div><div class="wh-lbl">Total Referral Earnings</div><div class="wh-amt" id="refEarned">Rs. 0</div></div>
+            <div style="text-align:right"><div class="wh-lbl">Friends Referred</div><div class="wh-amt" id="refCount" style="font-size:1.6rem">0</div></div>
+          </div>
+          <div class="field-row" style="border-bottom:none">
+            <div><div class="field-lbl">Your Referral Link</div><div class="field-desc">Share it — you both get Rs. 300 when your friend signs up</div></div>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <input class="field-input" id="refLink" readonly style="flex:1;min-width:220px;font-family:monospace;font-size:.78rem">
+            <button class="btn-primary" onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy</button>
+          </div>
+          <div style="margin-top:1.3rem">
+            <div class="field-lbl" style="margin-bottom:.6rem">Friends You've Referred</div>
+            <div id="referredList"></div>
+          </div>
+        </div>
+
+        <div class="settings-sec" id="sec-notifications">
+          <div class="field-row"><div><div class="field-lbl">Booking Updates</div><div class="field-desc">Notify when a worker accepts, starts, or completes a job</div></div><label class="toggle"><input type="checkbox" id="np-booking" checked onchange="saveNotifPrefs()"><span class="toggle-sl"></span></label></div>
+          <div class="field-row"><div><div class="field-lbl">Promotions</div><div class="field-desc">Occasional discounts and platform news</div></div><label class="toggle"><input type="checkbox" id="np-promo" onchange="saveNotifPrefs()"><span class="toggle-sl"></span></label></div>
+          <div class="field-row"><div><div class="field-lbl">Payment Receipts</div><div class="field-desc">Notify when a payment is settled</div></div><label class="toggle"><input type="checkbox" id="np-payment" checked onchange="saveNotifPrefs()"><span class="toggle-sl"></span></label></div>
+        </div>
+
+        <div class="settings-sec" id="sec-security">
+          <div class="field-row"><div><div class="field-lbl">Change Password</div><div class="field-desc">You'll need to sign in again after changing it</div></div><button class="btn-outline" onclick="changePassword()"><i class="fas fa-key"></i> Change Password</button></div>
+          <div class="field-row"><div><div class="field-lbl">Dark Mode</div><div class="field-desc">Toggle from the topbar moon icon too</div></div><label class="toggle"><input type="checkbox" id="darkToggle" onchange="toggleDarkFromSettings(this)"><span class="toggle-sl"></span></label></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+const TABS = [
+  {id:'profile', label:'Profile', icon:'fa-user'},
+  {id:'addresses', label:'Addresses', icon:'fa-location-dot'},
+  {id:'payments', label:'Payment Methods', icon:'fa-wallet'},
+  {id:'promo', label:'Promo Codes', icon:'fa-tag'},
+  {id:'referrals', label:'Referrals', icon:'fa-gift'},
+  {id:'notifications', label:'Notifications', icon:'fa-bell'},
+  {id:'security', label:'Security & Display', icon:'fa-shield-halved'},
+];
+
+function renderTabs(active){
+  document.getElementById('settingsTabs').innerHTML = TABS.map(t=>
+    `<div class="settings-tab${t.id===active?' active':''}" onclick="switchTab('${t.id}')"><i class="fas ${t.icon}"></i> ${t.label}</div>`).join('');
+}
+function switchTab(id){
+  document.querySelectorAll('.settings-sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  renderTabs(id);
+}
+
+let _pendingAvatarDataUrl = null;
+
+function loadProfile(){
+  const allUsers = JSON.parse(localStorage.getItem('allUsers')||'[]');
+  const u = allUsers.find(x=>x.id===session.id) || {};
+  const meta = HJ.getClientMeta(session.id);
+  document.getElementById('f-name').value = session.name || '';
+  document.getElementById('f-phone').value = session.phone || u.phone || '';
+  document.getElementById('f-city').value = u.city || 'Lahore';
+  document.getElementById('f-address').value = meta.address || '';
+  document.getElementById('f-bio').value = meta.bio || '';
+  document.getElementById('avatarPreview').src = meta.avatar || session.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(session.name||'Client')+'&background=1E5631&color=fff');
+  HC.wireAvatarUpload('avatarZone','avatarInput', document.getElementById('avatarPreview'), (dataUrl)=>{ _pendingAvatarDataUrl = dataUrl; });
+}
+
+function saveProfile(){
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const city = document.getElementById('f-city').value;
+  const address = document.getElementById('f-address').value.trim();
+  const bio = document.getElementById('f-bio').value.trim();
+  if (!name){ HC.toast('Name cannot be empty','warning'); return; }
+
+  const avatar = _pendingAvatarDataUrl || HJ.getClientMeta(session.id).avatar || session.image;
+  session.name = name; session.phone = phone; session.image = avatar || session.image;
+  localStorage.setItem('currentUser', JSON.stringify(session));
+
+  const allUsers = JSON.parse(localStorage.getItem('allUsers')||'[]');
+  const u = allUsers.find(x=>x.id===session.id);
+  if (u) { u.name = name; u.phone = phone; u.city = city; localStorage.setItem('allUsers', JSON.stringify(allUsers)); }
+
+  HJ.saveClientMeta(session.id, { ...HJ.getClientMeta(session.id), bio, address, avatar });
+
+  document.getElementById('avatarPreview').src = avatar || ('https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=1E5631&color=fff');
+  HC.toast('✓ Profile updated!','success');
+}
+
+function renderMethods(){
+  const linked = HJ.getPaymentMethods('client', session.id);
+  const types = ['easypaisa','jazzcash','bank'];
+  document.getElementById('settingsMethodsGrid').innerHTML = types.map(type=>{
+    const brand = HJ.PAYMENT_BRANDS[type];
+    const m = linked.find(x=>x.type===type);
+    return `<div class="paymethod-tile${m?' linked':''}">
+      <div class="paymethod-top">
+        <div class="paymethod-ico" style="background:${brand.bg};color:${brand.color}"><i class="fas ${brand.icon}"></i></div>
+        <div><div class="paymethod-name">${brand.label}</div><div class="paymethod-status">${m ? HJ.maskAccount(m.number) : 'Not linked'}</div></div>
+      </div>
+      ${m
+        ? `<button class="btn-outline" onclick="unlinkMethod('${type}')"><i class="fas fa-unlink"></i> Disconnect</button>`
+        : `<button class="btn-primary" onclick="linkMethod('${type}')"><i class="fas fa-link"></i> Connect</button>`}
+    </div>`;
+  }).join('');
+}
+function linkMethod(type){
+  const brand = HJ.PAYMENT_BRANDS[type];
+  const isBank = type === 'bank';
+  const inputId = 'linkNum_'+Date.now();
+  HC.modal({
+    icon:'fas '+brand.icon, title:'Connect '+brand.label,
+    body: isBank ? 'Enter your bank account (IBAN) number.' : `Enter the mobile number linked to your ${brand.label} account.`,
+    formHTML:`<div style="margin-top:.9rem;text-align:left">
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted)">${isBank?'IBAN / ACCOUNT NUMBER':'MOBILE NUMBER'}</label>
+      <input id="${inputId}" placeholder="${isBank?'PK00 HABB 0000 0000 0000 0000':'03XX-XXXXXXX'}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+    </div>`,
+    confirmText:'Connect',
+    onConfirm:()=>{
+      const val = document.getElementById(inputId).value.trim();
+      if (!val || val.length<6){ HC.toast('Enter a valid number','warning'); return false; }
+      HJ.linkPaymentMethod('client', session.id, type, val);
+      HC.toast(`✓ ${brand.label} connected!`,'success');
+      renderMethods();
+    }
+  });
+}
+function unlinkMethod(type){
+  const brand = HJ.PAYMENT_BRANDS[type];
+  HC.modal({icon:'fas fa-unlink',iconType:'danger',title:'Disconnect '+brand.label,body:`Remove your linked ${brand.label} account?`,confirmText:'Disconnect',danger:true,
+    onConfirm:()=>{ HJ.unlinkPaymentMethod('client', session.id, type); HC.toast(`${brand.label} disconnected.`,'warning'); renderMethods(); }});
+}
+
+function renderAddresses(){
+  const list = HJ.getAddresses(session.id);
+  document.getElementById('addressList').innerHTML = list.length ? list.map(a=>`
+    <div class="field-row">
+      <div><div class="field-lbl"><i class="fas fa-location-dot" style="color:var(--g1);margin-right:.3rem"></i>${a.label}</div><div class="field-desc">${a.address}, ${a.city}</div></div>
+      <button class="btn-outline" onclick="removeAddress(${a.id})"><i class="fas fa-trash"></i></button>
+    </div>`).join('') : `<div class="empty-state"><i class="fas fa-location-dot"></i>No saved addresses yet. Add one below for faster bookings.</div>`;
+}
+function addAddress(){
+  const label = document.getElementById('addr-label').value.trim();
+  const address = document.getElementById('addr-full').value.trim();
+  const city = document.getElementById('addr-city').value;
+  if (!label || !address){ HC.toast('Enter a label and address','warning'); return; }
+  HJ.addAddress(session.id, label, address, city);
+  document.getElementById('addr-label').value=''; document.getElementById('addr-full').value='';
+  HC.toast('✓ Address saved!','success');
+  renderAddresses();
+}
+function removeAddress(id){
+  HJ.removeAddress(session.id, id);
+  HC.toast('Address removed','info');
+  renderAddresses();
+}
+
+function redeemPromo(){
+  const code = document.getElementById('promo-code').value;
+  const result = HJ.redeemPromoCode(session.id, code);
+  HC.toast(result.message, result.ok ? 'success':'warning');
+  if (result.ok) { document.getElementById('promo-code').value=''; renderPromoHistory(); HC.confetti(); }
+}
+function renderPromoHistory(){
+  const codes = HJ.getRedeemedCodes(session.id);
+  document.getElementById('promoHistory').innerHTML = codes.length
+    ? `<div class="field-desc" style="margin-bottom:.4rem">Redeemed codes:</div>` + codes.map(c=>`<span class="profile-tag">${c}</span>`).join('')
+    : '';
+}
+
+function renderReferrals(){
+  const code = HJ.getReferralCode(session.id, session.name);
+  const link = `${location.origin}${location.pathname.replace('settings.html','auth.html')}?action=signup&ref=${code}`;
+  document.getElementById('refLink').value = link;
+  const data = HJ.getReferralData(session.id);
+  HC.animateCounter(document.getElementById('refEarned'), HJ.money(data.earned));
+  HC.animateCounter(document.getElementById('refCount'), String(data.referred.length));
+  document.getElementById('referredList').innerHTML = data.referred.length ? data.referred.map(r=>`
+    <div class="field-row"><div><div class="field-lbl">${r.name}</div><div class="field-desc">Joined ${r.date}</div></div><span class="badge green">+Rs. ${HJ.REFERRAL_BONUS}</span></div>
+  `).join('') : `<div class="empty-state"><i class="fas fa-user-group"></i>No referrals yet. Share your link above!</div>`;
+}
+function copyReferralLink(){
+  const input = document.getElementById('refLink');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(()=>{
+    HC.toast('✓ Referral link copied!','success');
+  }).catch(()=>{
+    document.execCommand('copy');
+    HC.toast('✓ Referral link copied!','success');
+  });
+}
+
+function saveNotifPrefs(){
+  const prefs = {
+    booking: document.getElementById('np-booking').checked,
+    promo: document.getElementById('np-promo').checked,
+    payment: document.getElementById('np-payment').checked,
+  };
+  localStorage.setItem('hun_notifprefs_client_'+session.id, JSON.stringify(prefs));
+  HC.toast('Preferences saved','success');
+}
+function loadNotifPrefs(){
+  const raw = localStorage.getItem('hun_notifprefs_client_'+session.id);
+  if (!raw) return;
+  const p = JSON.parse(raw);
+  document.getElementById('np-booking').checked = p.booking;
+  document.getElementById('np-promo').checked = p.promo;
+  document.getElementById('np-payment').checked = p.payment;
+}
+
+function changePassword(){
+  HC.modal({
+    icon:'fas fa-key', title:'Change Password',
+    formHTML:`<div style="margin-top:.9rem;text-align:left;display:flex;flex-direction:column;gap:.6rem">
+      <input type="password" id="cp-current" placeholder="Current password" style="padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+      <input type="password" id="cp-new" placeholder="New password" style="padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+    </div>`,
+    confirmText:'Update Password',
+    onConfirm:()=>{
+      const cur = document.getElementById('cp-current').value;
+      const nw = document.getElementById('cp-new').value;
+      if (!cur || !nw || nw.length<6){ HC.toast('Enter a valid current + new password (6+ chars)','warning'); return false; }
+      HC.toast('✓ Password updated!','success');
+    }
+  });
+}
+function toggleDarkFromSettings(el){
+  document.getElementById('hc-theme').click();
+  el.checked = document.documentElement.getAttribute('data-theme')==='dark';
+}
+
+HC.initClient('Settings','Account Settings','settings');
+renderTabs('profile');
+loadProfile();
+renderMethods();
+renderAddresses();
+renderPromoHistory();
+renderReferrals();
+loadNotifPrefs();
+document.getElementById('darkToggle').checked = document.documentElement.getAttribute('data-theme')==='dark';
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="auth.js"></script>
 
 <style>
 :root{
@@ -466,10 +467,11 @@ footer{background:#fff;border-top:1px solid rgba(26,46,26,.08);padding:60px 24px
         <a href="index.html" class="active-link">Home</a>
         <a href="about.html">About Us</a>
         <a href="contact.html">Contact Us</a>
+        <a href="auth.html?action=signup&role=worker">Join as a Professional</a>
     </div>
     <div class="nav-buttons">
-        <button class="login-btn">Login</button>
-        <button class="signup-btn">Sign Up</button>
+        <button class="login-btn" onclick="window.location.href='auth.html?action=login'">Login</button>
+        <button class="signup-btn" onclick="window.location.href='auth.html?action=signup'">Sign Up</button>
     </div>
     <button class="menu-btn" id="menuBtn">
         <span class="material-symbols-outlined" id="menuIcon">menu</span>
@@ -479,9 +481,10 @@ footer{background:#fff;border-top:1px solid rgba(26,46,26,.08);padding:60px 24px
         <a href="index.html">Home</a>
         <a href="about.html">About Us</a>
         <a href="contact.html">Contact Us</a>
+        <a href="auth.html?action=signup&role=worker">Join as a Professional</a>
         <div class="mobile-buttons">
-            <button class="mobile-login">Login</button>
-            <button class="mobile-signup">Sign Up</button>
+            <button class="mobile-login" onclick="window.location.href='auth.html?action=login'">Login</button>
+            <button class="mobile-signup" onclick="window.location.href='auth.html?action=signup'">Sign Up</button>
         </div>
     </div>
 </nav>
@@ -500,7 +503,7 @@ footer{background:#fff;border-top:1px solid rgba(26,46,26,.08);padding:60px 24px
       <p class="hero-desc">Find trusted skilled workers near you — or offer your skills to the world. A reliable platform built on transparency and excellence.</p>
 
       <div class="hero-btns">
-        <a href="#" class="btn-p" onclick="showToast('✅ Redirecting to Get Started!')">Get Started <span class="btn-arr">→</span></a>
+        <a href="auth.html?action=signup" class="btn-p">Get Started <span class="btn-arr">→</span></a>
         <a href="about.html" class="btn-s">Learn More</a>
       </div>
 
@@ -707,13 +710,13 @@ footer{background:#fff;border-top:1px solid rgba(26,46,26,.08);padding:60px 24px
       <div class="cta-wm"><svg viewBox="0 0 100 100"><path d="M70 10L88 32 58 62 48 88 30 70 60 40Z"/><circle cx="24" cy="76" r="15"/></svg></div>
       <h2>I need a Worker</h2>
       <p>Find vetted, reliable professionals for your home repairs, construction projects, or specialized tasks.</p>
-      <a href="#" class="cta-btn cb-dk" onclick="showToast('🔍 Finding talent for you!')">FIND TALENT <span class="ca">→</span></a>
+      <a href="auth.html?action=signup" class="cta-btn cb-dk">FIND TALENT <span class="ca">→</span></a>
     </div>
     <div class="cta-card cta-lt">
       <div class="cta-lt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
       <h2>I am a Skilled Worker</h2>
       <p>Create a profile, showcase your expertise, and connect with clients looking for your specific skills.</p>
-      <a href="#" class="cta-btn cb-lt" onclick="showToast('🚀 Setting up your profile!')">JOIN PLATFORM <span class="ca">→</span></a>
+      <a href="auth.html?action=signup&role=worker" class="cta-btn cb-lt">JOIN PLATFORM <span class="ca">→</span></a>
     </div>
   </div>
 </section>
@@ -760,6 +763,9 @@ footer{background:#fff;border-top:1px solid rgba(26,46,26,.08);padding:60px 24px
 <script>
 /* ══ LOADER ══ */
 window.addEventListener('load',()=>setTimeout(()=>document.getElementById('loader').classList.add('done'),800));
+// Safety fallback: never let a slow/blocked external resource (fonts, icon CDN, etc.)
+// leave the loading overlay stuck over the whole page indefinitely.
+setTimeout(()=>{ const l=document.getElementById('loader'); if(l) l.classList.add('done'); }, 3500);
 
 /* ══ SCROLL PROGRESS ══ */
 const pbar=document.getElementById('pbar');

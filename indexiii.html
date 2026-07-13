@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'user'){
+    localStorage.setItem('authRedirect','indexiii.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Control Center — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.welcome-banner{background:linear-gradient(135deg,var(--g1),var(--g3));border-radius:18px;padding:1.5rem 1.7rem;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;box-shadow:var(--shadow-deep)}
+.welcome-banner h2{font-family:var(--fd);font-size:1.35rem;margin:0}
+.welcome-banner p{font-size:.85rem;opacity:.85;margin:.2rem 0 0}
+.quick-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem}
+.qa-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.1rem;display:flex;flex-direction:column;gap:.5rem;box-shadow:var(--shadow-soft);transition:.2s;text-decoration:none;color:inherit}
+.qa-card:hover{box-shadow:var(--shadow-deep);transform:translateY(-3px)}
+.qa-card i{font-size:1.3rem;color:var(--g1)}
+.qa-card b{font-family:var(--fd);font-size:.9rem}
+.qa-card span{font-size:.76rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body" style="display:flex;flex-direction:column;gap:1.2rem">
+
+      <div class="welcome-banner">
+        <div><h2 id="greetHeading">Welcome back</h2><p>Here's what's happening with your bookings today.</p></div>
+        <a href="findworker.html" class="btn-primary" style="background:#fff;color:var(--g1)"><i class="fas fa-magnifying-glass"></i> Find an Artisan</a>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-hdr"><div class="stat-ico" style="background:var(--amber-bg);color:var(--amber)"><i class="fas fa-hourglass-half"></i></div><span class="stat-chip warn">Pending</span></div><p class="stat-lbl">Requested</p><p class="stat-val" id="s-req">0</p></div>
+        <div class="stat-card"><div class="stat-hdr"><div class="stat-ico" style="background:var(--blue-bg);color:var(--blue)"><i class="fas fa-briefcase"></i></div><span class="stat-chip">Active</span></div><p class="stat-lbl">In Progress</p><p class="stat-val" id="s-prog">0</p></div>
+        <div class="stat-card"><div class="stat-hdr"><div class="stat-ico"><i class="fas fa-circle-check"></i></div><span class="stat-chip">Done</span></div><p class="stat-lbl">Completed</p><p class="stat-val" id="s-done">0</p></div>
+        <div class="stat-card"><div class="stat-hdr"><div class="stat-ico" style="background:var(--mint);color:var(--g1)"><i class="fas fa-wallet"></i></div><span class="stat-chip">Wallet</span></div><p class="stat-lbl">Wallet Balance</p><p class="stat-val" id="s-wallet">Rs. 0</p></div>
+      </div>
+
+      <div class="quick-actions">
+        <a href="findworker.html" class="qa-card"><i class="fas fa-magnifying-glass"></i><b>Find Artisans</b><span>Browse verified professionals near you</span></a>
+        <a href="booking2.html" class="qa-card"><i class="fas fa-calendar-check"></i><b>My Bookings</b><span>Track the status of your requests</span></a>
+        <a href="payment.html" class="qa-card"><i class="fas fa-wallet"></i><b>Wallet</b><span>Top up funds & view transactions</span></a>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <div class="tbl-title-blk"><div class="tbl-title">Recent Bookings</div><div class="tbl-sub">Your latest job requests</div></div>
+          <div class="tbl-actions"><a href="booking2.html" class="btn-outline">View All <i class="fas fa-arrow-right"></i></a></div>
+        </div>
+        <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.7rem" id="recentList"></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <div class="tbl-title-blk"><div class="tbl-title">Recommended Artisans</div><div class="tbl-sub">Top-rated verified professionals</div></div>
+          <div class="tbl-actions"><a href="findworker.html" class="btn-outline">Browse All <i class="fas fa-arrow-right"></i></a></div>
+        </div>
+        <div class="worker-grid" style="padding:1rem 1.2rem" id="recommendedList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+
+function renderDashboard(){
+  const jobs = HJ.forClient(session.id);
+  HC.animateCounter(document.getElementById('s-req'), String(jobs.filter(j=>j.status==='requested').length));
+  HC.animateCounter(document.getElementById('s-prog'), String(jobs.filter(j=>j.status==='accepted'||j.status==='in_progress').length));
+  HC.animateCounter(document.getElementById('s-done'), String(jobs.filter(j=>j.status==='completed').length));
+  HC.animateCounter(document.getElementById('s-wallet'), HJ.moneySigned(HJ.walletBalance('client', session.id)));
+
+  const el = document.getElementById('recentList');
+  const recent = jobs.slice(0,4);
+  el.innerHTML = recent.length ? recent.map(j => `
+    <div class="job-card">
+      <div class="job-main">
+        <div class="job-ico"><i class="fas fa-wrench"></i></div>
+        <div>
+          <div class="job-title">${j.service}</div>
+          <div class="job-meta"><span><i class="fas fa-user-gear"></i> ${j.workerName}</span><span><i class="fas fa-clock"></i> ${j.createdAt}</span></div>
+        </div>
+      </div>
+      <div class="job-actions"><div class="job-budget">${HJ.money(j.budget)}</div>${HJ.statusBadge(j.status)}</div>
+    </div>`).join('') :
+    `<div class="empty-state"><i class="fas fa-calendar-xmark"></i>No bookings yet. <a href="findworker.html" style="color:var(--g1);font-weight:700">Find an artisan</a> to get started.</div>`;
+}
+
+function renderRecommended(){
+  const all = JSON.parse(localStorage.getItem('allWorkers')||'[]').filter(w=>(w.status||'').toLowerCase()==='verified');
+  const withMeta = all.map(w => ({...w, meta: HJ.getWorkerMeta(w.id)})).sort((a,b)=>b.meta.avgRating-a.meta.avgRating).slice(0,3);
+  const el = document.getElementById('recommendedList');
+  el.innerHTML = withMeta.length ? withMeta.map(w=>{
+    const av = HJ.AVAILABILITY[w.meta.availability] || HJ.AVAILABILITY.online;
+    return `<div class="worker-card">
+      <div class="worker-card-top">
+        <img src="${w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')}" alt="${w.name}">
+        <div><div class="worker-card-name">${w.name}</div><div class="worker-card-skill">${w.skill||'General'}</div></div>
+        <div class="avail-badge" style="position:absolute;top:0;right:0;display:flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;color:var(--muted)"><span class="avail-dot" style="width:9px;height:9px;border-radius:50%;background:${av.dot}"></span>${av.label}</div>
+      </div>
+      <div class="worker-card-meta"><span><i class="fas fa-star" style="color:var(--amber)"></i> ${w.meta.avgRating.toFixed(1)} (${w.meta.reviewCount})</span><span><i class="fas fa-location-dot"></i> ${w.city}</span></div>
+      <div class="worker-card-foot"><span style="font-size:.72rem;color:var(--muted)">${w.meta.hourlyRate?HJ.money(w.meta.hourlyRate)+'/hr':'Rate on request'}</span><a href="findworker.html" class="btn-outline">View</a></div>
+    </div>`;
+  }).join('') : `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-user-slash"></i>No verified artisans yet.</div>`;
+}
+
+HC.initClient('Control Center','Client Dashboard','dashboard');
+document.getElementById('greetHeading').textContent = 'Welcome back, ' + (session.name ? session.name.split(' ')[0] : 'there');
+renderDashboard();
+renderRecommended();
+</script>
+</body>
+</html>

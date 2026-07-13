@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'user'){
+    localStorage.setItem('authRedirect','help.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Help Center — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.help-hero{text-align:center;padding:2rem 1rem}
+.help-hero h1{font-family:var(--fd);font-size:1.6rem;color:var(--ink);margin:0 0 .5rem}
+.help-hero p{color:var(--muted);font-size:.9rem}
+.help-search{max-width:480px;margin:1rem auto 0}
+.faq-item{border-bottom:1px solid var(--row-line)}
+.faq-item:last-child{border-bottom:none}
+.faq-q{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;cursor:pointer;font-weight:600;font-size:.88rem;color:var(--ink)}
+.faq-q i{transition:transform .25s;color:var(--g1)}
+.faq-item.open .faq-q i{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;font-size:.83rem;color:var(--muted);line-height:1.6}
+.faq-item.open .faq-a{max-height:200px;padding-bottom:1rem}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body" style="display:flex;flex-direction:column;gap:1.1rem">
+
+      <div class="help-hero">
+        <h1>How can we help?</h1>
+        <p>Search our FAQ or reach out to support directly.</p>
+        <div class="help-search search-input-wrap"><i class="fas fa-search"></i><input id="faqSearch" placeholder="Search for help..." oninput="renderFAQ()"></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Frequently Asked Questions</div></div></div>
+        <div style="padding:0 1.4rem 1rem" id="faqList"></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">Still need help?</div><div class="tbl-sub">Send a message to our support team</div></div></div>
+        <div style="padding:1rem 1.4rem 1.4rem;display:flex;flex-direction:column;gap:.7rem;max-width:520px">
+          <input id="ticketSubject" placeholder="Subject" style="padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <textarea id="ticketMessage" rows="4" placeholder="Describe your issue..." style="padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea>
+          <button class="btn-primary" style="align-self:flex-start" onclick="submitTicket()"><i class="fas fa-paper-plane"></i> Send to Support</button>
+        </div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top"><div class="tbl-title-blk"><div class="tbl-title">My Support Tickets</div></div></div>
+        <div style="padding:1rem 1.4rem 1.4rem;display:flex;flex-direction:column;gap:.7rem" id="myTickets"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+
+const FAQS = [
+  { q:'How do I book an artisan?', a:'Go to Find Artisans, browse or search by category, then click "Request" on the professional you want. Fill in the service details and send.' },
+  { q:'How does pricing work?', a:'You set your own budget when requesting a job. We show you a live fairness check comparing your budget to typical market rates for that service.' },
+  { q:'What payment methods are supported?', a:'You can link EasyPaisa, JazzCash, or a bank account under Wallet or Settings, then use any of them to top up your Hunarmand wallet.' },
+  { q:'Is there a service fee?', a:'Hunarmand takes a small commission from the artisan\'s payout to keep the platform running — there is no extra charge to you as a client.' },
+  { q:'What if something goes wrong with my booking?', a:'Open the booking under My Bookings and click "Report Issue". Our team reviews every report and can issue a refund if warranted.' },
+  { q:'Can I cancel a booking?', a:'Yes — you can cancel any booking that is still in "Requested" status, before the artisan accepts it, from My Bookings.' },
+  { q:'How do referrals work?', a:'Share your unique referral link from Settings → Referrals. When a friend signs up through it, you both get a wallet bonus.' },
+  { q:'How is a worker verified?', a:'Every worker submits ID and skill documentation which our admin team manually reviews before they appear as "Verified" and can accept jobs.' },
+];
+
+function renderFAQ(){
+  const q = (document.getElementById('faqSearch').value||'').toLowerCase();
+  const filtered = FAQS.filter(f => !q || f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q));
+  const el = document.getElementById('faqList');
+  el.innerHTML = filtered.length ? filtered.map((f,i)=>`
+    <div class="faq-item" id="faq-${i}">
+      <div class="faq-q" onclick="toggleFAQ(${i})">${f.q} <i class="fas fa-chevron-down"></i></div>
+      <div class="faq-a">${f.a}</div>
+    </div>`).join('') : `<div class="empty-state"><i class="fas fa-magnifying-glass"></i>No results. Try the support form below.</div>`;
+}
+function toggleFAQ(i){ document.getElementById('faq-'+i).classList.toggle('open'); }
+
+function submitTicket(){
+  const subject = document.getElementById('ticketSubject').value.trim();
+  const message = document.getElementById('ticketMessage').value.trim();
+  if (!subject || !message){ HC.toast('Please fill in both fields','warning'); return; }
+  HJ.fileSupportTicket(session.id, session.name, subject, message);
+  document.getElementById('ticketSubject').value='';
+  document.getElementById('ticketMessage').value='';
+  HC.toast('✓ Support ticket sent — we\'ll reply here soon!','success');
+  renderMyTickets();
+}
+
+function renderMyTickets(){
+  const tickets = HJ.getSupportTickets().filter(t=>t.clientId===session.id);
+  const el = document.getElementById('myTickets');
+  el.innerHTML = tickets.length ? tickets.map(t=>`
+    <div class="job-card">
+      <div class="job-main"><div class="job-ico"><i class="fas fa-headset"></i></div>
+        <div><div class="job-title">${t.subject}</div><div class="job-meta"><span><i class="fas fa-clock"></i> ${t.createdAt}</span></div>
+        ${t.status==='resolved' ? `<div class="review-existing" style="margin-top:.5rem">${t.reply}</div>` : ''}</div>
+      </div>
+      <div class="job-actions">${t.status==='resolved' ? '<span class="badge green">Resolved</span>' : '<span class="badge amber">Awaiting Reply</span>'}</div>
+    </div>`).join('') : `<div class="empty-state"><i class="fas fa-inbox"></i>No support tickets yet.</div>`;
+}
+
+HC.initClient('Help Center','How can we help?','help');
+renderFAQ();
+renderMyTickets();
+</script>
+</body>
+</html>

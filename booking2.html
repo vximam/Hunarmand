@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var session = JSON.parse(localStorage.getItem('currentUser')||'null');
+  if(!session || session.role !== 'user'){
+    localStorage.setItem('authRedirect','booking2.html');
+    window.location.href = 'auth.html?action=login&error=unauthorized';
+  }
+})();
+</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Bookings — Hunarmand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.tab-row{display:flex;gap:.5rem;flex-wrap:wrap}
+.booking-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.2rem;box-shadow:var(--shadow-soft)}
+.booking-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.6rem;margin-bottom:.4rem}
+.review-existing{background:var(--mint);border-radius:10px;padding:.6rem .8rem;font-size:.8rem;color:var(--g1);margin-top:.6rem}
+.booking-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+.booking-photo{width:56px;height:56px;border-radius:10px;object-fit:cover;margin-top:.5rem}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body" style="display:flex;flex-direction:column;gap:1.1rem">
+
+      <div class="stats-grid">
+        <div class="stat-card"><p class="stat-lbl">Requested</p><p class="stat-val" id="st-req">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">In Progress</p><p class="stat-val" id="st-prog">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Completed</p><p class="stat-val" id="st-done">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Total Spent</p><p class="stat-val" id="st-spent">Rs. 0</p></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <div class="tbl-title-blk"><div class="tbl-title">My Bookings</div><div class="tbl-sub">Track every job request you've made</div></div>
+          <div class="tbl-actions"><a href="findworker.html" class="btn-primary"><i class="fas fa-plus"></i> New Request</a></div>
+        </div>
+        <div style="padding:0 1.2rem" class="tab-row" id="tabRow"></div>
+        <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.9rem" id="bookingsList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem('currentUser')||'null');
+let activeTab = 'all';
+const TABS = [
+  {id:'all', label:'All'},
+  {id:'requested', label:'Requested'},
+  {id:'active', label:'Accepted / In Progress'},
+  {id:'completed', label:'Completed'},
+  {id:'declined', label:'Declined / Cancelled'},
+];
+
+function renderTabs(){
+  document.getElementById('tabRow').innerHTML = TABS.map(t=>
+    `<button class="filter-chip${t.id===activeTab?' active':''}" onclick="activeTab='${t.id}';renderTabs();renderList()">${t.label}</button>`).join('');
+}
+
+function renderStats(){
+  const jobs = HJ.forClient(session.id);
+  HC.animateCounter(document.getElementById('st-req'), String(jobs.filter(j=>j.status==='requested').length));
+  HC.animateCounter(document.getElementById('st-prog'), String(jobs.filter(j=>j.status==='accepted'||j.status==='in_progress').length));
+  HC.animateCounter(document.getElementById('st-done'), String(jobs.filter(j=>j.status==='completed').length));
+  const spent = jobs.filter(j=>j.status==='completed').reduce((s,j)=>s+j.budget,0);
+  HC.animateCounter(document.getElementById('st-spent'), HJ.money(spent));
+}
+
+function trackingHTML(job){
+  if (job.status !== 'in_progress') return '';
+  const t = HJ.getTrackingStage(job);
+  if (!t) return '';
+  return `<div class="tracking-box" data-tracking-for="${job.id}">
+    <div class="tracking-hdr"><span class="live-dot"></span> LIVE TRACKING <span class="tracking-elapsed" style="margin-left:auto;font-weight:400;color:var(--muted)">${t.elapsedSec}s ago</span></div>
+    <div class="tracking-msg"><i class="fas ${t.icon}"></i> <span class="tracking-label">${t.label}</span></div>
+    <div class="tracking-bar"><div class="tracking-bar-fill" style="width:${t.pct}%"></div></div>
+  </div>`;
+}
+
+function stageTrackerHTML(job){
+  if (job.status==='declined' || job.status==='cancelled') {
+    return `<div class="stage-tracker"><div class="stage-step declined"><div class="stage-dot"><i class="fas fa-xmark"></i></div><div class="stage-lbl">${job.status==='declined'?'Declined':'Cancelled'}</div></div></div>`;
+  }
+  const idx = HJ.stageIndex(job.status);
+  return `<div class="stage-tracker">${HJ.STAGES.map((s,i)=>`
+    <div class="stage-step ${i<idx?'done':i===idx?'current':''}">
+      <div class="stage-line"></div>
+      <div class="stage-dot">${i<idx?'<i class="fas fa-check"></i>':i+1}</div>
+      <div class="stage-lbl">${HJ.STAGE_LABEL[s]}</div>
+    </div>`).join('')}</div>`;
+}
+
+function renderList(){
+  let jobs = HJ.forClient(session.id);
+  if (activeTab==='declined') jobs = jobs.filter(j=>j.status==='declined'||j.status==='cancelled');
+  else if (activeTab==='active') jobs = jobs.filter(j=>j.status==='accepted'||j.status==='in_progress');
+  else if (activeTab!=='all') jobs = jobs.filter(j=>j.status===activeTab);
+
+  const el = document.getElementById('bookingsList');
+  if (!jobs.length){
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-xmark"></i>No bookings here yet. <a href="findworker.html" style="color:var(--g1);font-weight:700">Find an artisan</a> to get started.</div>`;
+    return;
+  }
+  const canChat = j => j.status!=='requested' && j.status!=='declined';
+  const canReport = j => ['accepted','in_progress','completed'].includes(j.status);
+  el.innerHTML = jobs.map(j => `
+    <div class="booking-card" data-job-id="${j.id}">
+      <div class="booking-hdr">
+        <div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div class="job-title">${j.service}</div>
+            ${j.urgent ? '<span class="urgent-badge">Urgent</span>' : ''}
+          </div>
+          <div class="job-meta"><span><i class="fas fa-user-gear"></i> ${j.workerName}</span><span><i class="fas fa-location-dot"></i> ${j.city}</span><span><i class="fas fa-clock"></i> ${j.createdAt}</span></div>
+          ${j.preferredDate ? `<div style="margin-top:.4rem"><span class="sched-chip"><i class="fas fa-calendar-day"></i> ${j.preferredDate} · ${j.timeWindow||'Any time'}</span></div>` : ''}
+          ${j.photoUrl ? `<img src="${j.photoUrl}" class="booking-photo" alt="Issue photo" onerror="this.style.display='none'">` : ''}
+        </div>
+        <div style="text-align:right"><div class="job-budget">${HJ.money(j.budget)}</div>${j.status==='requested' ? `<button class="btn-outline" style="margin-top:.4rem" onclick="cancelBooking(${j.id})">Cancel</button>` : ''}</div>
+      </div>
+      ${stageTrackerHTML(j)}
+      ${trackingHTML(j)}
+      ${j.description ? `<div class="job-desc">${j.description}</div>` : ''}
+      <div class="booking-actions">
+        ${canChat(j) ? `<button class="btn-outline" onclick="openChat(${j.id})"><i class="fas fa-comment"></i> Message ${j.workerName.split(' ')[0]}</button>` : ''}
+        ${j.status==='completed' ? `<button class="btn-outline" onclick="bookAgain(${j.id})"><i class="fas fa-rotate"></i> Book Again</button>` : ''}
+        ${canReport(j) ? (HJ.hasDispute(j.id) ? `<span class="badge amber">Report Under Review</span>` : `<button class="btn-outline" onclick="reportIssue(${j.id})"><i class="fas fa-flag"></i> Report Issue</button>`) : ''}
+      </div>
+      ${j.status==='completed' ? (j.reviewed ?
+        `<div class="review-existing"><i class="fas fa-star"></i> You rated this ${j.rating}/5 — "${j.reviewComment||''}"</div>` :
+        `<button class="btn-primary" style="margin-top:.7rem" onclick="openReviewModal(${j.id})"><i class="fas fa-star"></i> Rate This Job</button>`) : ''}
+    </div>
+  `).join('');
+}
+
+function reportIssue(jobId){
+  const formId = 'reportForm_'+Date.now();
+  HC.modal({
+    icon:'fas fa-flag', iconType:'danger', title:'Report an Issue',
+    body:'Tell us what went wrong — our team will review and follow up.',
+    formHTML:`<div style="margin-top:.9rem;text-align:left">
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted)">REASON</label>
+      <select id="${formId}_reason" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+        ${HJ.DISPUTE_REASONS.map(r=>`<option>${r}</option>`).join('')}
+      </select>
+      <label style="font-size:.72rem;font-weight:700;color:var(--muted);margin-top:.7rem;display:block">DETAILS</label>
+      <textarea id="${formId}_desc" rows="3" placeholder="Describe what happened..." style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea>
+    </div>`,
+    confirmText:'Submit Report', danger:true,
+    onConfirm:()=>{
+      const reason = document.getElementById(formId+'_reason').value;
+      const desc = document.getElementById(formId+'_desc').value;
+      HJ.fileDispute(jobId, reason, desc);
+      HC.toast('✓ Report submitted — our team will review it shortly','success');
+      renderList();
+    }
+  });
+}
+
+function cancelBooking(id){
+  HC.modal({icon:'fas fa-xmark',iconType:'danger',title:'Cancel Request',body:'Cancel this booking request?',confirmText:'Yes, Cancel',danger:true,
+    onConfirm:()=>{ HJ.cancel(id); HC.toast('Booking cancelled.','warning'); renderStats(); renderList(); }});
+}
+
+function bookAgain(jobId){
+  const job = HJ.getJobs().find(j=>j.id===jobId);
+  if (!job) return;
+  const formId = 'rebookForm_'+Date.now();
+  const today = new Date().toISOString().split('T')[0];
+  HC.modal({
+    icon:'fas fa-rotate', title:'Book '+job.workerName+' Again', wide:true,
+    body:'Reusing details from your last booking — feel free to adjust.',
+    formHTML:`
+      <form id="${formId}" style="display:flex;flex-direction:column;gap:.7rem;text-align:left;margin-top:.9rem">
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">SERVICE NEEDED</label>
+          <input required name="service" value="${job.service}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1"><label style="font-size:.72rem;font-weight:700;color:var(--muted)">PREFERRED DATE</label>
+            <input type="date" name="preferredDate" min="${today}" value="${today}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+          <div style="flex:1"><label style="font-size:.72rem;font-weight:700;color:var(--muted)">TIME WINDOW</label>
+            <select name="timeWindow" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+              <option>Morning (8am-12pm)</option><option>Afternoon (12pm-5pm)</option><option>Evening (5pm-9pm)</option><option selected>ASAP</option>
+            </select></div>
+        </div>
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">BUDGET (Rs.)</label>
+          <input required type="number" min="100" name="budget" value="${job.budget}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+        <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">DESCRIPTION</label>
+          <textarea name="description" rows="2" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit">${job.description||''}</textarea></div>
+      </form>`,
+    confirmText:'Send Request',
+    onConfirm:()=>{
+      const form = document.getElementById(formId);
+      HJ.createRequest({
+        clientId: session.id, clientName: session.name, clientImage: session.image,
+        workerId: job.workerId, workerName: job.workerName, workerImage: job.workerImage,
+        service: form.service.value, skill: job.skill, city: job.city, address: job.address,
+        budget: form.budget.value, description: form.description.value,
+        preferredDate: form.preferredDate.value, timeWindow: form.timeWindow.value
+      });
+      HC.toast(`✓ New request sent to ${job.workerName}!`,'success');
+      renderStats(); renderList();
+    }
+  });
+}
+
+function openReviewModal(jobId){
+  const formId = 'reviewForm_'+Date.now();
+  const starsId = formId+'_stars';
+  HC.modal({
+    icon:'fas fa-star',
+    title:'Rate Your Experience',
+    body:'How was the service? Your review helps other clients choose the right artisan.',
+    formHTML:`
+      <div style="margin-top:1rem;text-align:left">
+        <div class="star-rate" id="${starsId}">
+          ${[1,2,3,4,5].map(n=>`<i class="fas fa-star active" data-n="${n}" onclick="setStars('${starsId}',${n})"></i>`).join('')}
+        </div>
+        <textarea id="${formId}_comment" rows="3" placeholder="Tell us more (optional)" style="width:100%;margin-top:.8rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea>
+      </div>`,
+    confirmText:'Submit Review',
+    onConfirm:()=>{
+      const stars = document.querySelectorAll(`#${starsId} i`);
+      const rating = [...stars].filter(s=>s.classList.contains('active')).length || 5;
+      const comment = document.getElementById(formId+'_comment').value;
+      HJ.addReview(jobId, rating, comment);
+      HC.toast('✓ Thanks for your review!','success');
+      HC.confetti();
+      renderList();
+    }
+  });
+}
+function setStars(starsId, n){
+  document.querySelectorAll(`#${starsId} i`).forEach(s => {
+    s.classList.toggle('active', Number(s.dataset.n) <= n);
+  });
+}
+
+function openChat(jobId){
+  const job = HJ.getJobs().find(j=>j.id===jobId);
+  if (!job) return;
+  const bodyId = 'chatBody_'+jobId;
+  const inputId = 'chatInput_'+jobId;
+  HC.modal({
+    icon:'fas fa-comment', title:'Chat with '+job.workerName,
+    formHTML:`<div class="chat-modal-body">
+      <div class="chat-msgs" id="${bodyId}"></div>
+      <div class="chat-input-row">
+        <input id="${inputId}" placeholder="Type a message..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat(${jobId},'${bodyId}','${inputId}')}">
+        <button class="btn-primary" onclick="sendChat(${jobId},'${bodyId}','${inputId}')"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>`,
+    confirmText:'Close',
+  });
+  renderChatMessages(jobId, bodyId);
+}
+function renderChatMessages(jobId, bodyId){
+  const msgs = HJ.getMessages(jobId);
+  const el = document.getElementById(bodyId);
+  if (!el) return;
+  el.innerHTML = msgs.length ? msgs.map(m=>`
+    <div class="chat-bubble ${m.sender==='client'?'me':'them'}">
+      ${m.text}
+      <div class="chat-bubble-time">${m.senderName} · ${m.time}</div>
+    </div>`).join('') : `<div class="chat-empty">No messages yet. Say hello to ${window._chatWorkerName||'your artisan'}!</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+function sendChat(jobId, bodyId, inputId){
+  const input = document.getElementById(inputId);
+  const text = input.value.trim();
+  if (!text) return;
+  HJ.sendMessage(jobId, 'client', session.name, text);
+  input.value = '';
+  renderChatMessages(jobId, bodyId);
+}
+
+HC.initClient('My Bookings','Track Your Service Requests','bookings');
+renderTabs();
+renderStats();
+renderList();
+setInterval(() => {
+  const jobs = HJ.forClient(session.id).filter(j=>j.status==='in_progress');
+  jobs.forEach(j => {
+    const box = document.querySelector(`.tracking-box[data-tracking-for="${j.id}"]`);
+    if (!box) return; // job not in the currently-filtered view
+    const t = HJ.getTrackingStage(j);
+    if (!t) return;
+    box.querySelector('.tracking-elapsed').textContent = `${t.elapsedSec}s ago`;
+    box.querySelector('.tracking-label').innerHTML = t.label;
+    box.querySelector('.tracking-msg i').className = `fas ${t.icon}`;
+    box.querySelector('.tracking-bar-fill').style.width = t.pct + '%';
+  });
+}, 2000);
+</script>
+</body>
+</html>

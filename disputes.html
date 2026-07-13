@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="auth.js"></script>
+<script>checkAdminSession();</script>
+<script>!function(){var t=localStorage.getItem('hun_theme')||'light';document.documentElement.setAttribute('data-theme',t);}();</script>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Disputes — Hunarmand Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-core.css">
+<style>
+.tab-strip{display:flex;gap:.25rem;padding:.55rem 1.4rem 0;border-bottom:1px solid var(--bdr2);overflow-x:auto}
+.dispute-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.2rem;box-shadow:var(--shadow-soft)}
+.dispute-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+.dispute-parties{font-size:.78rem;color:var(--muted);margin-top:.3rem}
+.dispute-reason{display:inline-block;background:var(--red-bg);color:var(--red);font-size:.68rem;font-weight:700;padding:.2rem .6rem;border-radius:100px;margin-top:.4rem}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="hc-sidebar-slot"></div>
+  <div class="main-content">
+    <div id="hc-topbar-slot"></div>
+    <div class="page-body">
+
+      <div class="qa-bar fu" style="margin-bottom:1rem">
+        <span class="qa-lbl">Resolution Center</span>
+        <button class="qa-btn" onclick="renderAll()"><i class="fas fa-rotate"></i> Refresh</button>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:1.1rem">
+        <div class="stat-card"><p class="stat-lbl">Open Disputes</p><p class="stat-val" id="st-open-disp">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Open Tickets</p><p class="stat-val" id="st-open-tix">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Resolved (All Time)</p><p class="stat-val" id="st-resolved">0</p></div>
+        <div class="stat-card"><p class="stat-lbl">Platform Revenue</p><p class="stat-val" id="st-revenue">Rs. 0</p></div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tab-strip" id="tabStrip"></div>
+        <div style="padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.9rem" id="listArea"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="admin-core.js"></script>
+<script src="portal-shared.js"></script>
+<script>
+let activeTab = 'disputes-open';
+const TABS = [
+  {id:'disputes-open', label:'Open Disputes'},
+  {id:'disputes-resolved', label:'Resolved Disputes'},
+  {id:'tickets-open', label:'Open Support Tickets'},
+  {id:'tickets-resolved', label:'Resolved Tickets'},
+];
+
+function renderTabs(){
+  document.getElementById('tabStrip').innerHTML = TABS.map(t=>
+    `<div class="settings-tab${t.id===activeTab?' active':''}" style="padding:.7rem .9rem;font-size:.8rem;font-weight:600;color:${t.id===activeTab?'var(--g1)':'var(--muted)'};cursor:pointer;border-bottom:2px solid ${t.id===activeTab?'var(--g1)':'transparent'}" onclick="activeTab='${t.id}';renderTabs();renderList()">${t.label}</div>`).join('');
+}
+
+function renderStats(){
+  HC.animateCounter(document.getElementById('st-open-disp'), String(HJ.openDisputeCount()));
+  HC.animateCounter(document.getElementById('st-open-tix'), String(HJ.openTicketCount()));
+  const resolvedCount = HJ.getDisputes().filter(d=>d.status==='resolved').length + HJ.getSupportTickets().filter(t=>t.status==='resolved').length;
+  HC.animateCounter(document.getElementById('st-resolved'), String(resolvedCount));
+  HC.animateCounter(document.getElementById('st-revenue'), HJ.money(HJ.totalPlatformRevenue()));
+}
+
+function renderList(){
+  const el = document.getElementById('listArea');
+  if (activeTab==='disputes-open' || activeTab==='disputes-resolved') {
+    const wantOpen = activeTab==='disputes-open';
+    const disputes = HJ.getDisputes().filter(d => wantOpen ? d.status==='open' : d.status==='resolved');
+    el.innerHTML = disputes.length ? disputes.map(d=>`
+      <div class="dispute-card">
+        <div class="dispute-hdr">
+          <div>
+            <div class="job-title">${d.service}</div>
+            <div class="dispute-parties"><i class="fas fa-user"></i> ${d.clientName} <i class="fas fa-arrow-right" style="margin:0 .3rem"></i> <i class="fas fa-user-gear"></i> ${d.workerName}</div>
+            <span class="dispute-reason">${d.reason}</span>
+          </div>
+          <div style="text-align:right"><div class="job-budget">${HJ.money(d.budget)}</div><div style="font-size:.7rem;color:var(--faint);margin-top:.2rem">${d.createdAt}</div></div>
+        </div>
+        ${d.description ? `<div class="job-desc" style="margin-top:.6rem">${d.description}</div>` : ''}
+        ${wantOpen ? `
+          <div style="display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap">
+            <button class="btn-primary" onclick="resolveDispute(${d.id},'Refund issued')"><i class="fas fa-money-bill-transfer"></i> Refund Client</button>
+            <button class="btn-outline" onclick="resolveDispute(${d.id},'Worker warned')"><i class="fas fa-triangle-exclamation"></i> Warn Worker</button>
+            <button class="btn-outline" onclick="resolveDispute(${d.id},'No action needed')">No Action</button>
+          </div>` :
+          `<div class="review-existing" style="margin-top:.7rem"><i class="fas fa-gavel"></i> Resolved: ${d.resolution} ${d.resolutionNote?`— "${d.resolutionNote}"`:''} <span style="opacity:.7">(${d.resolvedAt})</span></div>`}
+      </div>`).join('') : `<div class="empty-state"><i class="fas fa-circle-check"></i>Nothing here.</div>`;
+  } else {
+    const wantOpen = activeTab==='tickets-open';
+    const tickets = HJ.getSupportTickets().filter(t => wantOpen ? t.status==='open' : t.status==='resolved');
+    el.innerHTML = tickets.length ? tickets.map(t=>`
+      <div class="dispute-card">
+        <div class="dispute-hdr">
+          <div><div class="job-title">${t.subject}</div><div class="dispute-parties"><i class="fas fa-user"></i> ${t.clientName}</div></div>
+          <div style="font-size:.7rem;color:var(--faint)">${t.createdAt}</div>
+        </div>
+        <div class="job-desc" style="margin-top:.6rem">${t.message}</div>
+        ${wantOpen ? `<div style="margin-top:.8rem"><textarea id="reply_${t.id}" rows="2" placeholder="Type a reply..." style="width:100%;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea><button class="btn-primary" style="margin-top:.5rem" onclick="replyTicket(${t.id})"><i class="fas fa-reply"></i> Send Reply & Close</button></div>` :
+          `<div class="review-existing" style="margin-top:.7rem"><i class="fas fa-headset"></i> Replied: "${t.reply}" <span style="opacity:.7">(${t.resolvedAt})</span></div>`}
+      </div>`).join('') : `<div class="empty-state"><i class="fas fa-circle-check"></i>Nothing here.</div>`;
+  }
+}
+
+function resolveDispute(id, resolution){
+  openModal({icon:'fas fa-gavel',title:'Resolve Dispute',body:`Mark this dispute as resolved with outcome: "${resolution}"?`,confirmText:'Confirm',
+    formHTML:`<textarea id="resNote" rows="2" placeholder="Optional note..." style="width:100%;margin-top:.8rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea>`,
+    onConfirm:()=>{
+      const note = document.getElementById('resNote')?.value||'';
+      HJ.resolveDispute(id, resolution, note);
+      HC.toast('✓ Dispute resolved','success');
+      renderAll();
+    }});
+}
+
+function replyTicket(id){
+  const reply = document.getElementById('reply_'+id).value.trim();
+  if (!reply){ HC.toast('Write a reply first','warning'); return; }
+  HJ.resolveSupportTicket(id, reply);
+  HC.toast('✓ Reply sent, ticket closed','success');
+  renderAll();
+}
+
+function renderAll(){ renderStats(); renderList(); HC.applyGlobalSettings(); }
+
+HC.init('Disputes','Resolution Center','disputes');
+renderTabs();
+renderAll();
+</script>
+</body>
+</html>

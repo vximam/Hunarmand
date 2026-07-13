@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunarmand — Portal Access</title>
+    <!-- Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="portal-shared.js"></script>
+
+    <style>
+        :root {
+            --g1: #1b5e37;
+            --g2: #134228;
+            --g3: #246843;
+            --g4: #2e7d52;
+            --g5: #3d9862;
+            --mint: #e8f5ed;
+            --mint2: #d4ecde;
+            --mint3: #c2e3d0;
+            --white: #ffffff;
+            --near: #f5fbf7;
+            --ink: #0b1a10;
+            --muted: #4e6a57;
+            --faint: #8ca898;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --sh1: 0 4px 12px rgba(11, 26, 16, 0.05);
+            --sh2: 0 12px 36px rgba(11, 26, 16, 0.12);
+            --sh3: 0 24px 60px rgba(11, 26, 16, 0.18);
+            --e1: cubic-bezier(.4, 0, .2, 1);
+            --e2: cubic-bezier(.22, 1, .36, 1);
+            --e3: cubic-bezier(.34, 1.56, .64, 1);
+            --fd: 'Sora', sans-serif;
+            --fi: 'Inter', sans-serif;
+        }
+
+        /* Reset & Base styling */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--fi);
+            color: var(--ink);
+            background: var(--near);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* Split Screen Container */
+        .auth-container {
+            display: flex;
+            width: 100vw;
+            min-height: 100vh;
+            background: var(--white);
+        }
+
+        /* ═══ LEFT PANEL (VISUAL AREA) ═══ */
+        .visual-panel {
+            flex: 1.1;
+            background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 100%);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px;
+            color: var(--white);
+            overflow: hidden;
+        }
+        @media(max-width: 960px) {
+            .visual-panel {
+                display: none; /* Hide on tablets and mobile */
+            }
+        }
+
+        /* Background Pattern & Orbs */
+        .visual-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            top: -100px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(46, 125, 82, 0.25) 0%, transparent 70%);
+            filter: blur(10px);
+        }
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -50px;
+            right: -50px;
+            background: radial-gradient(circle, rgba(184, 221, 200, 0.2) 0%, transparent 70%);
+            filter: blur(10px);
+        }
+
+        /* Visual Panel Content */
+        .visual-header {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .logo-box {
+            width: 40px;
+            height: 40px;
+            background: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--g1);
+            font-size: 20px;
+            font-weight: 800;
+            box-shadow: var(--sh1);
+        }
+        .brand-name {
+            font-family: var(--fd);
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .visual-center {
+            position: relative;
+            z-index: 2;
+            max-width: 520px;
+            margin-top: 40px;
+        }
+        .welcome-title {
+            font-family: var(--fd);
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px;
+        }
+        .welcome-desc {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--mint2);
+            font-weight: 400;
+        }
+
+        /* Stats Stripe */
+        .stats-stripe {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 40px;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(8px);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .stat-box:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-3px);
+        }
+        .stat-num {
+            display: block;
+            font-family: var(--fd);
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--mint);
+        }
+        .stat-lbl {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--mint2);
+            margin-top: 2px;
+        }
+
+        /* Testimonial slider */
+        .visual-footer {
+            position: relative;
+            z-index: 2;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 24px;
+        }
+        .quote-slide {
+            font-style: italic;
+            font-size: 14.5px;
+            color: var(--mint);
+            line-height: 1.6;
+        }
+        .quote-author {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--white);
+        }
+
+        /* Floating Cards */
+        .fc-node {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            padding: 10px 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: bobCard 5s ease-in-out infinite;
+            z-index: 2;
+        }
+        .fc-1 {
+            top: 20%;
+            right: 8%;
+            animation-delay: 0s;
+        }
+        .fc-2 {
+            bottom: 25%;
+            left: 5%;
+            animation-delay: 2.5s;
+        }
+        @keyframes bobCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* ═══ RIGHT PANEL (FORM AREA) ═══ */
+        .form-panel {
+            flex: 0.9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 48px 40px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: var(--near);
+            min-height: 100vh;
+        }
+        @media(max-width: 960px) {
+            .form-panel {
+                flex: 1;
+                padding: 40px 16px;
+                justify-content: flex-start;
+            }
+        }
+
+        /* Card Wrap */
+        .auth-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--white);
+            border: 1px solid rgba(27, 94, 55, 0.12);
+            border-radius: 24px;
+            box-shadow: var(--sh2);
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        @media(max-width: 480px) {
+            .auth-card {
+                padding: 20px;
+                border-radius: 18px;
+            }
+        }
+
+        /* Nav Header for Toggle Form */
+        .auth-nav {
+            display: flex;
+            background: var(--near);
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .auth-nav-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s var(--e2);
+            user-select: none;
+            background: none;
+            border: none;
+            outline: none;
+        }
+        .auth-nav-btn.active {
+            background: var(--white);
+            color: var(--g1);
+            box-shadow: var(--sh1);
+        }
+
+        /* Form Titles */
+        .form-title-area {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .form-title {
+            font-family: var(--fd);
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--g1);
+        }
+        .form-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Forms Wrapper */
+        .form-slider {
+            display: flex;
+            width: 200%; /* Switch slider */
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .form-slide {
+            width: 50%;
+            transition: opacity 0.4s;
+        }
+        .slider-signup-active {
+            transform: translateX(-50%);
+        }
+
+        /* Dynamic role selectors inside SignUp */
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .role-btn {
+            border: 1.5px solid rgba(27, 94, 55, 0.15);
+            background: var(--white);
+            padding: 11px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .role-btn:hover {
+            border-color: var(--g4);
+            color: var(--g1);
+            background: var(--near);
+        }
+        .role-btn.active {
+            border-color: var(--g1);
+            background: var(--mint);
+            color: var(--g1);
+        }
+
+        /* Form Components */
+        .input-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            color: var(--faint);
+            font-size: 14px;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+        .form-input {
+            width: 100%;
+            border: 1.5px solid rgba(27, 94, 55, 0.18);
+            border-radius: 10px;
+            padding: 11px 14px 11px 40px;
+            background: var(--near);
+            font-size: 14px;
+            font-family: var(--fi);
+            color: var(--ink);
+            outline: none;
+            transition: all 0.25s;
+        }
+        .form-input:focus {
+            border-color: var(--g1);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.12);
+        }
+        .form-input:focus ~ .input-icon {
+            color: var(--g1);
+        }
+
+        /* Password eye icon */
+        .eye-toggle {
+            position: absolute;
+            right: 14px;
+            color: var(--faint);
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .eye-toggle:hover {
+            color: var(--g1);
+        }
+
+        /* Validation border classes */
+        .is-valid {
+            border-color: var(--success) !important;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
+        }
+        .is-invalid {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+
+        /* Field messages */
+        .field-error {
+            color: var(--danger);
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 4px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* File Upload Area (Avatar upload) */
+        .avatar-upload-zone {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+            background: rgba(27, 94, 55, 0.03);
+            border: 1.5px dashed rgba(27, 94, 55, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .avatar-upload-zone:hover {
+            background: rgba(27, 94, 55, 0.08);
+            border-color: var(--g1);
+        }
+        .avatar-preview-frame {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: var(--mint2);
+            border: 1.5px solid var(--white);
+            box-shadow: var(--sh1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--g1);
+            font-size: 20px;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .avatar-preview-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-upload-text {
+            flex: 1;
+        }
+        .avatar-upload-text h5 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--g1);
+        }
+        .avatar-upload-text p {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        .avatar-remove-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            display: none;
+            transition: all 0.2s;
+        }
+        .avatar-remove-btn:hover {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        /* Dynamic fields block switcher */
+        .dynamic-fields-block {
+            display: none;
+            animation: fadeInField 0.3s ease-in-out forwards;
+        }
+        @keyframes fadeInField {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Password Strength Meter */
+        .pw-strength-container {
+            margin-top: 6px;
+            display: none;
+        }
+        .pw-strength-bar {
+            height: 4px;
+            width: 100%;
+            background: var(--near);
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            gap: 2px;
+            margin-bottom: 6px;
+        }
+        .pw-strength-bar span {
+            flex: 1;
+            height: 100%;
+            background: transparent;
+            transition: background 0.3s;
+        }
+        .pw-strength-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .pw-criteria-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .crit-item {
+            font-size: 10.5px;
+            color: var(--faint);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        .crit-item.met {
+            color: var(--success);
+        }
+
+        /* Action buttons */
+        .form-btn-submit {
+            width: 100%;
+            background: var(--g1);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(27, 94, 55, 0.2);
+            transition: all 0.3s var(--e3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .form-btn-submit:hover {
+            background: var(--g2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(27, 94, 55, 0.3);
+        }
+        .form-btn-submit:active {
+            transform: translateY(0);
+        }
+
+
+
+        /* Utility links */
+        .form-extra-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            font-size: 12.5px;
+        }
+        .form-extra-links a {
+            color: var(--muted);
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .form-extra-links a:hover {
+            color: var(--g1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <!-- ═══ VISUAL BLOCK (LEFT) ═══ -->
+        <div class="visual-panel">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+
+            <div class="fc-node fc-1">
+                <div class="logo-box" style="width:28px;height:28px;font-size:13px;border-radius:8px;"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <div style="font-size:12px;font-weight:700;">Verified Carpenters</div>
+            </div>
+            <div class="fc-node fc-2">
+                <div class="logo-box" style="width:28px;height:28px;font-size:13px;border-radius:8px;background:#fef3c7;color:#d97706;"><i class="fa-solid fa-bolt"></i></div>
+                <div style="font-size:12px;font-weight:700;">AC Tech Matchers</div>
+            </div>
+
+            <!-- Top Header -->
+            <div class="visual-header" onclick="window.location.href='index.html'">
+                <div class="logo-box">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                </div>
+                <span class="brand-name">Hunarmand</span>
+            </div>
+
+            <!-- Center text -->
+            <div class="visual-center">
+                <h2 class="welcome-title">Empowering Local Artisans.</h2>
+                <p class="welcome-desc">Unlock direct, secure connections to Pakistan's elite specialists. Verified identities, vetted experience, transparent payments.</p>
+
+                <!-- Small Stats Grid -->
+                <div class="stats-stripe">
+                    <div class="stat-box">
+                        <span class="stat-num">500+</span>
+                        <span class="stat-lbl">Professionals</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-num">20+</span>
+                        <span class="stat-lbl">Cities</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-num">98%</span>
+                        <span class="stat-lbl">Satisfaction</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carousel slide quote -->
+            <div class="visual-footer">
+                <div id="visualCarousel">
+                    <div class="quote-slide">"Hunarmand enabled me to expand my plumbing services from local shops to executive clientele across Lahore. Dynamic payouts and client verification built absolute trust."</div>
+                    <div class="quote-author">Muhammad Tariq — Master Plumber</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ INTERACTIVE FORM CONTAINER (RIGHT) ═══ -->
+        <div class="form-panel">
+            <div class="auth-card">
+                <!-- Top Nav Switcher -->
+                <div class="auth-nav">
+                    <button class="auth-nav-btn active" id="tabLogin" onclick="switchFormTab('login')">Sign In</button>
+                    <button class="auth-nav-btn" id="tabSignup" onclick="switchFormTab('signup')">Create Account</button>
+                </div>
+
+                <div style="overflow: hidden; width: 100%;">
+                    <div class="form-slider" id="formSlider">
+
+                        <!-- ═══ SIGN IN VIEW ═══ -->
+                        <div class="form-slide" id="loginSlide">
+                            <div class="form-title-area">
+                                <h3 class="form-title">Welcome Back</h3>
+                                <p class="form-sub">Access your executive dashboard or portal account.</p>
+                            </div>
+
+                            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                                <div class="input-group">
+                                    <label for="loginEmail">Email Address / Username</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-envelope input-icon"></i>
+                                        <input type="text" id="loginEmail" placeholder="Enter email address or ID" class="form-input" required>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="loginPassword">Password</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-lock input-icon"></i>
+                                        <input type="password" id="loginPassword" placeholder="••••••••" class="form-input" required>
+                                        <i class="fa-solid fa-eye eye-toggle" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+                                    </div>
+                                </div>
+
+                                <div class="form-extra-links">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;font-weight:600;">
+                                        <input type="checkbox" style="accent-color:var(--g1);width:14px;height:14px;"> Remember me
+                                    </label>
+                                    <a href="#" onclick="alert('Password reset link is deactivated for demo profiles.')">Forgot Password?</a>
+                                </div>
+
+                                <button type="submit" class="form-btn-submit">
+                                    Sign In <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                                </button>
+                            </form>
+
+
+                        </div>
+
+                        <!-- ═══ SIGN UP VIEW ═══ -->
+                        <div class="form-slide" id="signupSlide">
+                            <div class="form-title-area">
+                                <h3 class="form-title">Join Hunarmand</h3>
+                                <p class="form-sub">Register your skills or post requests in seconds.</p>
+                            </div>
+
+                            <!-- Role Switcher -->
+                            <div class="role-selector">
+                                <button class="role-btn active" id="roleUser" onclick="switchSignUpRole('user')">
+                                    <i class="fa-solid fa-user-tie"></i> Client Account
+                                </button>
+                                <button class="role-btn" id="roleWorker" onclick="switchSignUpRole('worker')">
+                                    <i class="fa-solid fa-hammer"></i> Worker Registry
+                                </button>
+                            </div>
+
+                            <form id="signupForm" onsubmit="handleSignupSubmit(event)">
+                                <!-- Hidden Role Holder -->
+                                <input type="hidden" id="signupRole" value="user">
+
+                                <!-- Avatar Upload -->
+                                <div class="avatar-upload-zone" id="avatarZone" onclick="document.getElementById('avatarInput').click()">
+                                    <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleAvatarFileSelect(this)">
+                                    <div class="avatar-preview-frame" id="avatarPreviewFrame">
+                                        <i class="fa-solid fa-camera"></i>
+                                    </div>
+                                    <div class="avatar-upload-text">
+                                        <h5>Profile Photo</h5>
+                                        <p id="avatarUploadDesc">Drag & drop or click to upload. Max 2MB JPG/PNG.</p>
+                                    </div>
+                                    <button type="button" class="avatar-remove-btn" id="avatarRemoveBtn" onclick="removeUploadedAvatar(event)">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regName">Full Name</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-user input-icon"></i>
+                                        <input type="text" id="regName" placeholder="Enter first and last name" class="form-input" required oninput="validateNameField()">
+                                    </div>
+                                    <div class="field-error" id="nameError"><i class="fa-solid fa-circle-exclamation"></i> Only alphabets and spaces are allowed (min 3 chars).</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regEmail">Email Address</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-envelope input-icon"></i>
+                                        <input type="email" id="regEmail" placeholder="example@hunarmand.pk" class="form-input" required oninput="validateEmailField()">
+                                    </div>
+                                    <div class="field-error" id="emailError"><i class="fa-solid fa-circle-exclamation"></i> Please enter a valid email address.</div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regPhone">Phone Number</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-phone input-icon"></i>
+                                        <input type="tel" id="regPhone" placeholder="0300-1234567" class="form-input" required oninput="validatePhoneField()">
+                                    </div>
+                                    <div class="field-error" id="phoneError"><i class="fa-solid fa-circle-exclamation"></i> Enter a valid Pakistani mobile number (e.g. 03xx-xxxxxxx).</div>
+                                </div>
+
+                                <!-- WORKER ONLY DYNAMIC FIELDS -->
+                                <div id="workerFieldsBlock" class="dynamic-fields-block">
+                                    <div class="input-group">
+                                        <label for="regCNIC">CNIC Number (identity)</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-solid fa-address-card input-icon"></i>
+                                            <input type="text" id="regCNIC" placeholder="35201-1234567-1" class="form-input" oninput="validateCNICField()">
+                                        </div>
+                                        <div class="field-error" id="cnicError"><i class="fa-solid fa-circle-exclamation"></i> Enter a valid Pakistani CNIC format (13 digits: XXXXX-XXXXXXX-X).</div>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <label for="regSkill">Expertise Skill Mapping</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-solid fa-screwdriver-wrench input-icon" style="z-index:10;"></i>
+                                            <select id="regSkill" class="form-input" style="padding-left:40px; cursor:pointer;">
+                                                <option value="" disabled selected>Select your trade domain...</option>
+                                                <option value="Plumbing">Plumbing Expert</option>
+                                                <option value="Electrical">Electrical Specialist</option>
+                                                <option value="Carpentry">Carpentry Artisan</option>
+                                                <option value="HVAC">HVAC & AC Tech</option>
+                                                <option value="Painting">Wall Decor & Painting</option>
+                                                <option value="Cleaning">Home Cleaning</option>
+                                                <option value="Appliance Repair">Appliance Repair</option>
+                                                <option value="Security">Security Guard</option>
+                                                <option value="Welder">Metalwork & Welding</option>
+                                                <option value="Driver">Licensed Chauffeur/Driver</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <label for="regCity">Deployment City</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-solid fa-map-location-dot input-icon" style="z-index:10;"></i>
+                                            <select id="regCity" class="form-input" style="padding-left:40px; cursor:pointer;">
+                                                <option value="" disabled selected>Select city zone...</option>
+                                                <option value="Lahore">Lahore Zone</option>
+                                                <option value="Karachi">Karachi Zone</option>
+                                                <option value="Islamabad">Islamabad Zone</option>
+                                                <option value="Rawalpindi">Rawalpindi Zone</option>
+                                                <option value="Faisalabad">Faisalabad Zone</option>
+                                                <option value="Multan">Multan Zone</option>
+                                                <option value="Peshawar">Peshawar Zone</option>
+                                                <option value="Quetta">Quetta Zone</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regPassword">Password</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-lock input-icon"></i>
+                                        <input type="password" id="regPassword" placeholder="Min 8 characters" class="form-input" required oninput="validatePasswordField()">
+                                        <i class="fa-solid fa-eye eye-toggle" onclick="togglePasswordVisibility('regPassword', this)"></i>
+                                    </div>
+                                    <!-- Strength Meter -->
+                                    <div class="pw-strength-container" id="pwStrengthBox">
+                                        <div class="pw-strength-bar" id="pwStrengthBar">
+                                            <span></span><span></span><span></span><span></span>
+                                        </div>
+                                        <div class="pw-strength-label">
+                                            <span>Strength: <strong id="pwStrengthLabel">Weak</strong></span>
+                                        </div>
+                                        <div class="pw-criteria-list">
+                                            <span class="crit-item" id="critLength"><i class="fa-solid fa-circle-notch"></i> Min 8 chars</span>
+                                            <span class="crit-item" id="critUpper"><i class="fa-solid fa-circle-notch"></i> Uppercase</span>
+                                            <span class="crit-item" id="critLower"><i class="fa-solid fa-circle-notch"></i> Lowercase</span>
+                                            <span class="crit-item" id="critNumber"><i class="fa-solid fa-circle-notch"></i> Number</span>
+                                            <span class="crit-item" id="critSpecial"><i class="fa-solid fa-circle-notch"></i> Special char</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regConfirmPassword">Confirm Password</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-lock input-icon"></i>
+                                        <input type="password" id="regConfirmPassword" placeholder="Re-type password" class="form-input" required oninput="validateConfirmPasswordField()">
+                                        <i class="fa-solid fa-eye eye-toggle" onclick="togglePasswordVisibility('regConfirmPassword', this)"></i>
+                                    </div>
+                                    <div class="field-error" id="confirmError"><i class="fa-solid fa-circle-exclamation"></i> Passwords do not match.</div>
+                                </div>
+
+                                <button type="submit" class="form-btn-submit">
+                                    Submit Registration <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script triggers -->
+    <script>
+        // Retrieve URL params for actions
+        const urlParams = new URLSearchParams(window.location.search);
+        const actionParam = urlParams.get('action') || 'login';
+        const errorParam = urlParams.get('error');
+
+        // Drag & Drop Area listeners
+        const avatarZone = document.getElementById('avatarZone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            avatarZone.addEventListener(eventName, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                avatarZone.style.background = 'rgba(27, 94, 55, 0.1)';
+                avatarZone.style.borderColor = 'var(--g1)';
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            avatarZone.addEventListener(eventName, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                avatarZone.style.background = '';
+                avatarZone.style.borderColor = '';
+            }, false);
+        });
+        avatarZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                const fileInput = document.getElementById('avatarInput');
+                fileInput.files = files;
+                handleAvatarFileSelect(fileInput);
+            }
+        });
+
+        // Seed formatter binders
+        formatCNICInput(document.getElementById('regCNIC'));
+        formatPhoneInput(document.getElementById('regPhone'));
+
+        // Load correct tab initially
+        $(document).ready(() => {
+            switchFormTab(actionParam);
+            const roleParam = urlParams.get('role');
+            if (roleParam === 'worker') {
+                switchSignUpRole('worker');
+            }
+            const refParam = urlParams.get('ref');
+            if (refParam && actionParam === 'signup') {
+                setTimeout(() => showToastNotification(`🎉 You were referred! Sign up to get Rs. ${HJ.REFERRAL_BONUS} bonus credit.`, 'success'), 600);
+            }
+            if (errorParam === 'unauthorized') {
+                showToastNotification('Access Denied: Please sign in with admin credentials.', 'error');
+            }
+        });
+
+        // ═══════════════════════════════════════════════════
+        //  UI CONTROLS
+        // ═══════════════════════════════════════════════════
+        function switchFormTab(tab) {
+            const slider = document.getElementById('formSlider');
+            const loginBtn = document.getElementById('tabLogin');
+            const signupBtn = document.getElementById('tabSignup');
+
+            if (tab === 'login') {
+                slider.classList.remove('slider-signup-active');
+                loginBtn.classList.add('active');
+                signupBtn.classList.remove('active');
+                document.title = 'Hunarmand — Portal Sign In';
+            } else {
+                slider.classList.add('slider-signup-active');
+                loginBtn.classList.remove('active');
+                signupBtn.classList.add('active');
+                document.title = 'Hunarmand — Create Portal Account';
+            }
+        }
+
+        function switchSignUpRole(role) {
+            const userBtn = document.getElementById('roleUser');
+            const workerBtn = document.getElementById('roleWorker');
+            const workerBlock = document.getElementById('workerFieldsBlock');
+            const roleInput = document.getElementById('signupRole');
+
+            roleInput.value = role;
+
+            if (role === 'user') {
+                userBtn.classList.add('active');
+                workerBtn.classList.remove('active');
+                workerBlock.style.display = 'none';
+                document.getElementById('regCNIC').required = false;
+                document.getElementById('regSkill').required = false;
+                document.getElementById('regCity').required = false;
+            } else {
+                userBtn.classList.remove('active');
+                workerBtn.classList.add('active');
+                workerBlock.style.display = 'block';
+                document.getElementById('regCNIC').required = true;
+                document.getElementById('regSkill').required = true;
+                document.getElementById('regCity').required = true;
+            }
+        }
+
+        function togglePasswordVisibility(inputId, iconEl) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconEl.className = 'fa-solid fa-eye-slash eye-toggle';
+            } else {
+                input.type = 'password';
+                iconEl.className = 'fa-solid fa-eye eye-toggle';
+            }
+        }
+
+
+
+        // ═══════════════════════════════════════════════════
+        //  PROFILE PICTURE DRAG-DROP PREVIEW
+        // ═══════════════════════════════════════════════════
+        let uploadedAvatarDataUrl = null;
+
+        function handleAvatarFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Check type
+            if (!file.type.match('image.*')) {
+                showToastNotification('File must be a valid image format!', 'error');
+                return;
+            }
+
+            // Check size (2MB = 2 * 1024 * 1024)
+            if (file.size > 2097152) {
+                showToastNotification('Profile picture exceeds 2MB limit!', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedAvatarDataUrl = e.target.result;
+                const previewFrame = document.getElementById('avatarPreviewFrame');
+                previewFrame.innerHTML = `<img src="${uploadedAvatarDataUrl}" alt="Preview">`;
+                previewFrame.style.border = '2px solid var(--g1)';
+                
+                document.getElementById('avatarUploadDesc').innerHTML = `File size: ${(file.size/1024/1024).toFixed(2)} MB.<br>Click trash icon to remove.`;
+                document.getElementById('avatarRemoveBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeUploadedAvatar(e) {
+            e.stopPropagation();
+            document.getElementById('avatarInput').value = '';
+            uploadedAvatarDataUrl = null;
+
+            const previewFrame = document.getElementById('avatarPreviewFrame');
+            previewFrame.innerHTML = `<i class="fa-solid fa-camera"></i>`;
+            previewFrame.style.border = '';
+
+            document.getElementById('avatarUploadDesc').innerHTML = 'Drag & drop or click to upload. Max 2MB JPG/PNG.';
+            document.getElementById('avatarRemoveBtn').style.display = 'none';
+        }
+
+        // ═══════════════════════════════════════════════════
+        //  REAL-TIME INLINE FORM VALIDATIONS
+        // ═══════════════════════════════════════════════════
+        function validateNameField() {
+            const el = document.getElementById('regName');
+            const err = document.getElementById('nameError');
+            const valid = Validation.name(el.value);
+            updateFieldUI(el, err, valid);
+            return valid;
+        }
+
+        function validateEmailField() {
+            const el = document.getElementById('regEmail');
+            const err = document.getElementById('emailError');
+            const valid = Validation.email(el.value);
+            updateFieldUI(el, err, valid);
+            return valid;
+        }
+
+        function validatePhoneField() {
+            const el = document.getElementById('regPhone');
+            const err = document.getElementById('phoneError');
+            const valid = Validation.phone(el.value);
+            updateFieldUI(el, err, valid);
+            return valid;
+        }
+
+        function validateCNICField() {
+            const el = document.getElementById('regCNIC');
+            const err = document.getElementById('cnicError');
+            const isWorker = document.getElementById('signupRole').value === 'worker';
+            if (!isWorker) return true;
+            const valid = Validation.cnic(el.value);
+            updateFieldUI(el, err, valid);
+            return valid;
+        }
+
+        function validatePasswordField() {
+            const el = document.getElementById('regPassword');
+            const strengthBox = document.getElementById('pwStrengthBox');
+            const val = el.value;
+
+            if (val.length === 0) {
+                strengthBox.style.display = 'none';
+                el.className = 'form-input';
+                return false;
+            }
+
+            strengthBox.style.display = 'block';
+            const criteria = Validation.password(val);
+
+            // Update crit checks UI
+            toggleCriteriaItem('critLength', criteria.length);
+            toggleCriteriaItem('critUpper', criteria.upper);
+            toggleCriteriaItem('critLower', criteria.lower);
+            toggleCriteriaItem('critNumber', criteria.number);
+            toggleCriteriaItem('critSpecial', criteria.special);
+
+            // Count met rules
+            const score = Object.values(criteria).filter(Boolean).length;
+            const barSpans = document.querySelectorAll('#pwStrengthBar span');
+            const strengthLabel = document.getElementById('pwStrengthLabel');
+
+            // Reset strength meters
+            barSpans.forEach(span => span.style.background = 'transparent');
+
+            let finalValid = false;
+            if (score <= 2) {
+                barSpans[0].style.background = 'var(--danger)';
+                strengthLabel.textContent = 'Weak';
+                strengthLabel.style.color = 'var(--danger)';
+                el.className = 'form-input is-invalid';
+            } else if (score <= 4) {
+                barSpans[0].style.background = '#f59e0b';
+                barSpans[1].style.background = '#f59e0b';
+                barSpans[2].style.background = '#f59e0b';
+                strengthLabel.textContent = 'Medium';
+                strengthLabel.style.color = '#f59e0b';
+                el.className = 'form-input is-invalid';
+            } else {
+                barSpans.forEach(span => span.style.background = 'var(--success)');
+                strengthLabel.textContent = 'Strong';
+                strengthLabel.style.color = 'var(--success)';
+                el.className = 'form-input is-valid';
+                finalValid = true;
+            }
+
+            // Also check confirm password match
+            validateConfirmPasswordField();
+
+            return finalValid;
+        }
+
+        function toggleCriteriaItem(id, met) {
+            const el = document.getElementById(id);
+            if (met) {
+                el.classList.add('met');
+                el.querySelector('i').className = 'fa-solid fa-circle-check';
+            } else {
+                el.classList.remove('met');
+                el.querySelector('i').className = 'fa-solid fa-circle-notch';
+            }
+        }
+
+        function validateConfirmPasswordField() {
+            const passEl = document.getElementById('regPassword');
+            const confirmEl = document.getElementById('regConfirmPassword');
+            const err = document.getElementById('confirmError');
+
+            if (confirmEl.value.length === 0) {
+                confirmEl.className = 'form-input';
+                err.style.display = 'none';
+                return false;
+            }
+
+            const valid = (passEl.value === confirmEl.value);
+            updateFieldUI(confirmEl, err, valid);
+            return valid;
+        }
+
+        function updateFieldUI(inputEl, errorEl, isValid) {
+            if (isValid) {
+                inputEl.classList.remove('is-invalid');
+                inputEl.classList.add('is-valid');
+                if (errorEl) errorEl.style.display = 'none';
+            } else {
+                inputEl.classList.remove('is-valid');
+                inputEl.classList.add('is-invalid');
+                if (errorEl) errorEl.style.display = 'flex';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        //  FORM SUBMIT HANDLERS
+        // ═══════════════════════════════════════════════════
+        
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const identity = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            // 1. Admin checks
+            if (identity === 'adminH001' && pass === 'adminH001') {
+                const sessionPayload = { id: 0, name: "Super Administrator", email: "adminH001@hunarmand.pk", phone: "N/A", role: "admin", image: null };
+                localStorage.setItem('currentUser', JSON.stringify(sessionPayload));
+                showToastNotification('Access granted. Seeding secure session...', 'success');
+
+                setTimeout(() => {
+                    const redirect = localStorage.getItem('authRedirect') || 'dashboard.html';
+                    localStorage.removeItem('authRedirect');
+                    window.location.href = redirect;
+                }, 1000);
+                return;
+            }
+
+            // 2. Client / Worker checks from DB
+            const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+            const allWorkers = JSON.parse(localStorage.getItem('allWorkers') || '[]');
+
+            // Check worker email FIRST — workers are also duplicated into allUsers
+            // for the admin reports table, so checking allUsers first would wrongly
+            // log a worker in as a client.
+            const matchedWorker = allWorkers.find(w => w.email.toLowerCase() === identity.toLowerCase());
+            if (matchedWorker) {
+                const sessionPayload = { id: matchedWorker.id, name: matchedWorker.name, email: matchedWorker.email, phone: matchedWorker.phone, role: "worker", image: matchedWorker.image || null };
+                localStorage.setItem('currentUser', JSON.stringify(sessionPayload));
+                showToastNotification(`Welcome back, Expert ${matchedWorker.name}!`, 'success');
+                setTimeout(() => {
+                    const redirect = localStorage.getItem('authRedirect');
+                    localStorage.removeItem('authRedirect');
+                    window.location.href = (redirect === 'worker-dashboard.html') ? redirect : 'worker-dashboard.html';
+                }, 1000);
+                return;
+            }
+
+            // Check client email
+            const matchedUser = allUsers.find(u => u.email.toLowerCase() === identity.toLowerCase());
+            if (matchedUser) {
+                // Bypass actual hashed password checks for prototype, accept standard pass checks
+                const sessionPayload = { id: matchedUser.id, name: matchedUser.name, email: matchedUser.email, phone: matchedUser.phone, role: "user", image: matchedUser.image || null };
+                localStorage.setItem('currentUser', JSON.stringify(sessionPayload));
+                showToastNotification(`Welcome back, ${matchedUser.name}!`, 'success');
+                setTimeout(() => {
+                    const clientPages = ['indexiii.html','findworker.html','booking2.html','payment.html'];
+                    const redirect = localStorage.getItem('authRedirect');
+                    localStorage.removeItem('authRedirect');
+                    window.location.href = (redirect && clientPages.includes(redirect)) ? redirect : 'indexiii.html';
+                }, 1000);
+                return;
+            }
+
+            showToastNotification('Authentication failed: Invalid credentials entered.', 'error');
+        }
+
+        function handleSignupSubmit(e) {
+            e.preventDefault();
+
+            // Run validation sweeps
+            const n = validateNameField();
+            const em = validateEmailField();
+            const ph = validatePhoneField();
+            const pass = validatePasswordField();
+            const cnf = validateConfirmPasswordField();
+
+            const role = document.getElementById('signupRole').value;
+            let cnicValid = true;
+
+            if (role === 'worker') {
+                cnicValid = validateCNICField();
+            }
+
+            if (!n || !em || !ph || !pass || !cnf || !cnicValid) {
+                showToastNotification('Please resolve incorrect validation fields first.', 'error');
+                return;
+            }
+
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            // Save to mock database
+            if (role === 'user') {
+                const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+                if (allUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    showToastNotification('This email address is already registered!', 'error');
+                    return;
+                }
+
+                const newUser = {
+                    id: Date.now(),
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    city: 'Islamabad',
+                    status: 'active',
+                    requests: 0,
+                    rating: 5.0,
+                    joined: new Date().toLocaleDateString('en-US', {day:'numeric', month:'long', year:'numeric'}),
+                    gender: 'male',
+                    image: uploadedAvatarDataUrl
+                };
+
+                allUsers.push(newUser);
+                localStorage.setItem('allUsers', JSON.stringify(allUsers));
+
+                const refCode = new URLSearchParams(window.location.search).get('ref');
+                if (refCode) { HJ.applyReferral(newUser.id, newUser.name, refCode); }
+
+                // Set logged-in session
+                const sessionPayload = { id: newUser.id, name: newUser.name, email: newUser.email, phone: newUser.phone, role: "user", image: newUser.image };
+                localStorage.setItem('currentUser', JSON.stringify(sessionPayload));
+                
+            } else {
+                // Register Worker
+                const allWorkers = JSON.parse(localStorage.getItem('allWorkers') || '[]');
+                if (allWorkers.some(w => w.email.toLowerCase() === email.toLowerCase())) {
+                    showToastNotification('This email address is already registered!', 'error');
+                    return;
+                }
+
+                const skill = document.getElementById('regSkill').value;
+                const city = document.getElementById('regCity').value;
+                const cnic = document.getElementById('regCNIC').value;
+
+                if (!skill || !city || !cnic) {
+                    showToastNotification('Please complete CNIC, skill domain, and city fields.', 'error');
+                    return;
+                }
+
+                const newWorker = {
+                    id: Date.now(),
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    cnic: cnic,
+                    skill: skill,
+                    city: city,
+                    status: 'pending',
+                    statusColor: 'amber',
+                    badge: 'Standard',
+                    date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}),
+                    image: uploadedAvatarDataUrl
+                };
+
+                allWorkers.push(newWorker);
+                localStorage.setItem('allWorkers', JSON.stringify(allWorkers));
+
+                // Add to overall user list too for reports (compliance checking)
+                const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+                allUsers.push({
+                    id: newWorker.id,
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    city: city,
+                    status: 'pending',
+                    requests: 0,
+                    rating: 5.0,
+                    joined: newWorker.date,
+                    gender: 'male',
+                    image: uploadedAvatarDataUrl
+                });
+                localStorage.setItem('allUsers', JSON.stringify(allUsers));
+
+                // Set session
+                const sessionPayload = { id: newWorker.id, name: newWorker.name, email: newWorker.email, phone: newWorker.phone, role: "worker", image: newWorker.image };
+                localStorage.setItem('currentUser', JSON.stringify(sessionPayload));
+            }
+
+            showToastNotification('Registration successful! Launching secure session...', 'success');
+            setTimeout(() => {
+                window.location.href = (role === 'worker') ? 'worker-dashboard.html' : 'indexiii.html';
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>
