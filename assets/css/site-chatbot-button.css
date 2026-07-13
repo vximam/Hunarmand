@@ -1,0 +1,11 @@
+.site-chatbot-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+.site-chatbot-btn img { display: block; }
