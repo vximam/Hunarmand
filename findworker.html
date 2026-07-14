@@ -25,10 +25,6 @@
 .rate-row{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--muted)}
 .wc-bio{font-size:.76rem;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .profile-modal-hero{display:flex;gap:1rem;align-items:center;text-align:left}
-.profile-tag{display:inline-block;background:var(--mint);color:var(--g1);font-size:.7rem;font-weight:600;padding:.22rem .6rem;border-radius:100px;margin:.15rem .25rem 0 0}
-.review-item{padding:.7rem 0;border-bottom:1px solid var(--row-line);text-align:left}
-.review-item:last-child{border-bottom:none}
-.review-item-top{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -82,6 +78,7 @@
 
 <script src="admin-core.js"></script>
 <script src="portal-shared.js"></script>
+<script src="chatbot.js"></script>
 <script>
 const session = JSON.parse(localStorage.getItem('currentUser')||'null');
 let _debounceTimer = null;
@@ -94,8 +91,8 @@ let favOnly = false;
 
 const CATEGORY_ICONS = {
   'Plumbing':'fa-faucet-drip','Electrical':'fa-bolt','Carpentry':'fa-hammer','HVAC':'fa-fan',
-  'Painting':'fa-paint-roller','Cleaning':'fa-broom','Appliance Repair':'fa-blender',
-  'Security':'fa-shield-halved','Welder':'fa-fire','Driver':'fa-car','General':'fa-toolbox'
+  'Painting':'fa-paint-roller','Cleaning':'fa-broom','Appliance Repair':'fa-blender','Security':'fa-shield-halved',
+  'Welder':'fa-fire','Driver':'fa-car','General':'fa-toolbox'
 };
 
 function renderCategoryGrid(){
@@ -157,9 +154,9 @@ function renderGrid(){
     const av = HJ.AVAILABILITY[w.meta.availability] || HJ.AVAILABILITY.online;
     const isFav = favs.includes(w.id);
     return `
-    <div class="worker-card" style="animation-delay:${i*0.05}s">
+    <div class="worker-card">
       <div class="worker-card-top">
-        <img src="${w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')}" alt="${w.name}" loading="lazy">
+        <img src="${w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')}" alt="${w.name}">
         <div>
           <div class="worker-card-name">${w.name}</div>
           <div class="worker-card-skill">${w.skill||'General'} · ${w.meta.experience}</div>
@@ -175,8 +172,8 @@ function renderGrid(){
       </div>
       <label class="compare-check"><input type="checkbox" ${window._compareIds?.includes(w.id)?'checked':''} onchange="toggleCompare(${w.id}, this)"> Compare</label>
       <div class="worker-card-foot">
-        <button class="btn-outline" onclick="openProfileModal(${w.id})">View Profile</button>
-        <button class="btn-primary" onclick="openRequestModal(${w.id})"><i class="fas fa-paper-plane"></i> Request</button>
+        <button class="btn-outline" onclick="openProfileModal(${i})">View Profile</button>
+        <button class="btn-primary" onclick="openRequestModal(${i})"><i class="fas fa-paper-plane"></i> Request</button>
       </div>
     </div>
   `;}).join('');
@@ -302,9 +299,8 @@ function useMyLocation(){
   }, { timeout: 8000 });
 }
 
-function openProfileModal(workerId){
-  const w = window._currentGridWorkers.find(x=>x.id===workerId);
-  if (!w) return;
+function openProfileModal(idx){
+  const w = window._currentGridWorkers[idx];
   const reviews = HJ.getReviews(w.id);
   const av = HJ.AVAILABILITY[w.meta.availability] || HJ.AVAILABILITY.online;
   HC.modal({
@@ -328,13 +324,12 @@ function openProfileModal(workerId){
         </div>
       </div>`,
     confirmText:'Request Booking',
-    onConfirm:()=>{ openRequestModal(w.id); }
+    onConfirm:()=>{ openRequestModal(idx); }
   });
 }
 
-function openRequestModal(workerId){
-  const worker = window._currentGridWorkers.find(x=>x.id===workerId);
-  if (!worker) return;
+function openRequestModal(idx){
+  const worker = window._currentGridWorkers[idx];
   const formId = 'reqForm_'+Date.now();
   const addresses = HJ.getAddresses(session.id);
   const today = new Date().toISOString().split('T')[0];
@@ -346,26 +341,33 @@ function openRequestModal(workerId){
     formHTML:`
       <form id="${formId}" style="display:flex;flex-direction:column;gap:.7rem;text-align:left;margin-top:.9rem">
         <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">SERVICE NEEDED</label>
-          <input required name="service" placeholder="e.g. Fix kitchen sink leak" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+          <input required name="service" maxlength="80" placeholder="e.g. Fix kitchen sink leak" oninput="validateReqField(this,'service')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <div class="req-err" data-for="service" style="display:none;color:var(--red);font-size:.7rem;margin-top:.3rem"><i class="fas fa-circle-exclamation"></i> Describe the job in real words (not random letters).</div></div>
         <div style="display:flex;gap:.6rem">
           <div style="flex:1"><label style="font-size:.72rem;font-weight:700;color:var(--muted)">PREFERRED DATE</label>
-            <input type="date" name="preferredDate" min="${today}" value="${today}" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+            <input type="date" name="preferredDate" min="${today}" value="${today}" oninput="validateReqField(this,'preferredDate')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+            <div class="req-err" data-for="preferredDate" style="display:none;color:var(--red);font-size:.7rem;margin-top:.3rem"><i class="fas fa-circle-exclamation"></i> Pick today or a future date.</div></div>
           <div style="flex:1"><label style="font-size:.72rem;font-weight:700;color:var(--muted)">TIME WINDOW</label>
             <select name="timeWindow" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
               <option>Morning (8am-12pm)</option><option>Afternoon (12pm-5pm)</option><option>Evening (5pm-9pm)</option><option selected>ASAP</option>
             </select></div>
         </div>
         ${addresses.length ? `<div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">SAVED ADDRESS</label>
-          <select name="savedAddress" onchange="document.getElementById('${formId}_addr').value=this.value.split('|')[1]||''" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <select name="savedAddress" onchange="document.getElementById('${formId}_addr').value=this.value.split('|')[1]||''; validateReqField(document.getElementById('${formId}_addr'),'address')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
             <option value="">— Type a new address below —</option>
             ${addresses.map(a=>`<option value="${a.label}|${a.address}">${a.label} — ${a.address}</option>`).join('')}
           </select></div>` : ''}
         <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">YOUR CITY</label>
-          <input required name="city" value="${session.city||''}" placeholder="e.g. Lahore" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+          <select required name="city" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+            <option value="" disabled ${session.city?'':'selected'}>Select your city...</option>
+            ${HJ.MAJOR_CITIES.map(c=>`<option value="${c}" ${session.city===c?'selected':''}>${c}</option>`).join('')}
+          </select></div>
         <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">FULL ADDRESS</label>
-          <input id="${formId}_addr" name="address" placeholder="House #, Street, Area" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)"></div>
+          <input id="${formId}_addr" name="address" maxlength="120" placeholder="House #, Street, Area" oninput="validateReqField(this,'address')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <div class="req-err" data-for="address" style="display:none;color:var(--red);font-size:.7rem;margin-top:.3rem"><i class="fas fa-circle-exclamation"></i> Enter a real address, not random characters.</div></div>
         <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">BUDGET (Rs.)</label>
-          <input required type="number" min="100" name="budget" placeholder="e.g. 2000" oninput="updateFairnessHint('${worker.skill}', this.value, '${formId}')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <input required type="number" min="100" max="200000" step="50" name="budget" placeholder="e.g. 2000" oninput="updateFairnessHint('${worker.skill}', this.value, '${formId}'); validateReqField(this,'budget')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink)">
+          <div class="req-err" data-for="budget" style="display:none;color:var(--red);font-size:.7rem;margin-top:.3rem"><i class="fas fa-circle-exclamation"></i> Enter a realistic budget between Rs. 100 and Rs. 200,000.</div>
           <div id="${formId}_fair"></div>
         </div>
         <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">PHOTO OF THE ISSUE <span style="font-weight:400;text-transform:none">(optional)</span></label>
@@ -380,18 +382,20 @@ function openRequestModal(workerId){
           </div>
         </div>
         <div><label style="font-size:.72rem;font-weight:700;color:var(--muted)">DESCRIPTION</label>
-          <textarea name="description" rows="2" placeholder="Add any details the artisan should know" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea></div>
+          <textarea name="description" rows="2" maxlength="400" placeholder="Add any details the artisan should know" oninput="validateReqField(this,'description')" style="width:100%;margin-top:.3rem;padding:.6rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-family:inherit"></textarea>
+          <div class="req-err" data-for="description" style="display:none;color:var(--red);font-size:.7rem;margin-top:.3rem"><i class="fas fa-circle-exclamation"></i> Write real words, not random characters.</div></div>
         <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--ink);cursor:pointer"><input type="checkbox" name="urgent"> Mark as urgent (same-day priority)</label>
       </form>`,
     confirmText:'Send Request',
     onConfirm:()=>{
       const form = document.getElementById(formId);
-      if (!form.service.value || !form.city.value || !form.budget.value){ HC.toast('Please fill in all required fields','warning'); return false; }
+      const errors = validateReqForm(form);
+      if (errors.length){ HC.toast(errors[0],'warning'); return false; }
       HJ.createRequest({
         clientId: session.id, clientName: session.name, clientImage: session.image,
         workerId: worker.id, workerName: worker.name, workerImage: worker.image,
-        service: form.service.value, skill: worker.skill, city: form.city.value, address: form.address.value,
-        budget: form.budget.value, description: form.description.value,
+        service: form.service.value.trim(), skill: worker.skill, city: form.city.value, address: form.address.value.trim(),
+        budget: form.budget.value, description: form.description.value.trim(),
         preferredDate: form.preferredDate.value, timeWindow: form.timeWindow.value,
         photoUrl: window._pendingIssuePhoto || null, urgent: form.urgent.checked
       });
@@ -409,6 +413,36 @@ function openRequestModal(workerId){
   });
 }
 
+/* ═══ Request form validation — real-word checks, sane date/budget bounds ═══ */
+function validateReqField(el, field){
+  const errEl = el.closest('div').querySelector(`.req-err[data-for="${field}"]`) || document.querySelector(`.req-err[data-for="${field}"]`);
+  const ok = reqFieldRules[field](el.value);
+  el.style.borderColor = el.value.trim()==='' ? '' : (ok ? 'var(--g1, #1b5e37)' : 'var(--red)');
+  if (errEl) errEl.style.display = (!ok && el.value.trim()!=='') ? 'flex' : 'none';
+  return ok;
+}
+const reqFieldRules = {
+  service: v => HJ.isRealisticPhrase(v, 2),
+  address: v => v.trim()==='' || HJ.isRealisticPhrase(v, 2),
+  description: v => v.trim()==='' || HJ.isRealisticPhrase(v, 2),
+  budget: v => { const n = Number(v); return n >= 100 && n <= 200000; },
+  preferredDate: v => { if(!v) return true; const d = new Date(v+'T00:00:00'); const today = new Date(); today.setHours(0,0,0,0); return d >= today; },
+};
+function validateReqForm(form){
+  const errors = [];
+  if (!form.service.value.trim()) errors.push('Please describe the service you need.');
+  else if (!reqFieldRules.service(form.service.value)) errors.push('The service description looks like random text — please describe the job in real words.');
+  if (!form.city.value) errors.push('Please select your city.');
+  if (!form.budget.value) errors.push('Please enter a budget.');
+  else if (!reqFieldRules.budget(form.budget.value)) errors.push('Budget must be between Rs. 100 and Rs. 200,000.');
+  if (form.preferredDate.value && !reqFieldRules.preferredDate(form.preferredDate.value)) errors.push('Preferred date can\'t be in the past.');
+  if (form.address.value.trim() && !reqFieldRules.address(form.address.value)) errors.push('The address looks like random text — please enter a real address.');
+  if (form.description.value.trim() && !reqFieldRules.description(form.description.value)) errors.push('The description looks like random text — please write real words.');
+  // flip on-screen field highlights to match
+  ['service','address','description'].forEach(f => { if (form[f]) validateReqField(form[f], f); });
+  return errors;
+}
+
 function updateFairnessHint(skill, budget, formId){
   const hintEl = document.getElementById(formId+'_fair');
   if (!hintEl) return;
@@ -422,6 +456,7 @@ HC.initClient('Find Artisans','Browse Verified Artisans','findworker');
 renderCategoryGrid();
 renderChips();
 renderGrid();
+HunBot.init();
 </script>
 </body>
 </html>

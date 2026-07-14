@@ -77,6 +77,7 @@
 
 <script src="admin-core.js"></script>
 <script src="portal-shared.js"></script>
+<script src="chatbot.js"></script>
 <script>
 const session = JSON.parse(localStorage.getItem('currentUser')||'null');
 
@@ -125,6 +126,7 @@ HC.initClient('Control Center','Client Dashboard','dashboard');
 document.getElementById('greetHeading').textContent = 'Welcome back, ' + (session.name ? session.name.split(' ')[0] : 'there');
 renderDashboard();
 renderRecommended();
+HunBot.init();
 </script>
 </body>
 </html>

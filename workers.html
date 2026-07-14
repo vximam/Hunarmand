@@ -95,54 +95,43 @@
 <script>
 HC.init('Workers','Worker Registry','workers');
 
-function getAdminWorkers() {
-  const all = JSON.parse(localStorage.getItem('allWorkers') || '[]');
-  return all.map(w => {
-    const meta = HJ.getWorkerMeta(w.id);
-    return {
-      id: w.id,
-      name: w.name,
-      trade: w.skill || 'General',
-      city: w.city || '—',
-      rating: meta.avgRating || 5.0,
-      orders: meta.completedJobs || 0,
-      status: w.status || 'pending',
-      joined: w.date || 'Jan 2026',
-      cnic: w.cnic || '—',
-      phone: w.phone || '—',
-      age: 25 + (w.id % 20),
-      img: w.image || ('https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff')
-    };
+const workers=[
+  {id:1,name:'Tariq Mahmood',trade:'Plumber',city:'Karachi',rating:0,orders:0,status:'pending',joined:'Jan 2026',cnic:'42101-1234567-1',phone:'+92 321 111 0001',age:32,img:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop'},
+  {id:2,name:'Ayesha Khan',trade:'Housecleaner',city:'Lahore',rating:4.8,orders:47,status:'verified',joined:'Oct 2025',cnic:'35201-2345678-2',phone:'+92 300 222 0002',age:27,img:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop'},
+  {id:3,name:'Usman Ali',trade:'Carpenter',city:'Islamabad',rating:4.5,orders:83,status:'verified',joined:'Aug 2025',cnic:'61101-3456789-3',phone:'+92 333 333 0003',age:38,img:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop'},
+  {id:4,name:'Muhammad Rizwan',trade:'Electrician',city:'Faisalabad',rating:4.2,orders:112,status:'verified',joined:'Jul 2025',cnic:'33102-4567890-4',phone:'+92 345 444 0004',age:29,img:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop'},
+  {id:5,name:'Zainab Bibi',trade:'Housecleaner',city:'Peshawar',rating:4.9,orders:61,status:'verified',joined:'Sep 2025',cnic:'17301-5678901-5',phone:'+92 315 555 0005',age:24,img:'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop'},
+  {id:6,name:'Bilal Ahmed',trade:'Carpenter',city:'Lahore',rating:0,orders:0,status:'pending',joined:'Feb 2026',cnic:'35202-6789012-6',phone:'+92 322 666 0006',age:31,img:'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop'},
+  {id:7,name:'Kamran Shah',trade:'Plumber',city:'Karachi',rating:3.8,orders:24,status:'suspended',joined:'May 2025',cnic:'42201-7890123-7',phone:'+92 311 777 0007',age:44,img:'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop'},
+  {id:8,name:'Sana Malik',trade:'Housecleaner',city:'Rawalpindi',rating:4.7,orders:38,status:'verified',joined:'Nov 2025',cnic:'37501-8901234-8',phone:'+92 303 888 0008',age:26,img:'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=80&h=80&fit=crop'},
+  {id:9,name:'Faisal Qureshi',trade:'Electrician',city:'Multan',rating:4.6,orders:95,status:'verified',joined:'Jun 2025',cnic:'36302-9012345-9',phone:'+92 332 999 0009',age:35,img:'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop'},
+  {id:10,name:'Hamza Siddiqui',trade:'Welder',city:'Karachi',rating:0,orders:0,status:'pending',joined:'Feb 2026',cnic:'42301-0123456-0',phone:'+92 344 000 0010',age:22,img:'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=80&h=80&fit=crop'},
+  {id:11,name:'Sadia Imran',trade:'Tailor',city:'Lahore',rating:4.3,orders:52,status:'verified',joined:'Aug 2025',cnic:'35301-1234560-1',phone:'+92 307 111 0011',age:30,img:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop'},
+  {id:12,name:'Nabeel Munir',trade:'AC Technician',city:'Lahore',rating:4.4,orders:78,status:'verified',joined:'Sep 2025',cnic:'35401-5678904-5',phone:'+92 331 555 0012',age:36,img:'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&h=80&fit=crop'},
+];
+
+/* Merge real worker sign-ups (from auth.html) into the admin table */
+(function syncRealWorkers(){
+  const real = JSON.parse(localStorage.getItem('allWorkers')||'[]');
+  real.forEach(w=>{
+    if (typeof w.id !== 'number' || w.id < 1000000000000) return; // skip demo/seed rows, only real sign-ups
+    if (workers.some(x=>x.id===w.id)) return;
+    let status = (w.status||'pending').toLowerCase();
+    if (status==='reviewing docs') status='pending';
+    if (status==='verified match') status='verified';
+    workers.unshift({id:w.id,name:w.name,trade:w.skill||'General',city:w.city||'—',rating:HJ.getWorkerMeta(w.id).avgRating,orders:HJ.getWorkerMeta(w.id).completedJobs,status,joined:w.date||'—',cnic:w.cnic||'N/A',phone:w.phone||'N/A',age:'-',img:w.image||'https://ui-avatars.com/api/?name='+encodeURIComponent(w.name)+'&background=1b5e37&color=fff'});
   });
-}
-
-function persistWorkerStatus(id, status) {
-  const all = JSON.parse(localStorage.getItem('allWorkers') || '[]');
-  const w = all.find(x => x.id === id);
-  if (w) {
-    w.status = status;
-    localStorage.setItem('allWorkers', JSON.stringify(all));
-  }
-}
-
-function deleteWorkerFromStorage(id) {
-  const all = JSON.parse(localStorage.getItem('allWorkers') || '[]');
-  const filtered = all.filter(x => x.id !== id);
-  localStorage.setItem('allWorkers', JSON.stringify(filtered));
-}
-
-function addWorkerToStorage(w) {
-  const all = JSON.parse(localStorage.getItem('allWorkers') || '[]');
-  all.unshift(w);
-  localStorage.setItem('allWorkers', JSON.stringify(all));
+})();
+function persistWorkerStatus(id,status){
+  const real = JSON.parse(localStorage.getItem('allWorkers')||'[]');
+  const w = real.find(x=>x.id===id);
+  if(w){ w.status=status; localStorage.setItem('allWorkers', JSON.stringify(real)); }
 }
 
 let activeTab='all',page=1;const PER=8;
 let selectedW=null;
-let workers = [];
 
 function initStats(){
-  workers = getAdminWorkers();
   HC.countUp(document.getElementById('sc-total'),workers.length);
   HC.countUp(document.getElementById('sc-ver'),workers.filter(w=>w.status==='verified').length);
   HC.countUp(document.getElementById('sc-pend'),workers.filter(w=>w.status==='pending').length);
@@ -174,7 +163,6 @@ const sLbl={verified:'✓ Verified',pending:'⏳ Pending',suspended:'🚫 Suspen
 const avCls=['av0','av1','av2','av3','av4','av5'];
 
 function renderTable(){
-  workers = getAdminWorkers();
   const data=getFiltered();
   const total=data.length;
   const pages=Math.max(1,Math.ceil(total/PER));
@@ -222,7 +210,7 @@ function toggleAll(el){document.querySelectorAll('.rc').forEach(cb=>cb.checked=e
 function quickApprove(id,name){openModal({icon:'fas fa-user-check',title:'Approve Worker',body:`Approve ${name}?`,confirmText:'Approve',onConfirm:()=>{const w=workers.find(x=>x.id===id);if(w)w.status='verified';persistWorkerStatus(id,'verified');renderTable();initStats();HC.toast(`✓ ${name} approved!`,'success');}});}
 function quickSuspend(id,name){openModal({icon:'fas fa-ban',iconType:'danger',title:'Suspend Worker',body:`Suspend ${name}?`,confirmText:'Suspend',danger:true,onConfirm:()=>{const w=workers.find(x=>x.id===id);if(w)w.status='suspended';persistWorkerStatus(id,'suspended');renderTable();initStats();HC.toast(`${name} suspended.`,'warning');}});}
 function quickReinstate(id,name){const w=workers.find(x=>x.id===id);if(w)w.status='verified';persistWorkerStatus(id,'verified');renderTable();initStats();HC.toast(`${name} reinstated.`,'success');}
-function quickDelete(id,name){openModal({icon:'fas fa-trash',iconType:'danger',title:'Delete Worker',body:`Permanently delete ${name}? Cannot be undone.`,confirmText:'Delete',danger:true,onConfirm:()=>{const i=workers.findIndex(x=>x.id===id);if(i>-1)workers.splice(i,1);deleteWorkerFromStorage(id);renderTable();initStats();HC.toast(`${name} deleted.`,'warning');}});}
+function quickDelete(id,name){openModal({icon:'fas fa-trash',iconType:'danger',title:'Delete Worker',body:`Permanently delete ${name}? Cannot be undone.`,confirmText:'Delete',danger:true,onConfirm:()=>{const i=workers.findIndex(x=>x.id===id);if(i>-1)workers.splice(i,1);renderTable();initStats();HC.toast(`${name} deleted.`,'warning');}});}
 
 function openDrawer(id){
   selectedW=workers.find(w=>w.id===id);if(!selectedW)return;
@@ -273,7 +261,7 @@ function drawerApprove(){if(!selectedW)return;const w=selectedW;openModal({icon:
 function drawerSuspend(){if(!selectedW)return;const w=selectedW;const s=w.status==='suspended';openModal({icon:'fas fa-ban',iconType:s?'':'danger',title:s?'Reinstate':'Suspend',body:`${s?'Reinstate':'Suspend'} ${w.name}?`,confirmText:s?'Reinstate':'Suspend',danger:!s,onConfirm:()=>{w.status=s?'verified':'suspended';persistWorkerStatus(w.id,w.status);closeDrawer();renderTable();initStats();HC.toast(`${w.name} ${s?'reinstated':'suspended'}.`,s?'success':'warning');}});}
 function drawerMsg(){if(!selectedW)return;openModal({icon:'fas fa-comment',title:'Message Worker',body:`Send a message to ${selectedW.name}.`,formHTML:`<div class="modal-form"><div class="mf-field"><label class="mf-lbl">Message</label><textarea class="mf-input mf-ta" placeholder="Type your message..."></textarea></div></div>`,confirmText:'Send',onConfirm:()=>HC.toast(`Message sent to ${selectedW.name}.`,'success')});}
 
-function openAddWorker(){openModal({icon:'fas fa-hard-hat',title:'Add Worker',body:'Worker receives an SMS after submission.',wide:true,formHTML:`<div class="modal-form"><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Full Name</label><input class="mf-input" id="wna" placeholder="Ahmed Raza"></div><div class="mf-field"><label class="mf-lbl">Phone</label><input class="mf-input" id="wpa" placeholder="+92 3XX XXXXXXX"></div></div><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Trade</label><select class="mf-sel" id="wta"><option value="">Select...</option><option>Electrician</option><option>Plumber</option><option>Carpenter</option><option>Painter</option><option>AC Technician</option><option>Welder</option><option>Tailor</option><option>Housecleaner</option><option>Mason</option></select></div><div class="mf-field"><label class="mf-lbl">City</label><input class="mf-input" id="wca" placeholder="Karachi"></div></div><div class="mf-field"><label class="mf-lbl">CNIC</label><input class="mf-input" placeholder="XXXXX-XXXXXXX-X" maxlength="15"></div></div>`,confirmText:'Add Worker',onConfirm:()=>{const n=document.getElementById('wna')?.value.trim(),t=document.getElementById('wta')?.value,c=document.getElementById('wca')?.value.trim();if(!n||!t||!c){HC.toast('All fields required','warning');return;}const newW = {id:Date.now(),name:n,skill:t,city:c,status:'pending',date:'Jun 2026',cnic:'N/A',phone:document.getElementById('wpa')?.value||'N/A',image:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop'};addWorkerToStorage(newW);renderTable();initStats();HC.toast(`✓ Worker "${n}" added!`,'success');}});}
+function openAddWorker(){openModal({icon:'fas fa-hard-hat',title:'Add Worker',body:'Worker receives an SMS after submission.',wide:true,formHTML:`<div class="modal-form"><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Full Name</label><input class="mf-input" id="wna" placeholder="Ahmed Raza"></div><div class="mf-field"><label class="mf-lbl">Phone</label><input class="mf-input" id="wpa" placeholder="+92 3XX XXXXXXX"></div></div><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Trade</label><select class="mf-sel" id="wta"><option value="">Select...</option><option>Electrician</option><option>Plumber</option><option>Carpenter</option><option>Painter</option><option>AC Technician</option><option>Welder</option><option>Tailor</option><option>Housecleaner</option><option>Mason</option></select></div><div class="mf-field"><label class="mf-lbl">City</label><select class="mf-sel" id="wca"><option value="">Select city...</option>${HJ.MAJOR_CITIES.map(c=>`<option>${c}</option>`).join('')}</select></div></div><div class="mf-field"><label class="mf-lbl">CNIC</label><input class="mf-input" placeholder="XXXXX-XXXXXXX-X" maxlength="15"></div></div>`,confirmText:'Add Worker',onConfirm:()=>{const n=document.getElementById('wna')?.value.trim(),t=document.getElementById('wta')?.value,c=document.getElementById('wca')?.value;if(!n||!t||!c){HC.toast('All fields required','warning');return;}if(!HJ.isRealisticName(n)){HC.toast('Enter a real full name, not random characters','warning');return;}workers.unshift({id:Date.now(),name:n,trade:t,city:c,rating:0,orders:0,status:'pending',joined:'Jun 2026',cnic:'N/A',phone:document.getElementById('wpa')?.value||'N/A',age:'-',img:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop'});renderTable();initStats();HC.toast(`✓ Worker "${n}" added!`,'success');}});}
 function bulkVerify(){const checked=[...document.querySelectorAll('.rc:checked')].map(c=>parseInt(c.dataset.id));if(!checked.length){HC.toast('Select workers first','warning');return;}openModal({icon:'fas fa-shield-check',title:'Bulk Verify',body:`Verify ${checked.length} selected worker(s)?`,confirmText:`Verify ${checked.length}`,onConfirm:()=>{checked.forEach(id=>{const w=workers.find(x=>x.id===id);if(w)w.status='verified';persistWorkerStatus(id,'verified');});renderTable();initStats();HC.toast(`✓ ${checked.length} workers verified.`,'success');}});}
 function broadcastWorkers(){openModal({icon:'fas fa-bullhorn',iconType:'amber',title:'Message All Workers',body:'Send a notification to all active workers.',formHTML:`<div class="modal-form"><div class="mf-field"><label class="mf-lbl">Title</label><input class="mf-input" id="bwt" placeholder="Important Update"></div><div class="mf-field"><label class="mf-lbl">Message</label><textarea class="mf-input mf-ta" id="bwm" placeholder="Message body..."></textarea></div></div>`,confirmText:'Send',onConfirm:()=>{const t=document.getElementById('bwt')?.value.trim();if(!t){HC.toast('Title required','warning');return;}HC.toast(`📢 Message sent to all workers.`,'success');}});}
 function exportCSV(){HC.exportCSV([['Name','Trade','City','Rating','Orders','Status','Joined'],...workers.map(w=>[w.name,w.trade,w.city,w.rating,w.orders,w.status,w.joined])],'hunarmand_workers.csv');}

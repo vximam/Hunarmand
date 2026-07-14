@@ -53,6 +53,7 @@
 
 <script src="admin-core.js"></script>
 <script src="portal-shared.js"></script>
+<script src="chatbot.js"></script>
 <script>
 const session = JSON.parse(localStorage.getItem('currentUser')||'null');
 
@@ -153,6 +154,7 @@ function renderAll(){
 HC.initClient('Wallet','Payments & Wallet','payment');
 renderMethods();
 renderAll();
+HunBot.init();
 </script>
 </body>
 </html>

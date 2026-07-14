@@ -8,6 +8,78 @@
  */
 const HJ = {};
 
+/* ═══════════════ INPUT VALIDATION HELPERS ═══════════════
+ * Shared "does this look like a real word / real name" heuristic used
+ * across signup, profile edit, and admin forms so people can't submit
+ * keyboard-mash junk like "aaaaaa" or "asdfgh" as a name.
+ */
+HJ.MAJOR_CITIES = ['Lahore','Karachi','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar','Quetta','Gujranwala','Sialkot','Hyderabad','Bahawalpur'];
+
+/* True if `word` looks like a plausible real word rather than random keymashing:
+ *  - no character repeated 3+ times in a row ("aaa", "kkkk")
+ *  - contains at least one vowel (real words do; "sdfgh" doesn't)
+ *  - not more than ~60% of letters are the same single letter
+ *  - has some consonant/vowel alternation rather than one long run of consonants
+ */
+HJ.looksLikeRealWord = (word) => {
+  if (!word) return false;
+  const w = word.toLowerCase().trim();
+  if (w.length < 2) return false;
+  if (/(.)\1{2,}/.test(w)) return false; // same letter 3+ times in a row
+  if (!/[aeiou]/.test(w)) return false; // no vowel at all
+  const letters = w.replace(/[^a-z]/g, '');
+  if (letters.length >= 3) {
+    const counts = {};
+    for (const ch of letters) counts[ch] = (counts[ch]||0) + 1;
+    const maxCount = Math.max(...Object.values(counts));
+    if (maxCount / letters.length > 0.6) return false; // one letter dominates the word
+    // longest run of consecutive consonants (keyboard-mash tell, e.g. "sdfghjkl")
+    const consonantRuns = letters.match(/[^aeiou]+/g) || [];
+    if (Math.max(0, ...consonantRuns.map(r=>r.length)) > 4) return false;
+  }
+  return true;
+};
+
+/* True if `val` is a plausible full name: 2+ letters-only words, each a real-looking word */
+HJ.isRealisticName = (val) => {
+  if (!val) return false;
+  const trimmed = val.trim().replace(/\s+/g, ' ');
+  if (trimmed.length < 3 || trimmed.length > 60) return false;
+  if (!/^[a-zA-Z\u0600-\u06FF\s'.-]+$/.test(trimmed)) return false; // letters (incl. Urdu script), spaces, . ' -
+  const words = trimmed.split(' ').filter(Boolean);
+  if (words.length < 1) return false;
+  // Only apply the keymash heuristic to Latin-script words; Urdu script is left alone.
+  for (const word of words) {
+    if (/^[a-zA-Z'.-]+$/.test(word) && !HJ.looksLikeRealWord(word)) return false;
+  }
+  return true;
+};
+
+/* True if free-text `val` (bio, description, etc.) looks like real writing, not junk */
+HJ.isRealisticText = (val, minWords = 3) => {
+  if (!val) return false;
+  const trimmed = val.trim();
+  if (trimmed.length < 10) return false;
+  const words = trimmed.split(/\s+/).filter(w => /[a-zA-Z]{2,}/.test(w));
+  if (words.length < minWords) return false;
+  const realish = words.filter(w => HJ.looksLikeRealWord(w.replace(/[^a-zA-Z]/g,'')));
+  return realish.length / words.length >= 0.6; // most words should look real
+};
+
+/* Looser than isRealisticText — for short phrases like "Fix kitchen sink" or
+ * "AC repair" that are too short to hit the 3-word/10-char bar but still
+ * shouldn't be junk like "asdasd" or "xxxxx". */
+HJ.isRealisticPhrase = (val, minWords = 2) => {
+  if (!val) return false;
+  const trimmed = val.trim();
+  if (trimmed.length < 4) return false;
+  const words = trimmed.split(/\s+/).filter(w => /[a-zA-Z]{2,}/.test(w));
+  if (words.length < minWords) return false;
+  const realish = words.filter(w => HJ.looksLikeRealWord(w.replace(/[^a-zA-Z]/g,'')));
+  return realish.length / words.length >= 0.6;
+};
+
+
 /* ═══════════════ MONEY ═══════════════ */
 HJ.money = n => 'Rs. ' + Math.abs(Math.round(n||0)).toLocaleString('en-PK');
 HJ.moneySigned = n => (n<0 ? '-' : '') + HJ.money(n);
@@ -204,10 +276,9 @@ HJ.getWorkerMeta = (workerId) => {
 HJ.saveWorkerMeta = (workerId, meta) => localStorage.setItem(`hun_worker_meta_${workerId}`, JSON.stringify(meta));
 
 HJ.AVAILABILITY = {
-  online:  { label:'Available',  color:'#2E7D32', dot:'#43A047' },
-  busy:    { label:'Busy',       color:'#B26A00', dot:'#F5A623' },
-  working: { label:'On a Job',   color:'#1565C0', dot:'#3B82F6' },
-  offline: { label:'Offline',    color:'#78716C', dot:'#A8A29E' },
+  online:  { label:'Online',  color:'#2E7D32', dot:'#43A047' },
+  busy:    { label:'Busy',    color:'#B26A00', dot:'#F5A623' },
+  offline: { label:'Offline', color:'#78716C', dot:'#A8A29E' },
 };
 
 /* ═══════════════ CLIENT PROFILE META ═══════════════ */
@@ -220,17 +291,14 @@ HJ.saveClientMeta = (clientId, meta) => localStorage.setItem(`hun_client_meta_${
 
 /* ═══════════════ PRICE FAIRNESS ═══════════════ */
 HJ.MARKET_RATES = {
-  'Plumbing':        { min:800,  avg:1800, max:5000 },
-  'Electrical':      { min:700,  avg:1600, max:4500 },
-  'Carpentry':       { min:1000, avg:2400, max:8000 },
-  'HVAC':            { min:1500, avg:3200, max:9000 },
-  'Painting':        { min:1200, avg:2800, max:7000 },
-  'Cleaning':        { min:500,  avg:1200, max:3500 },
-  'Appliance Repair':{ min:600,  avg:1500, max:4000 },
-  'Security':        { min:1000, avg:2500, max:8000 },
-  'Welder':          { min:800,  avg:2000, max:6000 },
-  'Driver':          { min:400,  avg:900,  max:2500 },
-  'General':         { min:500,  avg:1400, max:4000 },
+  'Plumbing':   { min:800,  avg:1800, max:4000 },
+  'Electrical': { min:700,  avg:1600, max:3800 },
+  'Carpentry':  { min:1000, avg:2400, max:6500 },
+  'HVAC':       { min:1500, avg:3200, max:8000 },
+  'Painting':   { min:1200, avg:2800, max:7000 },
+  'Cleaning':   { min:500,  avg:1200, max:3000 },
+  'Appliance Repair': { min:600, avg:1500, max:3500 },
+  'General':    { min:600,  avg:1500, max:4000 },
 };
 HJ.priceFairness = (skill, budget) => {
   const rate = HJ.MARKET_RATES[skill] || HJ.MARKET_RATES['General'];
@@ -243,14 +311,14 @@ HJ.priceFairness = (skill, budget) => {
 
 /* ═══════════════ GEOLOCATION ═══════════════ */
 HJ.CITY_COORDS = {
-  'Lahore':    {lat:31.5497, lng:74.3436},
-  'Karachi':   {lat:24.8607, lng:67.0011},
+  'Lahore': {lat:31.5497, lng:74.3436},
+  'Karachi': {lat:24.8607, lng:67.0011},
   'Islamabad': {lat:33.6844, lng:73.0479},
-  'Rawalpindi':{lat:33.5651, lng:73.0169},
-  'Faisalabad':{lat:31.4504, lng:73.1350},
-  'Multan':    {lat:30.1575, lng:71.5249},
-  'Peshawar':  {lat:34.0151, lng:71.5249},
-  'Quetta':    {lat:30.1798, lng:66.9750},
+  'Rawalpindi': {lat:33.5651, lng:73.0169},
+  'Faisalabad': {lat:31.4504, lng:73.1350},
+  'Multan': {lat:30.1575, lng:71.5249},
+  'Peshawar': {lat:34.0151, lng:71.5249},
+  'Quetta': {lat:30.1798, lng:66.9750},
 };
 HJ.haversine = (lat1,lng1,lat2,lng2) => {
   const R=6371, toRad=d=>d*Math.PI/180;

@@ -138,10 +138,7 @@ HC.modal = function(opts) {
   if (cancel) cancel.textContent = opts.cancelText||'Cancel';
   HC._modalCb = opts.onConfirm||null;
   const box = document.getElementById('hc-mbox');
-  if (box) {
-    box.classList.toggle('wide', !!opts.wide);
-    box.style.maxWidth = opts.wide ? '660px' : '450px';
-  }
+  if (box) box.style.maxWidth = opts.wide ? '540px' : '450px';
   o.classList.add('open');
   document.body.style.overflow = 'hidden';
 };
@@ -1114,6 +1111,12 @@ HC.buildOverlays = function() {
   return `
   <!-- Backdrop -->
   <div id="hc-back" class="backdrop" style="display:none"></div>
+
+  <!-- Modal scroll fix: overlay scrolls instead of clipping tall forms -->
+  <style>
+  .modal-overlay{overflow-y:auto!important;align-items:flex-start!important}
+  .modal-overlay .modal-box{margin:auto;max-height:none!important;margin-top:1rem;margin-bottom:1rem}
+  </style>
 
   <!-- Modal -->
   <div class="modal-overlay" id="hc-modal">

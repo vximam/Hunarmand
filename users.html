@@ -90,70 +90,42 @@
 <script>
 HC.init('Users','Manage Users','users');
 
-function getAdminUsers() {
-  const all = JSON.parse(localStorage.getItem('allUsers') || '[]');
-  return all.map(u => {
-    return {
-      id: u.id,
-      name: u.name,
-      email: u.email || '',
-      city: u.city || '—',
-      phone: u.phone || '—',
-      joined: u.joined || 'Jan 2026',
-      orders: u.requests || 0,
-      status: u.status || 'active',
-      blocked: u.status === 'blocked',
-      gender: u.gender || 'male',
-      type: u.role === 'admin' ? 'Admin' : 'Regular'
-    };
+const users=[
+  {id:1,name:'Zeshan Siddiqui',email:'zeshan@email.com',city:'Karachi',phone:'+92 321 001 0001',joined:'Mar 2026',orders:7,status:'active',blocked:false,gender:'Male',type:'Regular'},
+  {id:2,name:'Sara Malik',email:'sara@email.com',city:'Lahore',phone:'+92 300 002 0002',joined:'Jan 2026',orders:3,status:'active',blocked:false,gender:'Female',type:'Regular'},
+  {id:3,name:'Hamid Raza',email:'hamid@email.com',city:'Islamabad',phone:'+92 333 003 0003',joined:'Feb 2026',orders:0,status:'pending',blocked:false,gender:'Male',type:'Regular'},
+  {id:4,name:'Fatima Shah',email:'fatima@email.com',city:'Rawalpindi',phone:'+92 345 004 0004',joined:'Dec 2025',orders:12,status:'active',blocked:false,gender:'Female',type:'Business'},
+  {id:5,name:'Ali Hassan',email:'ali@email.com',city:'Peshawar',phone:'+92 315 005 0005',joined:'Nov 2025',orders:2,status:'inactive',blocked:false,gender:'Male',type:'Regular'},
+  {id:6,name:'Nadia Iqbal',email:'nadia@email.com',city:'Faisalabad',phone:'+92 307 006 0006',joined:'Jan 2026',orders:5,status:'active',blocked:false,gender:'Female',type:'Regular'},
+  {id:7,name:'Imran Butt',email:'imran@email.com',city:'Karachi',phone:'+92 322 007 0007',joined:'Oct 2025',orders:18,status:'active',blocked:false,gender:'Male',type:'Business'},
+  {id:8,name:'Huma Farooq',email:'huma@email.com',city:'Lahore',phone:'+92 311 008 0008',joined:'Mar 2026',orders:0,status:'pending',blocked:false,gender:'Female',type:'Regular'},
+  {id:9,name:'Bilal Qureshi',email:'bilal@email.com',city:'Karachi',phone:'+92 303 009 0009',joined:'Sep 2025',orders:8,status:'active',blocked:false,gender:'Male',type:'Regular'},
+  {id:10,name:'Amna Nawaz',email:'amna@email.com',city:'Karachi',phone:'+92 332 010 0010',joined:'Nov 2025',orders:1,status:'blocked',blocked:true,gender:'Female',type:'Regular'},
+  {id:11,name:'Usman Tariq',email:'usman@email.com',city:'Islamabad',phone:'+92 344 011 0011',joined:'Dec 2025',orders:6,status:'active',blocked:false,gender:'Male',type:'Corporate'},
+  {id:12,name:'Rabia Farooq',email:'rabia@email.com',city:'Karachi',phone:'+92 328 014 0012',joined:'Oct 2025',orders:15,status:'active',blocked:false,gender:'Female',type:'Business'},
+];
+
+/* Merge real sign-ups (clients + workers) from auth.html into the Users table */
+(function syncRealUsers(){
+  const real = JSON.parse(localStorage.getItem('allUsers')||'[]');
+  real.forEach(u=>{
+    if (typeof u.id !== 'number' || u.id < 1000000000000) return; // skip demo/seed rows
+    if (users.some(x=>x.id===u.id)) return;
+    users.unshift({id:u.id,name:u.name,email:u.email,city:u.city||'—',phone:u.phone||'N/A',joined:u.joined||'—',orders:u.requests||0,status:(u.status||'active').toLowerCase(),blocked:false,gender:u.gender==='female'?'Female':'Male',type:'Regular'});
   });
-}
-
-function persistUserStatus(id, status) {
-  const all = JSON.parse(localStorage.getItem('allUsers') || '[]');
-  const u = all.find(x => x.id === id);
-  if (u) {
-    u.status = status;
-    localStorage.setItem('allUsers', JSON.stringify(all));
-  }
-}
-
-function persistUserEdit(id, name, city, phone) {
-  const all = JSON.parse(localStorage.getItem('allUsers') || '[]');
-  const u = all.find(x => x.id === id);
-  if (u) {
-    u.name = name;
-    u.city = city;
-    u.phone = phone;
-    localStorage.setItem('allUsers', JSON.stringify(all));
-  }
-}
-
-function deleteUserFromStorage(id) {
-  const all = JSON.parse(localStorage.getItem('allUsers') || '[]');
-  const filtered = all.filter(x => x.id !== id);
-  localStorage.setItem('allUsers', JSON.stringify(filtered));
-}
-
-function addUserToStorage(u) {
-  const all = JSON.parse(localStorage.getItem('allUsers') || '[]');
-  all.unshift(u);
-  localStorage.setItem('allUsers', JSON.stringify(all));
-}
+})();
 
 let activeTab='all',page=1;const PER=8;
 let selUser=null;
-let users = [];
 const avCls=['av0','av1','av2','av3','av4','av5'];
 const ini=n=>(n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
 function initStats(){
-  users = getAdminUsers();
   HC.countUp(document.getElementById('sc-total'),users.length);
   HC.countUp(document.getElementById('sc-act'),users.filter(u=>u.status==='active'&&!u.blocked).length);
   HC.countUp(document.getElementById('sc-pend'),users.filter(u=>u.status==='pending').length);
   HC.countUp(document.getElementById('sc-blk'),users.filter(u=>u.blocked).length);
-  const avg=users.length?(users.reduce((s,u)=>s+u.orders,0)/users.length).toFixed(1):'0';
+  const avg=(users.reduce((s,u)=>s+u.orders,0)/users.length).toFixed(1);
   setTimeout(()=>document.getElementById('sc-avg').textContent=avg,600);
 }
 
@@ -172,7 +144,6 @@ function getFiltered(){
 }
 
 function renderTable(){
-  users = getAdminUsers();
   const data=getFiltered();
   const total=data.length;
   const pages=Math.max(1,Math.ceil(total/PER));
@@ -219,8 +190,8 @@ function goPage(p){page=p;renderTable();}
 function setTab(t,el){document.querySelectorAll('#uTabs .ftab').forEach(b=>b.classList.remove('active'));el.classList.add('active');activeTab=t;page=1;renderTable();}
 function toggleAll(el){document.querySelectorAll('.rc').forEach(cb=>cb.checked=el.checked);}
 
-function quickBlock(id){const u=users.find(x=>x.id===id);if(!u)return;u.blocked=!u.blocked;u.status=u.blocked?'blocked':'active';persistUserStatus(id, u.status);renderTable();initStats();HC.toast(`${u.name} ${u.blocked?'blocked':'unblocked'}.`,u.blocked?'warning':'success');}
-function quickDelete(id,name){openModal({icon:'fas fa-trash',iconType:'danger',title:'Delete User',body:`Permanently delete ${name}?`,confirmText:'Delete',danger:true,onConfirm:()=>{const i=users.findIndex(x=>x.id===id);if(i>-1)users.splice(i,1);deleteUserFromStorage(id);renderTable();initStats();HC.toast(`${name} deleted.`,'warning');}});}
+function quickBlock(id){const u=users.find(x=>x.id===id);if(!u)return;u.blocked=!u.blocked;u.status=u.blocked?'blocked':'active';renderTable();initStats();HC.toast(`${u.name} ${u.blocked?'blocked':'unblocked'}.`,u.blocked?'warning':'success');}
+function quickDelete(id,name){openModal({icon:'fas fa-trash',iconType:'danger',title:'Delete User',body:`Permanently delete ${name}?`,confirmText:'Delete',danger:true,onConfirm:()=>{const i=users.findIndex(x=>x.id===id);if(i>-1)users.splice(i,1);renderTable();initStats();HC.toast(`${name} deleted.`,'warning');}});}
 
 function openDrawer(id){
   selUser=users.find(u=>u.id===id);if(!selUser)return;
@@ -260,11 +231,11 @@ function openDrawer(id){
   HC.applyGlobalSettings();
 }
 function closeDrawer(){document.getElementById('dOverlay').classList.remove('show');document.getElementById('uDrawer').classList.remove('open');document.body.style.overflow='';selUser=null;}
-function drawerBlock(){if(!selUser)return;const u=selUser;u.blocked=!u.blocked;u.status=u.blocked?'blocked':'active';persistUserStatus(u.id, u.status);closeDrawer();renderTable();initStats();HC.toast(`${u.name} ${u.blocked?'blocked':'unblocked'}.`,u.blocked?'warning':'success');}
-function drawerEdit(){if(!selUser)return;const u=selUser;openModal({icon:'fas fa-pen',title:'Edit User',body:`Editing profile for ${u.name}.`,formHTML:`<div class="modal-form"><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Full Name</label><input class="mf-input" id="euN" value="${u.name}"></div><div class="mf-field"><label class="mf-lbl">City</label><input class="mf-input" id="euC" value="${u.city}"></div></div><div class="mf-field"><label class="mf-lbl">Phone</label><input class="mf-input" id="euP" value="${u.phone}"></div></div>`,confirmText:'Save',onConfirm:()=>{u.name=document.getElementById('euN')?.value||u.name;u.city=document.getElementById('euC')?.value||u.city;u.phone=document.getElementById('euP')?.value||u.phone;persistUserEdit(u.id, u.name, u.city, u.phone);closeDrawer();renderTable();HC.toast('User updated.','success');}});}
+function drawerBlock(){if(!selUser)return;const u=selUser;u.blocked=!u.blocked;u.status=u.blocked?'blocked':'active';closeDrawer();renderTable();initStats();HC.toast(`${u.name} ${u.blocked?'blocked':'unblocked'}.`,u.blocked?'warning':'success');}
+function drawerEdit(){if(!selUser)return;const u=selUser;openModal({icon:'fas fa-pen',title:'Edit User',body:`Editing profile for ${u.name}.`,formHTML:`<div class="modal-form"><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Full Name</label><input class="mf-input" id="euN" value="${u.name}"></div><div class="mf-field"><label class="mf-lbl">City</label><select class="mf-sel" id="euC">${HJ.MAJOR_CITIES.map(c=>`<option ${u.city===c?'selected':''}>${c}</option>`).join('')}</select></div></div><div class="mf-field"><label class="mf-lbl">Phone</label><input class="mf-input" id="euP" value="${u.phone}"></div></div>`,confirmText:'Save',onConfirm:()=>{const n=document.getElementById('euN')?.value.trim();if(n && !HJ.isRealisticName(n)){HC.toast('Enter a real full name, not random characters','warning');return;}u.name=n||u.name;u.city=document.getElementById('euC')?.value||u.city;u.phone=document.getElementById('euP')?.value||u.phone;closeDrawer();renderTable();HC.toast('User updated.','success');}});}
 function drawerMsg(){if(!selUser)return;openModal({icon:'fas fa-comment',title:'Message User',body:`Send a message to ${selUser.name}.`,formHTML:`<div class="modal-form"><div class="mf-field"><label class="mf-lbl">Message</label><textarea class="mf-input mf-ta" placeholder="Type your message..."></textarea></div></div>`,confirmText:'Send',onConfirm:()=>HC.toast(`Message sent to ${selUser.name}.`,'success')});}
 
-function openAddUser(){openModal({icon:'fas fa-user-plus',title:'Add New User',body:'Register a new client account.',wide:true,formHTML:`<div class="modal-form"><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Full Name</label><input class="mf-input" id="uN" placeholder="Full name"></div><div class="mf-field"><label class="mf-lbl">Email</label><input class="mf-input" type="email" id="uE" placeholder="user@email.com"></div></div><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Phone</label><input class="mf-input" id="uP" placeholder="+92 3XX XXXXXXX"></div><div class="mf-field"><label class="mf-lbl">City</label><input class="mf-input" id="uC" placeholder="Karachi"></div></div><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Account Type</label><select class="mf-sel" id="uT"><option>Regular</option><option>Business</option><option>Corporate</option></select></div><div class="mf-field"><label class="mf-lbl">Gender</label><select class="mf-sel" id="uG"><option>Male</option><option>Female</option></select></div></div></div>`,confirmText:'Create Account',onConfirm:()=>{const n=document.getElementById('uN')?.value.trim();if(!n){HC.toast('Name required','warning');return;}const newU = {id:Date.now(),name:n,email:document.getElementById('uE')?.value||'',city:document.getElementById('uC')?.value||'',phone:document.getElementById('uP')?.value||'',joined:'Jun 2026',requests:0,status:'active',blocked:false,gender:document.getElementById('uG')?.value||'Male',role:'user'};addUserToStorage(newU);renderTable();initStats();HC.toast(`✓ Account created for "${n}".`,'success');}});}
+function openAddUser(){openModal({icon:'fas fa-user-plus',title:'Add New User',body:'Register a new client account.',wide:true,formHTML:`<div class="modal-form"><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Full Name</label><input class="mf-input" id="uN" placeholder="Full name"></div><div class="mf-field"><label class="mf-lbl">Email</label><input class="mf-input" type="email" id="uE" placeholder="user@email.com"></div></div><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Phone</label><input class="mf-input" id="uP" placeholder="+92 3XX XXXXXXX"></div><div class="mf-field"><label class="mf-lbl">City</label><select class="mf-sel" id="uC"><option value="">Select city...</option>${HJ.MAJOR_CITIES.map(c=>`<option>${c}</option>`).join('')}</select></div></div><div class="mf-row"><div class="mf-field"><label class="mf-lbl">Account Type</label><select class="mf-sel" id="uT"><option>Regular</option><option>Business</option><option>Corporate</option></select></div><div class="mf-field"><label class="mf-lbl">Gender</label><select class="mf-sel" id="uG"><option>Male</option><option>Female</option></select></div></div></div>`,confirmText:'Create Account',onConfirm:()=>{const n=document.getElementById('uN')?.value.trim();if(!n){HC.toast('Name required','warning');return;}if(!HJ.isRealisticName(n)){HC.toast('Enter a real full name, not random characters','warning');return;}users.unshift({id:Date.now(),name:n,email:document.getElementById('uE')?.value||'',city:document.getElementById('uC')?.value||'',phone:document.getElementById('uP')?.value||'',joined:'Jun 2026',orders:0,status:'pending',blocked:false,gender:document.getElementById('uG')?.value||'Male',type:document.getElementById('uT')?.value||'Regular'});renderTable();initStats();HC.toast(`✓ Account created for "${n}".`,'success');}});}
 function bulkAction(){openModal({icon:'fas fa-users-gear',title:'Bulk Actions',body:'Apply an action to all selected users.',formHTML:`<div class="modal-form"><div class="mf-field"><label class="mf-lbl">Action</label><select class="mf-sel"><option>Send Notification</option><option>Block Selected</option><option>Export Selected</option></select></div></div>`,confirmText:'Apply',onConfirm:()=>HC.toast('Bulk action applied.','success')});}
 function broadcastUsers(){openModal({icon:'fas fa-bullhorn',iconType:'amber',title:'Message All Users',body:'Send a platform notification to all users.',formHTML:`<div class="modal-form"><div class="mf-field"><label class="mf-lbl">Title</label><input class="mf-input" id="bT" placeholder="Platform Update"></div><div class="mf-field"><label class="mf-lbl">Message</label><textarea class="mf-input mf-ta" id="bM" placeholder="Message body..."></textarea></div></div>`,confirmText:'Send',onConfirm:()=>{const t=document.getElementById('bT')?.value.trim();if(!t){HC.toast('Title required','warning');return;}HC.toast(`📢 Broadcast sent to all users.`,'success');}});}
 function exportCSV(){HC.exportCSV([['Name','Email','City','Phone','Orders','Joined','Status'],...users.map(u=>[u.name,u.email,u.city,u.phone,u.orders,u.joined,u.blocked?'Blocked':u.status])],'hunarmand_users.csv');}

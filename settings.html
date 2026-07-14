@@ -24,19 +24,6 @@
 .settings-tab.active{color:var(--g1);border-color:var(--g1)}
 .settings-sec{display:none;padding:1.3rem}
 .settings-sec.active{display:block}
-.field-row{display:flex;justify-content:space-between;align-items:center;padding:.9rem 0;border-bottom:1px solid var(--row-line);gap:1rem;flex-wrap:wrap}
-.field-row:last-child{border-bottom:none}
-.field-lbl{font-weight:600;font-size:.85rem;color:var(--ink)}
-.field-desc{font-size:.74rem;color:var(--muted);margin-top:.1rem}
-.field-input{padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);min-width:220px;font-family:inherit}
-.avatar-edit{display:flex;align-items:center;gap:1rem}
-.avatar-edit img{width:64px;height:64px;border-radius:14px;object-fit:cover;border:2px solid var(--mint2)}
-.toggle{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-sl{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:100px;transition:.2s}
-.toggle-sl:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
-.toggle input:checked + .toggle-sl{background:var(--g1)}
-.toggle input:checked + .toggle-sl:before{transform:translateX(18px)}
 </style>
 </head>
 <body>
@@ -135,6 +122,7 @@
 
 <script src="admin-core.js"></script>
 <script src="portal-shared.js"></script>
+<script src="chatbot.js"></script>
 <script>
 const session = JSON.parse(localStorage.getItem('currentUser')||'null');
 const TABS = [
@@ -179,6 +167,9 @@ function saveProfile(){
   const address = document.getElementById('f-address').value.trim();
   const bio = document.getElementById('f-bio').value.trim();
   if (!name){ HC.toast('Name cannot be empty','warning'); return; }
+  if (!HJ.isRealisticName(name)){ HC.toast('Enter a real full name, not random characters','warning'); return; }
+  if (address && !HJ.isRealisticPhrase(address, 1)){ HC.toast('Address must be real words, not random characters','warning'); return; }
+  if (bio && !HJ.isRealisticText(bio, 3)){ HC.toast('Bio must be written in real words, not random characters','warning'); return; }
 
   const avatar = _pendingAvatarDataUrl || HJ.getClientMeta(session.id).avatar || session.image;
   session.name = name; session.phone = phone; session.image = avatar || session.image;
@@ -251,6 +242,8 @@ function addAddress(){
   const address = document.getElementById('addr-full').value.trim();
   const city = document.getElementById('addr-city').value;
   if (!label || !address){ HC.toast('Enter a label and address','warning'); return; }
+  if (!HJ.isRealisticPhrase(label, 1)){ HC.toast('Label must be a real word (e.g. Home, Office)','warning'); return; }
+  if (!HJ.isRealisticPhrase(address, 1)){ HC.toast('Address must be real words, not random characters','warning'); return; }
   HJ.addAddress(session.id, label, address, city);
   document.getElementById('addr-label').value=''; document.getElementById('addr-full').value='';
   HC.toast('✓ Address saved!','success');
@@ -345,6 +338,7 @@ renderPromoHistory();
 renderReferrals();
 loadNotifPrefs();
 document.getElementById('darkToggle').checked = document.documentElement.getAttribute('data-theme')==='dark';
+HunBot.init();
 </script>
 </body>
 </html>

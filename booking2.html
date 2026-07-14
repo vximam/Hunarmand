@@ -22,7 +22,6 @@
 .tab-row{display:flex;gap:.5rem;flex-wrap:wrap}
 .booking-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.2rem;box-shadow:var(--shadow-soft)}
 .booking-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.6rem;margin-bottom:.4rem}
-.review-existing{background:var(--mint);border-radius:10px;padding:.6rem .8rem;font-size:.8rem;color:var(--g1);margin-top:.6rem}
 .booking-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
 .booking-photo{width:56px;height:56px;border-radius:10px;object-fit:cover;margin-top:.5rem}
 </style>
@@ -56,6 +55,7 @@
 
 <script src="admin-core.js"></script>
 <script src="portal-shared.js"></script>
+<script src="chatbot.js"></script>
 <script>
 const session = JSON.parse(localStorage.getItem('currentUser')||'null');
 let activeTab = 'all';
@@ -163,7 +163,10 @@ function reportIssue(jobId){
     confirmText:'Submit Report', danger:true,
     onConfirm:()=>{
       const reason = document.getElementById(formId+'_reason').value;
-      const desc = document.getElementById(formId+'_desc').value;
+      const desc = document.getElementById(formId+'_desc').value.trim();
+      if (desc && !HJ.isRealisticText(desc, 3)) {
+        HC.toast('Please describe the issue in real words, not random characters','warning'); return false;
+      }
       HJ.fileDispute(jobId, reason, desc);
       HC.toast('✓ Report submitted — our team will review it shortly','success');
       renderList();
@@ -204,11 +207,18 @@ function bookAgain(jobId){
     confirmText:'Send Request',
     onConfirm:()=>{
       const form = document.getElementById(formId);
+      const svc = form.service.value.trim();
+      const desc = form.description.value.trim();
+      const bud = Number(form.budget.value);
+      if (!svc) { HC.toast('Please describe the service needed','warning'); return false; }
+      if (!HJ.isRealisticPhrase(svc, 2)) { HC.toast('Service description must be real words, not random characters','warning'); return false; }
+      if (!bud || bud < 100) { HC.toast('Enter a realistic budget (at least Rs. 100)','warning'); return false; }
+      if (desc && !HJ.isRealisticPhrase(desc, 2)) { HC.toast('Description must be real words, not random characters','warning'); return false; }
       HJ.createRequest({
         clientId: session.id, clientName: session.name, clientImage: session.image,
         workerId: job.workerId, workerName: job.workerName, workerImage: job.workerImage,
-        service: form.service.value, skill: job.skill, city: job.city, address: job.address,
-        budget: form.budget.value, description: form.description.value,
+        service: svc, skill: job.skill, city: job.city, address: job.address,
+        budget: bud, description: desc,
         preferredDate: form.preferredDate.value, timeWindow: form.timeWindow.value
       });
       HC.toast(`✓ New request sent to ${job.workerName}!`,'success');
@@ -235,7 +245,10 @@ function openReviewModal(jobId){
     onConfirm:()=>{
       const stars = document.querySelectorAll(`#${starsId} i`);
       const rating = [...stars].filter(s=>s.classList.contains('active')).length || 5;
-      const comment = document.getElementById(formId+'_comment').value;
+      const comment = document.getElementById(formId+'_comment').value.trim();
+      if (comment && !HJ.isRealisticPhrase(comment, 2)) {
+        HC.toast('Review comment must be real words, not random characters','warning'); return false;
+      }
       HJ.addReview(jobId, rating, comment);
       HC.toast('✓ Thanks for your review!','success');
       HC.confetti();
@@ -304,6 +317,7 @@ setInterval(() => {
     box.querySelector('.tracking-bar-fill').style.width = t.pct + '%';
   });
 }, 2000);
+HunBot.init();
 </script>
 </body>
 </html>
